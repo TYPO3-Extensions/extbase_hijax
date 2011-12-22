@@ -1,0 +1,27 @@
+.hijax-js-off .hijax-js-fallback .hijax-content {
+	visibility: visible;
+}
+
+.hijax-js-on .hijax-js-fallback .hijax-content {
+	visibility: hidden;
+}
+
+.hijax-element {
+	overflow: hidden;
+	position: relative;
+}
+
+.hijax-loading {
+	display: block; 
+	background: white url(../Images/loader.gif) no-repeat 50% 50%; 
+	height: 100%; 
+	display: none;
+	position: absolute; 
+	width: 100%; 
+	left: 0px; 
+	top: 0px; 
+	z-index: 10; 
+	filter: alpha(opacity=50);
+	-moz-opacity:0.5; 
+	opacity:0.5;
+}
