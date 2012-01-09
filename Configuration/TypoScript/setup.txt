@@ -27,11 +27,6 @@
 						body.className = body.className.replace(' ' + EXTBASE_HIJAX.bodyClass, '');
 					} catch(err) {}
 				//]]></script>
-				<!--
-					TEST elements	
-				<div class="hijax-js-fallback hijax-element" data-hijax-extension="Pageresource" data-hijax-plugin="Pi3" data-hijax-controller="Detail" data-hijax-action="show" data-hijax-settings="" data-hijax-timing="30"><div class="hijax-content">Hello World</div><div class="hijax-loading"></div></div>
-				<div class="hijax-js-fallback hijax-element" data-hijax-extension="Disqus" data-hijax-plugin="Pi1" data-hijax-controller="Comments" data-hijax-action="countJS" data-hijax-settings="" data-hijax-timing="10" data-hijax-dontRunAtStart="1"><div class="hijax-content">Hello World</div><div class="hijax-loading"></div></div>
-				-->
 			)
 		}
 

@@ -1,15 +1,42 @@
-.hijax-js-off .hijax-js-conditional .hijax-content,
-.hijax-js-off .hijax-js-fallback .hijax-content {
+/**
+ * fallback element logic
+ */
+
+.hijax-js-off .hijax-js-fallback > .hijax-content {
 	visibility: visible;
 }
 
-.hijax-js-on .hijax-js-conditional .hijax-content,
-.hijax-js-on .hijax-js-fallback .hijax-content {
+.hijax-js-on .hijax-js-fallback > .hijax-content {
 	visibility: hidden;
 }
 
+/**
+ * js conditional element logic
+ */
+
+.hijax-js-off .hijax-js-conditional > .hijax-content {
+	visibility: visible;
+}
+
+.hijax-js-off .hijax-js-conditional .hijax-content-else {
+	display: none;
+}
+
+.hijax-js-on .hijax-js-conditional > .hijax-content {
+	visibility: hidden;
+	display: block;
+}
+
+.hijax-js-on .hijax-js-conditional .hijax-content-else {
+	display: none;
+}
+
+/**
+ * general element
+ */
+
 .hijax-element {
-	overflow: hidden;
+	/* overflow: hidden; */
 	position: relative;
 }
 

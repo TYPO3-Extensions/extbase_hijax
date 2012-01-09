@@ -51,40 +51,47 @@
 			var requests = [];
 			$.each(elements, function(i, element) {
 				var el = $(element);
-				if (el.attr('data-hijax-element-type')=='conditional') {
-					try {
-						val = eval(el.attr('data-hijax-condition'));
-						if (!val) {
-							el.css('display', 'none');
-						} else {
-							el.find('> .hijax-content').css('visibility', 'visible');
+				switch (el.attr('data-hijax-element-type')) {
+					case 'conditional':
+						try {
+							val = eval(el.attr('data-hijax-condition'));
+							if (!val) {
+								el.find('> .hijax-content-else').css('display', 'block').css('visibility', 'visible');
+								el.find('> .hijax-content').css('display', 'none'); // TODO: remove the element?
+							} else {
+								el.find('> .hijax-content').css('display', 'block').css('visibility', 'visible');
+								el.find('> .hijax-content-else').css('display', 'none'); // TODO: remove the element?
+							}
+						} catch (err) {
+							el.css('display', 'none'); // TODO: remove the element?
 						}
-					} catch (err) {
-						el.css('display', 'none');
-					}
-				} else {
-						// ajax request
-					var el = {
-						id: $(element).attr('id'),
-						extension: $(element).attr('data-hijax-extension'),
-						plugin: $(element).attr('data-hijax-plugin'),
-						controller: $(element).attr('data-hijax-controller'),
-						action: $(element).attr('data-hijax-action'),
-						arguments: $(element).attr('data-hijax-arguments'),
-						settingsHash: $(element).attr('data-hijax-settings')
-					};
-					var loader = $(element).find('> .'+EXTBASE_HIJAX.loadingClass);
-					if (!loader.data('targetOpacity')) {
-						loader.data('targetOpacity', loader.css('opacity'));
-						loader.css('opacity', 0);
-					}
-					loader.show();
-					loader.stop().animate({
-						opacity: loader.data('targetOpacity')
-					}, 500, function() {
-							// Animation complete.
-					});
-					requests.push(el);
+						
+						break;
+					default: 
+							// ajax request
+						var el = {
+							id: $(element).attr('id'),
+							extension: $(element).attr('data-hijax-extension'),
+							plugin: $(element).attr('data-hijax-plugin'),
+							controller: $(element).attr('data-hijax-controller'),
+							action: $(element).attr('data-hijax-action'),
+							arguments: $(element).attr('data-hijax-arguments'),
+							settingsHash: $(element).attr('data-hijax-settings')
+						};
+						var loader = $(element).find('> .'+EXTBASE_HIJAX.loadingClass);
+						if (!loader.data('targetOpacity')) {
+							loader.data('targetOpacity', loader.css('opacity'));
+							loader.css('opacity', 0);
+						}
+						loader.show();
+						loader.stop().animate({
+							opacity: loader.data('targetOpacity')
+						}, 500, function() {
+								// Animation complete.
+						});
+						requests.push(el);
+						
+						break;
 				}
 			});
 			
@@ -160,8 +167,6 @@
 })(jQuery);
 
 jQuery(document).ready(function(){
-//	jQuery('[data-hijax-extension]:nth-child(even)').extbaseHijax();
-//	jQuery('[data-hijax-extension]:nth-child(odd)').extbaseHijax();
 	jQuery('.hijax-element').extbaseHijax();
 	jQuery.extbaseHijax.start();
 });
