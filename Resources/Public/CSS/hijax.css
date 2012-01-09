@@ -1,7 +1,9 @@
+.hijax-js-off .hijax-js-conditional .hijax-content,
 .hijax-js-off .hijax-js-fallback .hijax-content {
 	visibility: visible;
 }
 
+.hijax-js-on .hijax-js-conditional .hijax-content,
 .hijax-js-on .hijax-js-fallback .hijax-content {
 	visibility: hidden;
 }
