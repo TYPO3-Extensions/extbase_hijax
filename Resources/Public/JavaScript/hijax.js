@@ -22,7 +22,7 @@
  ***************************************************************/
 
 ; (function($) {
-	var elements = [], startedTimer = false, timerInterval = 10000, currentTimerTime = 0, uniqueIDCounter = 0;
+	var elements = [], startedTimer = false, timerInterval = 10000, currentTimerTime = 0, uniqueIDCounter = 0, ajaxCallback = false;
 	
 	/*
 	 * Private methods 
@@ -80,13 +80,28 @@
 				switch (el.attr('data-hijax-element-type')) {
 					case 'conditional':
 						try {
-							val = eval(el.attr('data-hijax-condition'));
+							var val = eval(el.attr('data-hijax-condition'));
+							var thenTarget = el.find('> .hijax-content');
+							var elseTarget = el.find('> .hijax-content-else');
+							
 							if (!val) {
-								el.find('> .hijax-content-else').css('display', 'block').css('visibility', 'visible');
-								el.find('> .hijax-content').css('display', 'none'); // TODO: remove the element?
+								elseTarget.css('display', 'block').css('visibility', 'visible');
+								var targetHeight = elseTarget.outerHeight();
+								var startingHeight = thenTarget.outerHeight();
+								thenTarget.css('display', 'none'); // TODO: remove the element?
+								
+								if (!ajaxCallback) {
+									elseTarget.stop().css('height', startingHeight).animate({
+										height: targetHeight
+									}, 100, function() {
+											// Animation complete.
+										$(this).css('height', 'auto');
+									});
+								}
+								
 							} else {
-								el.find('> .hijax-content').css('display', 'block').css('visibility', 'visible');
-								el.find('> .hijax-content-else').css('display', 'none'); // TODO: remove the element?
+								thenTarget.css('display', 'block').css('visibility', 'visible');
+								elseTarget.css('display', 'none'); // TODO: remove the element?
 							}
 						} catch (err) {
 							el.css('display', 'none'); // TODO: remove the element?
@@ -180,6 +195,8 @@
 	 */
 
 	$.fn.loadHijaxData = function(response) {
+		ajaxCallback = true;
+		
 		var element = $(this);
 		var loader = element.find('> .'+EXTBASE_HIJAX.loadingClass);
 		var content = element.find('> .'+EXTBASE_HIJAX.contentClass);
@@ -205,7 +222,6 @@
 					loader.hide();
 				});
 				element.find('.hijax-element').extbaseHijax(true);
-				//jQuery.extbaseHijax.start();
 				
 				element.stop().animate({
 					height: content.outerHeight()
@@ -237,6 +253,8 @@
 					// Animation complete.
 			});
 		}
+		
+		ajaxCallback = false;
 		
 		return this;
 	};	
