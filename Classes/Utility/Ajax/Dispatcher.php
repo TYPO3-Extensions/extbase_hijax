@@ -43,13 +43,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 	 * @var Tx_Extbase_Object_ObjectManager
 	 */
 	protected $objectManager;
-	
-	
-	/**
-	 * @var Tx_Extbase_Configuration_ConfigurationManagerInterface
-	 */
-	protected $configurationManager;
-	
+
 	/**
 	 * @var t3lib_cache_frontend_VariableFrontend
 	 */
@@ -78,7 +72,6 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 		$this->initializeTsfe();
 		
 		$this->objectManager = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager');
-		$this->configurationManager = $this->objectManager->get('Tx_Extbase_Configuration_ConfigurationManagerInterface');
 		$this->cacheInstance = $GLOBALS['typo3CacheManager']->getCache('extbase_hijax');
 		
 		$callback = t3lib_div::_GP('callback');
