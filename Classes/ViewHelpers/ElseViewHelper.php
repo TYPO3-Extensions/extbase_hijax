@@ -25,8 +25,6 @@
 /**
  * Else-Branch of a condition. Only has an effect inside of "If". See the If-ViewHelper for documentation.
  * 
- * @see Tx_Fluid_ViewHelpers_IfViewHelper
- *
  * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
  * @api
  */

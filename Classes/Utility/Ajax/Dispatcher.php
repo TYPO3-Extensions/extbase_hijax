@@ -1,39 +1,36 @@
 <?php
-
 /***************************************************************
-*  Copyright notice
-*
-*  (c) 2011 AOE media GmbH <dev@aoemedia.de>, AOE media GmbH
-*
-*  All rights reserved
-*
-*  This script is part of the TYPO3 project. The TYPO3 project is
-*  free software; you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation; either version 3 of the License, or
-*  (at your option) any later version.
-*
-*  The GNU General Public License can be found at
-*  http://www.gnu.org/copyleft/gpl.html.
-*
-*  This script is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-*
-*  This copyright notice MUST APPEAR in all copies of the script!
-***************************************************************/
+ *  Copyright notice
+ *
+ *  (c) 2011 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
 
 /**
  * An AJAX dispatcher.
- * Based on a script by Daniel Lienert (http://daniel.lienert.cc/blog/blog-post/2011/04/23/extbase-und-ajax/).
- * 
- * @access     public
- * @package    Mcep
- * @subpackage Utility\Ajax
- * @author     Timo Fuchs <timo.fuchs@aoemedia.de>
  */
-class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher {
+class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
+	
+	/**
+	 * @var bool
+	 */
+	protected $isActive = false;
 	
 	/**
 	 * Array of all request Arguments
@@ -46,31 +43,25 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher {
 	 * @var Tx_Extbase_Object_ObjectManager
 	 */
 	protected $objectManager;
-     
+	
+	
 	/**
-	 * @var string
+	 * @var Tx_Extbase_Configuration_ConfigurationManagerInterface
 	 */
-	//protected $extensionName;
-     
+	protected $configurationManager;
+	
 	/**
-	 * @var string
+	 * @var t3lib_cache_frontend_VariableFrontend
 	 */
-	//protected $pluginName;
-     
+	protected $cacheInstance;
+	
 	/**
-	 * @var string
+	 * Constructor
+	 *
+	 * @api
 	 */
-	//protected $controllerName; 
-     
-	/**
-	 * @var string
-	 */
-	//protected $actionName; 
-     
-	/**
-	 * @var array
-	 */
-	//protected $arguments;
+	public function __construct() {
+	}
 	
 	/**
 	 * Called by ajax.php / eID.php
@@ -80,11 +71,15 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher {
 	 */
 	public function dispatch() {
 		
+		$this->setIsActive(true);
+		
 		$this->initializeDatabase();
 		$this->initializeTca();
 		$this->initializeTsfe();
-
+		
 		$this->objectManager = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager');
+		$this->configurationManager = $this->objectManager->get('Tx_Extbase_Configuration_ConfigurationManagerInterface');
+		$this->cacheInstance = $GLOBALS['typo3CacheManager']->getCache('extbase_hijax');
 		
 		$callback = t3lib_div::_GP('callback');
 		$requests = t3lib_div::_GP('r');
@@ -94,12 +89,18 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher {
 			$configuration = array();
 			$configuration['extensionName'] = $r['extension'];
 			$configuration['pluginName']    = $r['plugin'];
-						
-			// TODO: load settings saved under settingsHash
+			
+				// load settings saved under settingsHash
+			if ($r['settingsHash'] && $this->cacheInstance->has($r['settingsHash'])) {
+				$tryConfiguration = $this->cacheInstance->get($r['settingsHash']);
+				if ($configuration['extensionName']==$tryConfiguration['extensionName'] && $configuration['pluginName']==$tryConfiguration['pluginName']) {
+					$configuration = $tryConfiguration;
+				}
+			}
 			
 			$bootstrap = t3lib_div::makeInstance('Tx_Extbase_Core_Bootstrap');
 			$bootstrap->initialize($configuration);
-			
+
 			$request  = $this->buildRequest($r);
 			
 				/* @var $response Tx_Extbase_MVC_Web_Response */
@@ -111,7 +112,6 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher {
 			
 			//$response->sendHeaders();
 			
-			//$responses[] = array( 'id' => $r['id'], 'response' => ( $r['extension'] == 'Disqus' ? '<script type="text/javascript">alert("teest");</script>' : $response->getContent() ) );
 			$responses[] = array( 'id' => $r['id'], 'response' => $response->getContent() );
 		}
 		
@@ -120,6 +120,8 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher {
 		echo $callback.'('.json_encode($responses).')';
 		
 		$this->cleanShutDown();
+		
+		$this->setIsActive(false);
 	}
 	
 	/**
@@ -190,12 +192,17 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher {
 	}
 	
 	/**
-	 * 
-	 * 
-	 * @return Tx_LogMe_Logger
+	 * @return the $isActive
 	 */
-	protected function getLogger() {
-		return $this->objectManager->get('Tx_LogMe_Logger');
+	public function getIsActive() {
+		return $this->isActive;
+	}
+
+	/**
+	 * @param boolean $isActive
+	 */
+	protected function setIsActive($isActive) {
+		$this->isActive = $isActive;
 	}
 }
 
