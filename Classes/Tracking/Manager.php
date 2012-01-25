@@ -131,7 +131,7 @@ class Tx_ExtbaseHijax_Tracking_Manager implements t3lib_Singleton {
 	 */
 	public function clearPageCacheForObjectIdentifier($objectIdentifier) {
 			// TODO: Move this to different implementations of the Tracking Manager...
-		error_log($this->extensionConfiguration->getCacheInvalidationLevel());
+		
 		switch ($this->extensionConfiguration->getCacheInvalidationLevel()) {
 			case 'consistent':
 				$sharedLock = null;
