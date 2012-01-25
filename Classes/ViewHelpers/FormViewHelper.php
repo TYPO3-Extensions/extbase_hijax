@@ -161,7 +161,7 @@ class Tx_ExtbaseHijax_ViewHelpers_FormViewHelper extends Tx_Fluid_ViewHelpers_Fo
 		$this->tag->addAttribute('data-hijax-arguments', htmlspecialchars(serialize($request->getArguments())));
 		
 		$frameworkConfiguration = $this->configurationManager->getConfiguration(Tx_Extbase_Configuration_ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK);
-		$settingsHashKey = md5(serialize($frameworkConfiguration));
+		$settingsHashKey = 's-'.md5(serialize($frameworkConfiguration));
 		if (!$this->cacheInstance->has($settingsHashKey)) {
 			$this->cacheInstance->set($settingsHashKey, $frameworkConfiguration);
 		}
@@ -169,9 +169,6 @@ class Tx_ExtbaseHijax_ViewHelpers_FormViewHelper extends Tx_Fluid_ViewHelpers_Fo
 		
 		$pluginNamespace = $this->extensionService->getPluginNamespace($extensionName, $pluginName);
 		$this->tag->addAttribute('data-hijax-namespace', $pluginNamespace);
-		
-		//$frameworkConfiguration = $this->configurationManager->setConfiguration()getConfiguration(Tx_Extbase_Configuration_ConfigurationManagerInterface::CONFIGURATION_TYPE_FULL_TYPOSCRIPT);
-		//$frameworkConfiguration = $this->configurationManager->getConfiguration(Tx_Extbase_Configuration_ConfigurationManagerInterface::CONFIGURATION_TYPE_SETTINGS);
 		
 		return $result;
 	}

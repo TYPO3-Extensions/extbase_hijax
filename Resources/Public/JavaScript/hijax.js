@@ -149,7 +149,7 @@
 							});	
 						});
 						break;
-					default: 
+					case 'ajax':
 							// ajax request
 						var el = {
 							id: $(element).attr('id'),
@@ -163,7 +163,8 @@
 						$(element).showHijaxLoader();
 						
 						requests.push(el);
-						
+						break;
+					default: 
 						break;
 				}
 			});
@@ -215,20 +216,24 @@
 				if (!loader.data('targetOpacity')) {
 					loader.data('targetOpacity', loader.css('opacity'));
 				}
+				//debugger;
 				loader.stop().animate({
 					opacity: 0
 				}, 500, function() {
 						// Animation complete.
 					loader.hide();
 				});
-				element.find('.hijax-element').extbaseHijax(true);
+				var newElements = element.find('.hijax-element');
+				if (jQuery(element[0]).hasClass('hijax-element')) {
+					newElements.push(jQuery(element[0]));
+				}
+				newElements.extbaseHijax(true);
 				
 				element.stop().animate({
 					height: content.outerHeight()
 				}, 500, function() {
 						// Animation complete.
 				});
-
 			}
 		} else {
 			element.removeClass(EXTBASE_HIJAX.fallbackClass);
@@ -244,8 +249,11 @@
 					// Animation complete.
 				loader.hide();
 			});
-
-			element.find('.hijax-element').extbaseHijax(true);
+			var newElements = element.find('.hijax-element');
+			if (element.hasClass('hijax-element')) {
+				newElements.push(element);
+			}
+			newElements.extbaseHijax(true);
 
 			element.stop().animate({
 				height: content.outerHeight()
@@ -299,10 +307,6 @@
 		if (process) {
 			_process(addedElements);
 		}
-		/*
-		$(this)
-			.data('extbaseHijax', $.extend({}, options, ($.metadata ? $(this).metadata() : {})));
-		*/
 		
 		return this;
 	};

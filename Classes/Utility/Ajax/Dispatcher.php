@@ -64,7 +64,6 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 	 * @return void
 	 */
 	public function dispatch() {
-		
 		$this->setIsActive(true);
 		
 		$this->initializeDatabase();
