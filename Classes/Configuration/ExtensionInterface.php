@@ -94,4 +94,9 @@ interface Tx_ExtbaseHijax_Configuration_ExtensionInterface {
 	 * @return string
 	 */
 	public function getBaseUrl();
+	
+	/**
+	 * @return string
+	 */
+	public function getCacheInvalidationLevel();
 }

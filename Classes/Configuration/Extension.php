@@ -30,10 +30,22 @@ class Tx_ExtbaseHijax_Configuration_Extension implements Tx_ExtbaseHijax_Configu
 	protected $configuration;
 	
 	/**
+	 * @var Tx_Extbase_Configuration_ConfigurationManagerInterface
+	 */
+	protected $configurationManager;	
+	
+	/**
+	 * @var Tx_Extbase_Object_ObjectManager
+	 */
+	protected $objectManager;
+		
+	/**
 	 * constructor
 	 */
 	public function __construct() {
 		$this->configuration = $GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['extbase_hijax'] ? unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['extbase_hijax']) : array();
+		$this->objectManager = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager');
+		$this->configurationManager = $this->objectManager->get('Tx_Extbase_Configuration_ConfigurationManagerInterface');
 	}
 
 	/**
@@ -142,4 +154,14 @@ class Tx_ExtbaseHijax_Configuration_Extension implements Tx_ExtbaseHijax_Configu
 	public function getBaseUrl() {
 		return $GLOBALS['TSFE']->baseUrl ? $GLOBALS['TSFE']->baseUrl : ( t3lib_div::getIndpEnv('TYPO3_REQUEST_HOST') . $GLOBALS['TSFE']->absRefPrefix ) ;
 	}
+	
+	/**
+	 * @return string
+	 */
+	public function getCacheInvalidationLevel() {
+		$frameworkConfiguration = $this->configurationManager->getConfiguration(Tx_Extbase_Configuration_ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK);
+		
+		return (string) ($frameworkConfiguration['settings']['cacheInvalidationLevel'] ? $frameworkConfiguration['settings']['cacheInvalidationLevel'] : 'noinvalidation');
+	}
+	
 }

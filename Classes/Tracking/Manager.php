@@ -63,6 +63,13 @@ class Tx_ExtbaseHijax_Tracking_Manager implements t3lib_Singleton {
 	protected $ajaxDispatcher;
 		
 	/**
+	 * Extension Configuration
+	 *
+	 * @var Tx_ExtbaseHijax_Configuration_ExtensionInterface
+	 */
+	protected $extensionConfiguration;
+	
+	/**
 	 * Constructor
 	 */
 	public function __construct() {
@@ -73,6 +80,7 @@ class Tx_ExtbaseHijax_Tracking_Manager implements t3lib_Singleton {
 		$this->pageCache = $GLOBALS['typo3CacheManager']->getCache('cache_pages');
 		$this->configurationManager = $this->objectManager->get('Tx_Extbase_Configuration_ConfigurationManagerInterface');
 		$this->ajaxDispatcher = $this->objectManager->get('Tx_ExtbaseHijax_Utility_Ajax_Dispatcher');
+		$this->extensionConfiguration = $this->objectManager->get('Tx_ExtbaseHijax_Configuration_ExtensionInterface');
 	}
 	
 	/**
@@ -122,42 +130,51 @@ class Tx_ExtbaseHijax_Tracking_Manager implements t3lib_Singleton {
 	 * @param string $objectIdentifier
 	 */
 	public function clearPageCacheForObjectIdentifier($objectIdentifier) {
-		$sharedLock = null;
-		$sharedLockAcquired = $this->acquireLock($sharedLock, $objectIdentifier, FALSE);
-
-		if ($sharedLockAcquired) {
-			if ($this->trackingCache->has($objectIdentifier)) {
-				$exclusiveLock = null;
-				$exclusiveLockAcquired = $this->acquireLock($sharedLock, $objectIdentifier.'-e', TRUE);
-
-				if ($exclusiveLockAcquired) {
-					$pageHashs = $this->trackingCache->get($objectIdentifier);
-					if ($pageHashs && count($pageHashs)) {
-						foreach ($pageHashs as $pageHash) {
-							if (substr($pageHash, 0, 3) == 'id-') {
-								$this->pageCache->flushByTag('pageId_' . substr($pageHash, 3));
-							} elseif (substr($pageHash, 0, 5) == 'hash-') {
-								$this->pageCache->remove(substr($pageHash, 5));
+			// TODO: Move this to different implementations of the Tracking Manager...
+		error_log($this->extensionConfiguration->getCacheInvalidationLevel());
+		switch ($this->extensionConfiguration->getCacheInvalidationLevel()) {
+			case 'consistent':
+				$sharedLock = null;
+				$sharedLockAcquired = $this->acquireLock($sharedLock, $objectIdentifier, FALSE);
+		
+				if ($sharedLockAcquired) {
+					if ($this->trackingCache->has($objectIdentifier)) {
+						$exclusiveLock = null;
+						$exclusiveLockAcquired = $this->acquireLock($sharedLock, $objectIdentifier.'-e', TRUE);
+		
+						if ($exclusiveLockAcquired) {
+							$pageHashs = $this->trackingCache->get($objectIdentifier);
+							if ($pageHashs && count($pageHashs)) {
+								foreach ($pageHashs as $pageHash) {
+									if (substr($pageHash, 0, 3) == 'id-') {
+										$this->pageCache->flushByTag('pageId_' . substr($pageHash, 3));
+									} elseif (substr($pageHash, 0, 5) == 'hash-') {
+										$this->pageCache->remove(substr($pageHash, 5));
+									}
+								}
+								$this->trackingCache->set($objectIdentifier, array());
+							}
+								
+							$this->releaseLock($exclusiveLock);
+						} else {
+							$pageHashs = $this->trackingCache->get($objectIdentifier);
+							if ($pageHashs && count($pageHashs)) {
+								foreach ($pageHashs as $pageHash) {
+									$this->pageCache->remove($pageHash);
+								}
 							}
 						}
-						$this->trackingCache->set($objectIdentifier, array());
 					}
 						
-					$this->releaseLock($exclusiveLock);
+					$this->releaseLock($sharedLock);
 				} else {
-					$pageHashs = $this->trackingCache->get($objectIdentifier);
-					if ($pageHashs && count($pageHashs)) {
-						foreach ($pageHashs as $pageHash) {
-							$this->pageCache->remove($pageHash);
-						}
-					}
+					// Failed locking
+					// should probably throw an exception here
 				}
-			}
-				
-			$this->releaseLock($sharedLock);
-		} else {
-			// Failed locking
-			// should probably throw an exception here
+				break;
+			default:
+			case 'noinvalidation':
+				break;
 		}
 	
 		return;

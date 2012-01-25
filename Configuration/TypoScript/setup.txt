@@ -1,7 +1,10 @@
 	config.tx_extbase {
 		persistence{
 				# we do NOT want the extbase built-in automatic cache clearing
-			enableAutomaticCacheClearing = 0 
+			enableAutomaticCacheClearing = 0
+		}
+		settings {
+			cacheInvalidationLevel = consistent
 		}
 	}
 
