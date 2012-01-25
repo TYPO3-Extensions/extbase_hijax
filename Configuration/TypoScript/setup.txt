@@ -1,3 +1,10 @@
+	config.tx_extbase {
+		persistence{
+				# we do NOT want the extbase built-in automatic cache clearing
+			enableAutomaticCacheClearing = 0 
+		}
+	}
+
 	plugin.tx_extbase_hijax.settings {
 		
 	}
