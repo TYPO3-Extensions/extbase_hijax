@@ -99,4 +99,16 @@ interface Tx_ExtbaseHijax_Configuration_ExtensionInterface {
 	 * @return string
 	 */
 	public function getCacheInvalidationLevel();
+
+	/**
+	 * @return integer
+	 */
+	public function getNextElementId();
+	
+	/**
+	 * @param integer $nextElementId
+	 * @return void
+	 */
+	public function setNextElementId($nextElementId);
+	
 }

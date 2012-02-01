@@ -140,7 +140,7 @@ class Tx_ExtbaseHijax_Tracking_Manager implements t3lib_Singleton {
 				if ($sharedLockAcquired) {
 					if ($this->trackingCache->has($objectIdentifier)) {
 						$exclusiveLock = null;
-						$exclusiveLockAcquired = $this->acquireLock($sharedLock, $objectIdentifier.'-e', TRUE);
+						$exclusiveLockAcquired = $this->acquireLock($exclusiveLock, $objectIdentifier.'-e', TRUE);
 		
 						if ($exclusiveLockAcquired) {
 							$pageHashs = $this->trackingCache->get($objectIdentifier);
@@ -233,7 +233,7 @@ class Tx_ExtbaseHijax_Tracking_Manager implements t3lib_Singleton {
 								$pageHashs = $this->trackingCache->get($objectIdentifier);
 								if (!in_array($pageHash, $pageHashs)) {
 									$exclusiveLock = null;
-									$exclusiveLockAcquired = $this->acquireLock($sharedLock, $objectIdentifier.'-e', TRUE);
+									$exclusiveLockAcquired = $this->acquireLock($exclusiveLock, $objectIdentifier.'-e', TRUE);
 									
 									if ($exclusiveLockAcquired) {
 										$pageHashs = $this->trackingCache->get($objectIdentifier);
@@ -295,7 +295,7 @@ class Tx_ExtbaseHijax_Tracking_Manager implements t3lib_Singleton {
 						$pageHashs = $this->trackingCache->get($objectIdentifier);
 						if (!in_array($pageHash, $pageHashs)) {
 							$exclusiveLock = null;
-							$exclusiveLockAcquired = $this->acquireLock($sharedLock, $objectIdentifier.'-e', TRUE);
+							$exclusiveLockAcquired = $this->acquireLock($exclusiveLock, $objectIdentifier.'-e', TRUE);
 							
 							if ($exclusiveLockAcquired) {
 								$pageHashs = $this->trackingCache->get($objectIdentifier);

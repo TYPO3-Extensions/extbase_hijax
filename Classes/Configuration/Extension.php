@@ -163,5 +163,19 @@ class Tx_ExtbaseHijax_Configuration_Extension implements Tx_ExtbaseHijax_Configu
 		
 		return (string) ($frameworkConfiguration['settings']['cacheInvalidationLevel'] ? $frameworkConfiguration['settings']['cacheInvalidationLevel'] : 'noinvalidation');
 	}
+
+	/**
+	 * @return integer
+	 */
+	public function getNextElementId() {
+		return intval($GLOBALS['TSFE']->config['extbase_hijax.']['nextElementId']);
+	}
 	
+	/**
+	 * @param integer $nextElementId
+	 * @return void
+	 */
+	public function setNextElementId($nextElementId) {
+		$GLOBALS['TSFE']->config['extbase_hijax.']['nextElementId'] = $nextElementId;
+	}
 }

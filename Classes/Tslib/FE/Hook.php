@@ -22,8 +22,10 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-class Tx_ExtbaseHijax_Tslib_FE_Hook {
-
+class Tx_ExtbaseHijax_Tslib_FE_Hook implements t3lib_Singleton {
+	
+	protected static $loopCount = 0;
+	
 	/**
 	 * @var Tx_Extbase_Object_ObjectManagerInterface
 	 */
@@ -35,6 +37,16 @@ class Tx_ExtbaseHijax_Tslib_FE_Hook {
 	 * @var Tx_ExtbaseHijax_Configuration_ExtensionInterface
 	 */
 	protected $extensionConfiguration;
+	
+	/**
+	 * @var Tx_ExtbaseHijax_Event_Dispatcher
+	 */
+	protected $hijaxEventDispatcher;
+	
+	/**
+	 * @var Tx_ExtbaseHijax_Service_Serialization_ListenerFactory
+	 */
+	protected $listenerFactory;
 	
 	/**
 	 * Constructor
@@ -50,24 +62,33 @@ class Tx_ExtbaseHijax_Tslib_FE_Hook {
 	 */
 	protected function initializeObjectManager() {
 		$this->objectManager = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager');
-		$this->injectExtensionConfiguration($this->objectManager->get('Tx_ExtbaseHijax_Configuration_ExtensionInterface'));
+		$this->extensionConfiguration = $this->objectManager->get('Tx_ExtbaseHijax_Configuration_ExtensionInterface');
+		$this->hijaxEventDispatcher = $this->objectManager->get('Tx_ExtbaseHijax_Event_Dispatcher');
+		$this->listenerFactory = $this->objectManager->get('Tx_ExtbaseHijax_Service_Serialization_ListenerFactory');
 	}
-	
+
 	/**
-	 * injectExtensionConfiguration
-	 *
-	 * @param Tx_ExtbaseHijax_Configuration_ExtensionInterface $extensionConfiguration
-	 * @return void
+	 * @param array $params
+	 * @param tslib_fe $pObj
 	 */
-	public function injectExtensionConfiguration(Tx_ExtbaseHijax_Configuration_ExtensionInterface $extensionConfiguration) {
-		$this->extensionConfiguration = $extensionConfiguration;
+	public function contentPostProcAll($params, $pObj) {
+		$this->contentPostProc($params, $pObj, 'all');
+	}
+
+	/**
+	 * @param array $params
+	 * @param tslib_fe $pObj
+	 */
+	public function contentPostProcOutput($params, $pObj) {
+		$this->contentPostProc($params, $pObj, 'output');
 	}
 	
 	/**
 	 * @param array $params
 	 * @param tslib_fe $pObj
+	 * @param string $hookType
 	 */
-	public function contentPostProc($params, $pObj) {		
+	protected function contentPostProc($params, $pObj, $hookType) {		
 		if ($this->extensionConfiguration->shouldIncludeEofe() && !$this->extensionConfiguration->hasIncludedEofe()) {
 			$this->extensionConfiguration->setIncludedEofe(true);
 			
@@ -108,6 +129,109 @@ class Tx_ExtbaseHijax_Tslib_FE_Hook {
 				$this->extensionConfiguration->setAddedBodyClass(true);
 			}
 		}
+		
+		while ($this->hijaxEventDispatcher->hasPendingNextPhaseEvents()) {
+			$this->hijaxEventDispatcher->promoteNextPhaseEvents();
+			$this->parseAndRunEventListeners($pObj);
+			
+			if (self::$loopCount++>99) {
+					// preventing dead loops
+				break;
+			}
+		}
+		
+		if ($hookType=='output') {
+			$this->replaceXMLCommentsWithDivs($pObj);
+		}
+	}
+	
+	/**
+	 * @param tslib_fe $pObj
+	 * @return void
+	 */
+	protected function parseAndRunEventListeners($pObj) {
+		$tempContent = preg_replace_callback('/<!-- ###EVENT_LISTENER_(?P<elementId>\d*)### START (?P<listenerDefinition>.*) -->(?P<content>.*?)<!-- ###EVENT_LISTENER_(\\1)### END -->/msU', array($this, 'parseAndRunEventListenersCallback'), $pObj->content);
+		$pObj->content = $tempContent;
+	}
+	
+	/**
+	 * @param array $match
+	 * @return string
+	 */
+	protected function parseAndRunEventListenersCallback($match) {
+		$matchesListenerDef = array();
+		preg_match('/(?P<listenerId>[a-z0-9_]*)\((?P<eventNames>.*)\);/msU', $match['listenerDefinition'], $matchesListenerDef);
+			
+		$elementId = $match['elementId'];
+		$listenerId = $matchesListenerDef['listenerId'];
+		$eventNames = $this->convertCSVToArray($matchesListenerDef['eventNames']);
+			
+		$shouldProcess = FALSE;
+			
+		foreach ($eventNames as $eventName) {
+			if ($this->hijaxEventDispatcher->hasPendingEventWithName($eventName)) {
+				$shouldProcess = TRUE;
+				break;
+			}
+		}
+			
+		if ($shouldProcess) {
+			/* @var $listener Tx_ExtbaseHijax_Event_Listener */
+			$listener = $this->listenerFactory->findById($listenerId);
+	
+			$bootstrap = t3lib_div::makeInstance('Tx_Extbase_Core_Bootstrap');
+			$bootstrap->initialize($listener->getConfiguration());
+			$request = $listener->getRequest();
+				
+			/* @var $response Tx_Extbase_MVC_Web_Response */
+			$response = $this->objectManager->create('Tx_Extbase_MVC_Web_Response');
+	
+			$dispatcher = $this->objectManager->get('Tx_Extbase_MVC_Dispatcher');
+			$dispatcher->dispatch($request, $response);
+			
+			$result = $response->getContent();
+		} else {
+			$result = $match[0];
+		}
+
+		return $result;
+	}	
+	
+	/**
+	 * @param tslib_fe $pObj
+	 * @return void
+	 */
+	protected function replaceXMLCommentsWithDivs($pObj) {
+		$pObj->content = preg_replace_callback('/<!-- ###EVENT_LISTENER_(?P<elementId>\d*)### START (?P<listenerDefinition>.*) -->(?P<content>.*?)<!-- ###EVENT_LISTENER_(\\1)### END -->/msU', array($this, 'replaceXMLCommentsWithDivsCallback'), $pObj->content);
+	}
+
+	/**
+	 * @param array $match
+	 * @return string
+	 */
+	protected function replaceXMLCommentsWithDivsCallback($match) {
+		$matchesListenerDef = array();
+		preg_match('/(?P<listenerId>[a-z0-9_]*)\((?P<eventNames>.*)\);/msU', $match['listenerDefinition'], $matchesListenerDef);
+			
+		$elementId = $match['elementId'];
+		$listenerId = $matchesListenerDef['listenerId'];
+		
+		return '<div class="hijax-element hijax-js-listener" data-hijax-element-id="'.$elementId.'" data-hijax-listener-id="'.$listenerId.'" data-hijax-listener-events="'.htmlspecialchars($matchesListenerDef['eventNames']).'">'.$match['content'].'</div>';
+	}
+	
+	/**
+	 * @param string $data
+	 * @param string $delimiter
+	 * @param string $enclosure
+	 * @return array
+	 */
+	protected function convertCSVToArray($data, $delimiter = ',', $enclosure = '"') {
+        $instream = fopen("php://temp", 'r+');
+        fwrite($instream, $data);
+        rewind($instream);
+        $csv = fgetcsv($instream, 9999999, $delimiter, $enclosure);
+        fclose($instream);
+        return $csv;
 	}
 }
 
