@@ -26,6 +26,10 @@
  * An AJAX dispatcher.
  */
 class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
+	/**
+	 * @var int
+	 */
+	protected static $loopCount = 0;
 	
 	/**
 	 * @var bool
@@ -50,11 +54,25 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 	protected $cacheInstance;
 	
 	/**
+	 * @var Tx_ExtbaseHijax_Event_Dispatcher
+	 */
+	protected $hijaxEventDispatcher;
+
+	/**
+	 * @var Tx_ExtbaseHijax_Service_Serialization_ListenerFactory
+	 */
+	protected $listenerFactory;
+	
+	/**
 	 * Constructor
 	 *
 	 * @api
 	 */
 	public function __construct() {
+		$this->objectManager = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager');
+		$this->hijaxEventDispatcher = $this->objectManager->get('Tx_ExtbaseHijax_Event_Dispatcher');
+		$this->listenerFactory = $this->objectManager->get('Tx_ExtbaseHijax_Service_Serialization_ListenerFactory');
+		$this->cacheInstance = $GLOBALS['typo3CacheManager']->getCache('extbase_hijax');
 	}
 	
 	/**
@@ -70,12 +88,13 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 		$this->initializeTca();
 		$this->initializeTsfe();
 		
-		$this->objectManager = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager');
-		$this->cacheInstance = $GLOBALS['typo3CacheManager']->getCache('extbase_hijax');
-		
 		$callback = t3lib_div::_GP('callback');
 		$requests = t3lib_div::_GP('r');
-		$responses = array();
+		$eventsToListen = t3lib_div::_GP('e');
+		$responses = array(
+						'original' => array(),
+						'affected' => array(),
+						);
 
 		foreach ($requests as $r) {
 			$configuration = array();
@@ -97,16 +116,31 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 			
 				/* @var $response Tx_Extbase_MVC_Web_Response */
 			$response = $this->objectManager->create('Tx_Extbase_MVC_Web_Response');
-			//$response->setHeader('Content-Type', 'application/x-json');
-			
+
 			$dispatcher = $this->objectManager->get('Tx_Extbase_MVC_Dispatcher');
 			$dispatcher->dispatch($request, $response);
 			
-			//$response->sendHeaders();
-			
-			$responses[] = array( 'id' => $r['id'], 'response' => $response->getContent() );
+			$responses['original'][] = array( 'id' => $r['id'], 'response' => $response->getContent() );
 		}
 		
+		while ($this->hijaxEventDispatcher->hasPendingNextPhaseEvents()) {
+			$this->hijaxEventDispatcher->promoteNextPhaseEvents();
+			$this->parseAndRunEventListeners($responses, $eventsToListen);
+				
+			if (self::$loopCount++>99) {
+				// preventing dead loops
+				break;
+			}
+		}
+		
+		foreach ($responses['original'] as $i=>$response) {
+			$this->hijaxEventDispatcher->replaceXMLCommentsWithDivs($responses['original'][$i]['response']);
+		}
+		foreach ($responses['affected'] as $i=>$response) {
+			$this->hijaxEventDispatcher->replaceXMLCommentsWithDivs($responses['affected'][$i]['response']);
+		}
+		
+		//$response->setHeader('Content-Type', 'application/x-json');
 		header('Content-type: text/javascript');
 		
 		echo $callback.'('.json_encode($responses).')';
@@ -115,6 +149,42 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 		
 		$this->setIsActive(false);
 	}
+	
+	/**
+	 * @param tslib_fe $pObj
+	 * @return void
+	 */
+	protected function parseAndRunEventListeners(&$responses, $eventsToListen) {
+		foreach ($responses['original'] as $response) {
+			$this->hijaxEventDispatcher->parseAndRunEventListeners($response['response']);
+		}
+		foreach ($eventsToListen as $listenerId => $eventNames) {
+			$shouldProcess = FALSE;
+			foreach ($eventNames as $eventName) {
+				if ($this->hijaxEventDispatcher->hasPendingEventWithName($eventName)) {
+					$shouldProcess = TRUE;
+					break;
+				}
+			}
+
+			if ($shouldProcess) {
+				/* @var $listener Tx_ExtbaseHijax_Event_Listener */
+				$listener = $this->listenerFactory->findById($listenerId);
+			
+				$bootstrap = t3lib_div::makeInstance('Tx_Extbase_Core_Bootstrap');
+				$bootstrap->initialize($listener->getConfiguration());
+				$request = $listener->getRequest();
+			
+				/* @var $response Tx_Extbase_MVC_Web_Response */
+				$response = $this->objectManager->create('Tx_Extbase_MVC_Web_Response');
+			
+				$dispatcher = $this->objectManager->get('Tx_Extbase_MVC_Dispatcher');
+				$dispatcher->dispatch($request, $response);
+			
+				$responses['affected'][] = array( 'id' => $listenerId, 'response' => $response->getContent() );
+			}			
+		}
+	}	
 	
 	/**
 	 * Initializes TYPO3 db.

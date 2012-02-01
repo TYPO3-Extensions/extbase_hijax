@@ -22,12 +22,11 @@
  ***************************************************************/
 
 ; (function($) {
-	var elements = [], startedTimer = false, timerInterval = 10000, currentTimerTime = 0, uniqueIDCounter = 0, ajaxCallback = false;
+	var elements = [], eventsToListen = {}, listeners = [], startedTimer = false, timerInterval = 10000, currentTimerTime = 0, uniqueIDCounter = 0, ajaxCallback = false;
 	
 	/*
 	 * Private methods 
 	 */
-
 	_addElements = function(newElements) {
 			// add unique element ID if it already doesn't have it
 		$.each(newElements, function(i, element) {
@@ -60,6 +59,31 @@
 		return addedElements;
 	};
 	
+	_addEvents = function(listenerId, newEvents) {
+		var addedEvents = [];
+		
+		if (typeof eventsToListen[listenerId] == 'undefined') {
+			eventsToListen[listenerId] = [];
+		}
+		
+			// filter out duplicates and join the new elements to the existing array
+		$.each(newEvents, function(i, newEvent) {
+			var notDuplicate = true;
+			$.each(eventsToListen[listenerId], function(i, event) {
+				if (newEvent==event) {
+					notDuplicate = false;
+					return false;
+				}
+			});
+			if (notDuplicate) {
+				eventsToListen[listenerId].push(newEvent);
+				addedEvents.push(newEvent);
+			}
+		});
+		
+		return addedEvents;
+	};	
+	
 	_timer = function () {
 		currentTimerTime += timerInterval/1000;
 		processElements = [];
@@ -72,12 +96,95 @@
 		_process(processElements);
 	};
 	
+    _parseCSV = function( strData, strDelimiter ){
+    		// Check to see if the delimiter is defined. If not,
+        	// then default to comma.
+        strDelimiter = (strDelimiter || ",");
+
+        // Create a regular expression to parse the CSV values.
+        var objPattern = new RegExp(
+                (
+                        // Delimiters.
+                        "(\\" + strDelimiter + "|\\r?\\n|\\r|^)" +
+
+                        // Quoted fields.
+                        "(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|" +
+
+                        // Standard fields.
+                        "([^\"\\" + strDelimiter + "\\r\\n]*))"
+                ),
+                "gi"
+                );
+
+	
+	        // Create an array to hold our data. Give the array
+	        // a default empty first row.
+        var arrData = [[]];
+
+	        // Create an array to hold our individual pattern
+	        // matching groups.
+        var arrMatches = null;
+
+	        // Keep looping over the regular expression matches
+	        // until we can no longer find a match.
+        while (arrMatches = objPattern.exec( strData )){
+
+                	// Get the delimiter that was found.
+                var strMatchedDelimiter = arrMatches[ 1 ];
+
+	                // Check to see if the given delimiter has a length
+	                // (is not the start of string) and if it matches
+	                // field delimiter. If id does not, then we know
+	                // that this delimiter is a row delimiter.
+                if (
+                        strMatchedDelimiter.length &&
+                        (strMatchedDelimiter != strDelimiter)
+                        ){
+	                        // Since we have reached a new row of data,
+	                        // add an empty row to our data array.
+                        arrData.push( [] );
+                }
+
+	                // Now that we have our delimiter out of the way,
+	                // let's check to see which kind of value we
+	                // captured (quoted or unquoted).
+                if (arrMatches[ 2 ]){
+
+	                        // We found a quoted value. When we capture
+	                        // this value, unescape any double quotes.
+                        var strMatchedValue = arrMatches[ 2 ].replace(
+                                new RegExp( "\"\"", "g" ),
+                                "\""
+                                );
+                } else {
+                        	// We found a non-quoted value.
+                        var strMatchedValue = arrMatches[ 3 ];
+                }
+
+
+                // Now that we have our value string, let's add
+                // it to the data array.
+                arrData[ arrData.length - 1 ].push( strMatchedValue );
+        }
+
+        // Return the parsed data.
+        return( arrData );
+    };	
+	
 	_process = function (elements) {
 		if (elements && elements.length > 0) {
 			var requests = [];
 			$.each(elements, function(i, element) {
 				var el = $(element);
 				switch (el.attr('data-hijax-element-type')) {
+					case 'listener':
+						var listenerId = el.attr('data-hijax-listener-id');
+						var eventNames = _parseCSV(el.attr('data-hijax-listener-events'));
+						if (eventNames.length && eventNames[0].length) {
+							_addEvents(listenerId, eventNames[0]);
+							listeners[listenerId] = el;
+						}
+						break;
 					case 'conditional':
 						try {
 							var val = eval(el.attr('data-hijax-condition'));
@@ -130,7 +237,7 @@
 							$.each(fields, function(i, f) {
 								fields[i]['name'] = fields[i]['name'].replace(pluginNameSpace, 'r[0][arguments]');
 							});
-							$data = $.param({r: requests})+'&'+$.param(fields);
+							$data = $.param({r: requests, e: eventsToListen})+'&'+$.param(fields);
 							
 							var ajaxRequest = $.ajax({
 								url: EXTBASE_HIJAX.url,
@@ -139,8 +246,14 @@
 								data: $data,
 								dataType: "jsonp",
 								success: function(data) { 
-									$.each(data, function(i, r) {
+									$.each(data['original'], function(i, r) {
 										var element = $('#'+r['id']);
+										if (element) {
+											element.loadHijaxData(r['response']);
+										}
+									});
+									$.each(data['affected'], function(i, r) {
+										var element = $(listeners[r['id']]);
 										if (element) {
 											element.loadHijaxData(r['response']);
 										}
@@ -216,7 +329,7 @@
 				if (!loader.data('targetOpacity')) {
 					loader.data('targetOpacity', loader.css('opacity'));
 				}
-				//debugger;
+				
 				loader.stop().animate({
 					opacity: 0
 				}, 500, function() {

@@ -23,7 +23,9 @@
  ***************************************************************/
 
 class Tx_ExtbaseHijax_Tslib_FE_Hook implements t3lib_Singleton {
-	
+	/**
+	 * @var int
+	 */
 	protected static $loopCount = 0;
 	
 	/**
@@ -44,11 +46,6 @@ class Tx_ExtbaseHijax_Tslib_FE_Hook implements t3lib_Singleton {
 	protected $hijaxEventDispatcher;
 	
 	/**
-	 * @var Tx_ExtbaseHijax_Service_Serialization_ListenerFactory
-	 */
-	protected $listenerFactory;
-	
-	/**
 	 * Constructor
 	 */
 	public function __construct() {
@@ -64,7 +61,6 @@ class Tx_ExtbaseHijax_Tslib_FE_Hook implements t3lib_Singleton {
 		$this->objectManager = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager');
 		$this->extensionConfiguration = $this->objectManager->get('Tx_ExtbaseHijax_Configuration_ExtensionInterface');
 		$this->hijaxEventDispatcher = $this->objectManager->get('Tx_ExtbaseHijax_Event_Dispatcher');
-		$this->listenerFactory = $this->objectManager->get('Tx_ExtbaseHijax_Service_Serialization_ListenerFactory');
 	}
 
 	/**
@@ -132,7 +128,7 @@ class Tx_ExtbaseHijax_Tslib_FE_Hook implements t3lib_Singleton {
 		
 		while ($this->hijaxEventDispatcher->hasPendingNextPhaseEvents()) {
 			$this->hijaxEventDispatcher->promoteNextPhaseEvents();
-			$this->parseAndRunEventListeners($pObj);
+			$this->hijaxEventDispatcher->parseAndRunEventListeners($pObj->content);
 			
 			if (self::$loopCount++>99) {
 					// preventing dead loops
@@ -141,97 +137,8 @@ class Tx_ExtbaseHijax_Tslib_FE_Hook implements t3lib_Singleton {
 		}
 		
 		if ($hookType=='output') {
-			$this->replaceXMLCommentsWithDivs($pObj);
+			$this->hijaxEventDispatcher->replaceXMLCommentsWithDivs($pObj->content);
 		}
-	}
-	
-	/**
-	 * @param tslib_fe $pObj
-	 * @return void
-	 */
-	protected function parseAndRunEventListeners($pObj) {
-		$tempContent = preg_replace_callback('/<!-- ###EVENT_LISTENER_(?P<elementId>\d*)### START (?P<listenerDefinition>.*) -->(?P<content>.*?)<!-- ###EVENT_LISTENER_(\\1)### END -->/msU', array($this, 'parseAndRunEventListenersCallback'), $pObj->content);
-		$pObj->content = $tempContent;
-	}
-	
-	/**
-	 * @param array $match
-	 * @return string
-	 */
-	protected function parseAndRunEventListenersCallback($match) {
-		$matchesListenerDef = array();
-		preg_match('/(?P<listenerId>[a-z0-9_]*)\((?P<eventNames>.*)\);/msU', $match['listenerDefinition'], $matchesListenerDef);
-			
-		$elementId = $match['elementId'];
-		$listenerId = $matchesListenerDef['listenerId'];
-		$eventNames = $this->convertCSVToArray($matchesListenerDef['eventNames']);
-			
-		$shouldProcess = FALSE;
-			
-		foreach ($eventNames as $eventName) {
-			if ($this->hijaxEventDispatcher->hasPendingEventWithName($eventName)) {
-				$shouldProcess = TRUE;
-				break;
-			}
-		}
-			
-		if ($shouldProcess) {
-			/* @var $listener Tx_ExtbaseHijax_Event_Listener */
-			$listener = $this->listenerFactory->findById($listenerId);
-	
-			$bootstrap = t3lib_div::makeInstance('Tx_Extbase_Core_Bootstrap');
-			$bootstrap->initialize($listener->getConfiguration());
-			$request = $listener->getRequest();
-				
-			/* @var $response Tx_Extbase_MVC_Web_Response */
-			$response = $this->objectManager->create('Tx_Extbase_MVC_Web_Response');
-	
-			$dispatcher = $this->objectManager->get('Tx_Extbase_MVC_Dispatcher');
-			$dispatcher->dispatch($request, $response);
-			
-			$result = $response->getContent();
-		} else {
-			$result = $match[0];
-		}
-
-		return $result;
-	}	
-	
-	/**
-	 * @param tslib_fe $pObj
-	 * @return void
-	 */
-	protected function replaceXMLCommentsWithDivs($pObj) {
-		$pObj->content = preg_replace_callback('/<!-- ###EVENT_LISTENER_(?P<elementId>\d*)### START (?P<listenerDefinition>.*) -->(?P<content>.*?)<!-- ###EVENT_LISTENER_(\\1)### END -->/msU', array($this, 'replaceXMLCommentsWithDivsCallback'), $pObj->content);
-	}
-
-	/**
-	 * @param array $match
-	 * @return string
-	 */
-	protected function replaceXMLCommentsWithDivsCallback($match) {
-		$matchesListenerDef = array();
-		preg_match('/(?P<listenerId>[a-z0-9_]*)\((?P<eventNames>.*)\);/msU', $match['listenerDefinition'], $matchesListenerDef);
-			
-		$elementId = $match['elementId'];
-		$listenerId = $matchesListenerDef['listenerId'];
-		
-		return '<div class="hijax-element hijax-js-listener" data-hijax-element-id="'.$elementId.'" data-hijax-listener-id="'.$listenerId.'" data-hijax-listener-events="'.htmlspecialchars($matchesListenerDef['eventNames']).'">'.$match['content'].'</div>';
-	}
-	
-	/**
-	 * @param string $data
-	 * @param string $delimiter
-	 * @param string $enclosure
-	 * @return array
-	 */
-	protected function convertCSVToArray($data, $delimiter = ',', $enclosure = '"') {
-        $instream = fopen("php://temp", 'r+');
-        fwrite($instream, $data);
-        rewind($instream);
-        $csv = fgetcsv($instream, 9999999, $delimiter, $enclosure);
-        fclose($instream);
-        return $csv;
 	}
 }
 
