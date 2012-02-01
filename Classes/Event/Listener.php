@@ -184,22 +184,4 @@ class Tx_ExtbaseHijax_Event_Listener {
 	public function setId($id) {
 		$this->id = $id;
 	}
-
-	/**
-	 * @param Tx_ExtbaseHijax_Event_Event $event
-	 * @param mixed $callback
-	 * @return void
-	 */
-	public function call(Tx_ExtbaseHijax_Event_Event $event = null, $callback = null){
-		/* @var $response Tx_Extbase_MVC_Web_Response */
-		/*
-		$response = $this->objectManager->create('Tx_Extbase_MVC_Web_Response');
-			
-		$dispatcher = $this->objectManager->get('Tx_Extbase_MVC_Dispatcher');
-		$dispatcher->dispatch($request, $response);
-		*/
-		// TODO: set current events!
-	}
-
-
 }
