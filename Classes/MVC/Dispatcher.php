@@ -51,7 +51,6 @@ class Tx_ExtbaseHijax_MVC_Dispatcher extends Tx_Extbase_MVC_Dispatcher {
 		$this->extensionConfiguration = $this->objectManager->get('Tx_ExtbaseHijax_Configuration_ExtensionInterface');
 		self::$id = $this->extensionConfiguration->getNextElementId();
 		$this->listenersStack = array();
-		// TODO: update $id from config if page is already cached
 	}
 		
 	/**
@@ -63,27 +62,29 @@ class Tx_ExtbaseHijax_MVC_Dispatcher extends Tx_Extbase_MVC_Dispatcher {
 	 */
 	public function dispatch(Tx_Extbase_MVC_RequestInterface $request, Tx_Extbase_MVC_ResponseInterface $response) {
 
-		$this->currentListener = t3lib_div::makeInstance('Tx_ExtbaseHijax_Event_Listener', $request);
-		array_push($this->listenersStack, $this->currentListener);
-		$this->hijaxEventDispatcher->startContentElement();
-		
-		parent::dispatch($request, $response);
-
-		if ($this->hijaxEventDispatcher->hasListeners('', TRUE)) {
-			$currentListeners = $this->hijaxEventDispatcher->getListeners('', TRUE);
+		if (defined('TYPO3_cliMode') && TYPO3_cliMode === TRUE) {
+			parent::dispatch($request, $response);
+		} else {
+			$this->currentListener = t3lib_div::makeInstance('Tx_ExtbaseHijax_Event_Listener', $request);
+			array_push($this->listenersStack, $this->currentListener);
+			$this->hijaxEventDispatcher->startContentElement();
 			
-			$signature = $this->getCurrentListener()->getId().'('.$this->convertArrayToCSV(array_keys($currentListeners)).'); ';
+			parent::dispatch($request, $response);
 			
-			$content = $response->getContent();
-
-			$response->setContent('<!-- ###EVENT_LISTENER_'.self::$id.'### START '.$signature.' -->'.$content.'<!-- ###EVENT_LISTENER_'.self::$id.'### END -->');
-			$this->extensionConfiguration->setNextElementId(++self::$id);
+			if ($this->hijaxEventDispatcher->hasListeners('', TRUE)) {
+				$currentListeners = $this->hijaxEventDispatcher->getListeners('', TRUE);
+					
+				$signature = $this->getCurrentListener()->getId().'('.$this->convertArrayToCSV(array_keys($currentListeners)).'); ';
+					
+				$content = $response->getContent();
+			
+				$response->setContent('<!-- ###EVENT_LISTENER_'.self::$id.'### START '.$signature.' -->'.$content.'<!-- ###EVENT_LISTENER_'.self::$id.'### END -->');
+				$this->extensionConfiguration->setNextElementId(++self::$id);
+			}
+			
+			$this->hijaxEventDispatcher->endContentElement();
+			$this->currentListener = array_pop($this->listenersStack);
 		}
-
-		$this->hijaxEventDispatcher->endContentElement();
-		$this->currentListener = array_pop($this->listenersStack);
-		
-		// TODO: if has events, dispatch them
 	}	
 	
 	/**

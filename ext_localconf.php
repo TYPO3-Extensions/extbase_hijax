@@ -28,8 +28,6 @@ $GLOBALS ['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['pro
 $GLOBALS ['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['processCmdmapClass'][] =
 	'EXT:extbase_hijax/Classes/TCEmain/Hooks.php:Tx_ExtbaseHijax_TCEmain_Hooks';
 
-require_once(t3lib_extMgm::extPath($_EXTKEY) . 'Classes/Core/Bootstrap.php');
-
 $objectContainer = t3lib_div::makeInstance('Tx_Extbase_Object_Container_Container');
 $objectContainer->registerImplementation('Tx_Extbase_MVC_Dispatcher', 'Tx_ExtbaseHijax_MVC_Dispatcher');
 
