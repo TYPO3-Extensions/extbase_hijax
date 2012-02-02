@@ -342,7 +342,7 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 		$elementId = $match['elementId'];
 		$listenerId = $matchesListenerDef['listenerId'];
 		
-		return '<div class="hijax-element hijax-js-listener" data-hijax-element-type="listener" data-hijax-element-id="'.$elementId.'" data-hijax-listener-id="'.$listenerId.'" data-hijax-listener-events="'.htmlspecialchars($matchesListenerDef['eventNames']).'"><div class="hijax-content">'.$match['content'].'</div><div class="hijax-loading"></div></div>';
+		return '<div class="hijax-element hijax-js-listener" data-hijax-result-target="this" data-hijax-result-wrap="false" data-hijax-element-type="listener" data-hijax-element-id="'.$elementId.'" data-hijax-listener-id="'.$listenerId.'" data-hijax-listener-events="'.htmlspecialchars($matchesListenerDef['eventNames']).'"><div class="hijax-content">'.$match['content'].'</div><div class="hijax-loading"></div></div>';
 	}
 	
 	/**
