@@ -246,7 +246,8 @@
 								data: $data,
 								dataType: "json",
 								pendingElement: $(element),
-								success: function(data, textStatus, jqXHR) { 
+								success: function(data, textStatus, jqXHR) {
+									this.pendingElement.hideHijaxLoader();
 									$.each(data['original'], function(i, r) {
 										var element = $('#'+r['id']);
 										if (element) {
@@ -315,9 +316,9 @@
 
 	$.fn.showMessage = function(msg) {
 		var element = $(this);
-		//if (element.attr('data-hijax-result-target')) {
-			//element = eval(element.attr('data-hijax-result-target'));
-		//}
+		if (element.attr('data-hijax-result-target')) {
+			element = eval(element.attr('data-hijax-result-target'));
+		}
 		var content = element.find('> .'+EXTBASE_HIJAX.contentClass);
 
 		var startingHeight = content.height();
@@ -360,7 +361,6 @@
 		ajaxCallback = true;
 		
 		var element = $(this);
-		var loader = element.find('> .'+EXTBASE_HIJAX.loadingClass);
 		var content = element.find('> .'+EXTBASE_HIJAX.contentClass);
 		
 		if (element.attr('data-hijax-result-target')) {
@@ -372,18 +372,7 @@
 				var startingHeight = content.height();
 				element = content.outer(response).css('height', startingHeight);
 				content = element.find('> .'+EXTBASE_HIJAX.contentClass);
-				loader = element.find('> .'+EXTBASE_HIJAX.loadingClass).show();
-				
-				if (!loader.data('targetOpacity')) {
-					loader.data('targetOpacity', loader.css('opacity'));
-				}
-				
-				loader.stop().animate({
-					opacity: 0
-				}, 500, function() {
-						// Animation complete.
-					loader.hide();
-				});
+
 				var newElements = element.find('.hijax-element');
 				if (jQuery(element[0]).hasClass('hijax-element')) {
 					newElements.push(jQuery(element[0]));
@@ -403,15 +392,6 @@
 			element.css('height', startingHeight);
 			content.html(response);
 
-			if (!loader.data('targetOpacity')) {
-				loader.data('targetOpacity', loader.css('opacity'));
-			}
-			loader.stop().animate({
-				opacity: 0
-			}, 500, function() {
-					// Animation complete.
-				loader.hide();
-			});
 			var newElements = element.find('.hijax-element');
 			if (element.hasClass('hijax-element')) {
 				newElements.push(element);
@@ -431,10 +411,15 @@
 	};	
 	
 	$.fn.showHijaxLoader = function() {
-		var content = $(this).find('> .'+EXTBASE_HIJAX.contentClass);
-		$(this).css('height', content.outerHeight());
+		var element = $(this);
+		if (element.attr('data-hijax-result-target')) {
+			element = eval(element.attr('data-hijax-result-target'));
+		}		
 
-		var loader = $(this).find('> .'+EXTBASE_HIJAX.loadingClass);
+		var content = element.find('> .'+EXTBASE_HIJAX.contentClass);
+		element.css('height', content.outerHeight());
+
+		var loader = element.find('> .'+EXTBASE_HIJAX.loadingClass);
 		if (!loader.data('targetOpacity')) {
 			loader.data('targetOpacity', loader.css('opacity'));
 			loader.css('opacity', 0);
@@ -450,7 +435,11 @@
 	};		
 	
 	$.fn.hideHijaxLoader = function() {
-		var loader = $(this).find('> .'+EXTBASE_HIJAX.loadingClass);
+		var element = $(this);
+		if (element.attr('data-hijax-result-target')) {
+			element = eval(element.attr('data-hijax-result-target'));
+		}			
+		var loader = element.find('> .'+EXTBASE_HIJAX.loadingClass).show();
 		
 		if (!loader.data('targetOpacity')) {
 			loader.data('targetOpacity', loader.css('opacity'));
