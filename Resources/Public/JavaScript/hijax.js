@@ -237,15 +237,16 @@
 							$.each(fields, function(i, f) {
 								fields[i]['name'] = fields[i]['name'].replace(pluginNameSpace, 'r[0][arguments]');
 							});
-							$data = $.param({r: requests, e: eventsToListen})+'&'+$.param(fields);
+							$data = $.param({r: requests, e: eventsToListen})+'&'+$.param(fields)+'&eID=extbase_hijax_dispatcher';
 							
 							var ajaxRequest = $.ajax({
 								url: EXTBASE_HIJAX.url,
 								type: "POST",
 								//crossDomain: true,
 								data: $data,
-								dataType: "jsonp",
-								success: function(data) { 
+								dataType: "json",
+								pendingElement: $(element),
+								success: function(data, textStatus, jqXHR) { 
 									$.each(data['original'], function(i, r) {
 										var element = $('#'+r['id']);
 										if (element) {
@@ -258,6 +259,10 @@
 											element.loadHijaxData(r['response']);
 										}
 									});
+								},
+								error: function(jqXHR, textStatus, errorThrown) {
+									this.pendingElement.hideHijaxLoader();
+									this.pendingElement.showMessage('Oops... An error occurred.');
 								}
 							});	
 						});
@@ -283,14 +288,14 @@
 			});
 			
 			if (requests.length>0) {
-				$data = {r: requests};
+				$data = {r: requests}+'&eID=extbase_hijax_dispatcher';
 				
 				var ajaxRequest = $.ajax({
 					url: EXTBASE_HIJAX.url,
 					type: "POST",
 					//crossDomain: true,
 					data: $data,
-					dataType: "jsonp",
+					dataType: "json",
 					success: function(data) { 
 						$.each(data, function(i, r) {
 							var element = $('#'+r['id']);
@@ -308,6 +313,49 @@
 	 * Public methods 
 	 */
 
+	$.fn.showMessage = function(msg) {
+		var element = $(this);
+		//if (element.attr('data-hijax-result-target')) {
+			//element = eval(element.attr('data-hijax-result-target'));
+		//}
+		var content = element.find('> .'+EXTBASE_HIJAX.contentClass);
+
+		var startingHeight = content.height();
+		element.css('height', startingHeight);
+		content.append('<p class="hijax-error">' + msg + '</p>');
+
+		element.addClass('hijax-element-forced-visible-overflow');
+		element.stop().animate({
+			height: content.outerHeight()
+		}, 300, function() {
+				// Animation complete.
+		});
+		
+		content.find('> .hijax-error').animate({
+			opacity: 100
+		}, 600);
+		
+		setTimeout(
+			function() {
+				var startingHeight = content.height();
+				content.find('> .hijax-error:last').fadeOut(300, function() {
+					var content = $(this).parent();
+					var element = content.parent();
+					$(this).remove();
+					element.css('height', startingHeight);
+					element.stop().animate({
+						height: content.outerHeight()
+					}, 150, function() {
+							// Animation complete.
+						element.removeClass('hijax-element-forced-visible-overflow');
+					});
+				});
+			}, 5000
+		);		
+		
+		return this;
+	};	
+	
 	$.fn.loadHijaxData = function(response) {
 		ajaxCallback = true;
 		
@@ -351,7 +399,9 @@
 		} else {
 			element.removeClass(EXTBASE_HIJAX.fallbackClass);
 
-			content.html(response).css('height', content.height());
+			var startingHeight = content.height();
+			element.css('height', startingHeight);
+			content.html(response);
 
 			if (!loader.data('targetOpacity')) {
 				loader.data('targetOpacity', loader.css('opacity'));
@@ -398,6 +448,21 @@
 		
 		return this;
 	};		
+	
+	$.fn.hideHijaxLoader = function() {
+		var loader = $(this).find('> .'+EXTBASE_HIJAX.loadingClass);
+		
+		if (!loader.data('targetOpacity')) {
+			loader.data('targetOpacity', loader.css('opacity'));
+		}
+		
+		loader.stop().animate({
+			opacity: 0
+		}, 300, function() {
+				// Animation complete.
+			loader.hide();
+		});		
+	}
 	
 	$.fn.outer = function(val){
 		if (val) {

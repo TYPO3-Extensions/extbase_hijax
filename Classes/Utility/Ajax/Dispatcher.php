@@ -83,72 +83,109 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 	 */
 	public function dispatch() {
 		$this->setIsActive(true);
-		
-		$this->initializeDatabase();
-		$this->initializeTca();
-		$this->initializeTsfe();
-		
 		$callback = t3lib_div::_GP('callback');
 		$requests = t3lib_div::_GP('r');
 		$eventsToListen = t3lib_div::_GP('e');
-		$responses = array(
-						'original' => array(),
-						'affected' => array(),
-						);
-
-		foreach ($requests as $r) {
-			$configuration = array();
-			$configuration['extensionName'] = $r['extension'];
-			$configuration['pluginName']    = $r['plugin'];
+		
+		try {
+			$this->initializeDatabase();
+			$this->initializeTca();
+			$this->initializeTsfe();
 			
+			$responses = array(
+					'original' => array(),
+					'affected' => array(),
+			);
+			
+			foreach ($requests as $r) {
+				$configuration = array();
+				$configuration['extensionName'] = $r['extension'];
+				$configuration['pluginName']    = $r['plugin'];
+					
 				// load settings saved under settingsHash
-			if ($r['settingsHash'] && $this->cacheInstance->has($r['settingsHash'])) {
-				$tryConfiguration = $this->cacheInstance->get($r['settingsHash']);
-				if ($configuration['extensionName']==$tryConfiguration['extensionName'] && $configuration['pluginName']==$tryConfiguration['pluginName']) {
-					$configuration = $tryConfiguration;
+				if ($r['settingsHash'] && $this->cacheInstance->has($r['settingsHash'])) {
+					$tryConfiguration = $this->cacheInstance->get($r['settingsHash']);
+					if ($configuration['extensionName']==$tryConfiguration['extensionName'] && $configuration['pluginName']==$tryConfiguration['pluginName']) {
+						$configuration = $tryConfiguration;
+					}
+				}
+
+				$bootstrap = t3lib_div::makeInstance('Tx_Extbase_Core_Bootstrap');
+				$bootstrap->initialize($configuration);
+			
+				$request  = $this->buildRequest($r);
+					
+				/* @var $response Tx_Extbase_MVC_Web_Response */
+				$response = $this->objectManager->create('Tx_Extbase_MVC_Web_Response');
+			
+				$dispatcher = $this->objectManager->get('Tx_Extbase_MVC_Dispatcher');
+				$dispatcher->dispatch($request, $response);
+					
+				$content = $response->getContent();
+				$this->processAbsRefPrefix($content, $configuration['settings']['absRefPrefix']);
+				$responses['original'][] = array( 'id' => $r['id'], 'response' => $content );
+			}
+			
+			while ($this->hijaxEventDispatcher->hasPendingNextPhaseEvents()) {
+				$this->hijaxEventDispatcher->promoteNextPhaseEvents();
+				$this->parseAndRunEventListeners($responses, $eventsToListen);
+			
+				if (self::$loopCount++>99) {
+					// preventing dead loops
+					break;
 				}
 			}
 			
-			$bootstrap = t3lib_div::makeInstance('Tx_Extbase_Core_Bootstrap');
-			$bootstrap->initialize($configuration);
-
-			$request  = $this->buildRequest($r);
-			
-				/* @var $response Tx_Extbase_MVC_Web_Response */
-			$response = $this->objectManager->create('Tx_Extbase_MVC_Web_Response');
-
-			$dispatcher = $this->objectManager->get('Tx_Extbase_MVC_Dispatcher');
-			$dispatcher->dispatch($request, $response);
-			
-			$responses['original'][] = array( 'id' => $r['id'], 'response' => $response->getContent() );
-		}
-		
-		while ($this->hijaxEventDispatcher->hasPendingNextPhaseEvents()) {
-			$this->hijaxEventDispatcher->promoteNextPhaseEvents();
-			$this->parseAndRunEventListeners($responses, $eventsToListen);
+			foreach ($responses['original'] as $i=>$response) {
+				$this->hijaxEventDispatcher->replaceXMLCommentsWithDivs($responses['original'][$i]['response']);
 				
-			if (self::$loopCount++>99) {
-				// preventing dead loops
-				break;
 			}
+			foreach ($responses['affected'] as $i=>$response) {
+				$this->hijaxEventDispatcher->replaceXMLCommentsWithDivs($responses['affected'][$i]['response']);
+			}
+			
+			$this->cleanShutDown();
+		} catch (Exception $e) {
+			header('HTTP/1.1 503 Service Unavailable');
+			header('Status: 503 Service Unavailable');
+			$responses = array('success'=>false, 'code'=>$e->getCode());
 		}
 		
-		foreach ($responses['original'] as $i=>$response) {
-			$this->hijaxEventDispatcher->replaceXMLCommentsWithDivs($responses['original'][$i]['response']);
+		if ($callback) {
+			header('Content-type: text/javascript');
+			echo $callback.'('.json_encode($responses).')';
+		} else {
+			header('Content-type: application/x-json');
+			echo json_encode($responses);
 		}
-		foreach ($responses['affected'] as $i=>$response) {
-			$this->hijaxEventDispatcher->replaceXMLCommentsWithDivs($responses['affected'][$i]['response']);
-		}
-		
-		//$response->setHeader('Content-Type', 'application/x-json');
-		header('Content-type: text/javascript');
-		
-		echo $callback.'('.json_encode($responses).')';
-		
-		$this->cleanShutDown();
 		
 		$this->setIsActive(false);
 	}
+
+	/**
+	 * Converts relative paths in the HTML source to absolute paths for fileadmin/, typo3conf/ext/ and media/ folders.
+	 *
+	 * @param string $content
+	 * @param string $absRefPrefix
+	 * @return	void
+	 */
+	protected function processAbsRefPrefix(&$content, $absRefPrefix)	{
+		if ($absRefPrefix)	{
+			$content = str_replace('"media/', '"'.t3lib_extMgm::siteRelPath('cms').'tslib/media/', $content);
+			$content = str_replace('"typo3temp/', '"' . $absRefPrefix . 'typo3temp/', $content);
+			$content = str_replace('"typo3conf/ext/', '"'.$absRefPrefix.'typo3conf/ext/', $content);
+			$content = str_replace('"' . TYPO3_mainDir . 'contrib/', '"' . $absRefPrefix . TYPO3_mainDir . 'contrib/', $content);
+			$content = str_replace('"' . TYPO3_mainDir . 'ext/', '"' . $absRefPrefix . TYPO3_mainDir . 'ext/', $content);
+			$content = str_replace('"' . TYPO3_mainDir . 'sysext/' , '"' . $absRefPrefix . TYPO3_mainDir . 'sysext/', $content);
+			$content = str_replace('"'.$GLOBALS['TYPO3_CONF_VARS']['BE']['fileadminDir'], '"'.$absRefPrefix.$GLOBALS['TYPO3_CONF_VARS']['BE']['fileadminDir'], $content);
+			$content = str_replace('"' . $GLOBALS['TYPO3_CONF_VARS']['BE']['RTE_imageStorageDir'], '"' . $absRefPrefix . $GLOBALS['TYPO3_CONF_VARS']['BE']['RTE_imageStorageDir'], $content);
+			// Process additional directories
+			$directories = t3lib_div::trimExplode(',', $GLOBALS['TYPO3_CONF_VARS']['FE']['additionalAbsRefPrefixDirectories'], TRUE);
+			foreach ($directories as $directory) {
+				$content = str_replace('"' . $directory, '"' . $absRefPrefix . $directory, $content);
+			}
+		}
+	}	
 	
 	/**
 	 * @param tslib_fe $pObj
@@ -172,16 +209,19 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 				$listener = $this->listenerFactory->findById($listenerId);
 			
 				$bootstrap = t3lib_div::makeInstance('Tx_Extbase_Core_Bootstrap');
-				$bootstrap->initialize($listener->getConfiguration());
+				$configuration = $listener->getConfiguration();
+				$bootstrap->initialize($configuration);
 				$request = $listener->getRequest();
-			
+				
 				/* @var $response Tx_Extbase_MVC_Web_Response */
 				$response = $this->objectManager->create('Tx_Extbase_MVC_Web_Response');
 			
 				$dispatcher = $this->objectManager->get('Tx_Extbase_MVC_Dispatcher');
 				$dispatcher->dispatch($request, $response);
-			
-				$responses['affected'][] = array( 'id' => $listenerId, 'response' => $response->getContent() );
+				
+				$content = $response->getContent();
+				$this->processAbsRefPrefix($content, $configuration['settings']['absRefPrefix']);
+				$responses['affected'][] = array( 'id' => $listenerId, 'response' => $content );
 			}			
 		}
 	}	

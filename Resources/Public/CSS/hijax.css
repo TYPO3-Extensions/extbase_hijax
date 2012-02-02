@@ -38,6 +38,11 @@
 .hijax-element {
 	/* overflow: hidden; */
 	position: relative;
+	/* overflow: visible !important; */
+}
+
+.hijax-element-forced-visible-overflow {
+	overflow: visible !important;
 }
 
 .hijax-loading {
@@ -53,4 +58,16 @@
 	filter: alpha(opacity=50);
 	-moz-opacity:0.5; 
 	opacity:0.5;
+}
+
+.hijax-error {
+	border: 1px solid #ef0104; 
+	background-color: #ffeae9;
+	color: #ef0104;
+	margin: 10px 0 !important;
+	font-weight: bold;
+	padding: 12px;
+	filter: alpha(opacity=0);
+	-moz-opacity:0.0; 
+	opacity:0.0;
 }

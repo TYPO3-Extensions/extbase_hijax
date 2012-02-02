@@ -5,6 +5,7 @@
 		}
 		settings {
 			cacheInvalidationLevel = consistent
+			absRefPrefix < config.absRefPrefix
 		}
 	}
 
@@ -30,7 +31,7 @@
 			10.data = TSFE:id
 			10.wrap (
 				<script type="text/javascript">//<![CDATA[
-					var EXTBASE_HIJAX = {bodyClass: 'hijax-js-off', loadingClass: 'hijax-loading', fallbackClass: 'hijax-js-fallback', contentClass: 'hijax-content', url: '/index.php?eID=extbase_hijax_dispatcher&id=|'};
+					var EXTBASE_HIJAX = {bodyClass: 'hijax-js-off', loadingClass: 'hijax-loading', fallbackClass: 'hijax-js-fallback', contentClass: 'hijax-content', url: '/index.php?id=|'};
 					try {
 						var body = document.getElementsByTagName("body")[0];
 						body.className = body.className + ' hijax-js-on';
