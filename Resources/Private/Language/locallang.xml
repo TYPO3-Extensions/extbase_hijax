@@ -6,7 +6,7 @@
 	</meta>
 	<data type="array">
 		<languageKey index="default" type="array">
-			<label index="dummy"></label>
+			<label index="server-error">Oops... An error occurred.</label>
 		</languageKey>
 	</data>
 </T3locallang>

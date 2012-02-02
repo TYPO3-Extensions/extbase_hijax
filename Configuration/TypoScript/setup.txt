@@ -27,11 +27,35 @@
 			# start of FE
 		sofe = COA
 		sofe {
-			10 = TEXT
-			10.data = TSFE:id
-			10.wrap (
+			10 = LOAD_REGISTER
+			10.currentUrl.cObject = TEXT
+			10.currentUrl.cObject {
+				typolink {
+					parameter.data = TSFE:id
+					addQueryString = 1
+					addQueryString.exclude = id
+					returnLast = url
+				}
+			}
+			
+			20 = TEXT
+			20.wrap (
 				<script type="text/javascript">//<![CDATA[
-					var EXTBASE_HIJAX = {bodyClass: 'hijax-js-off', loadingClass: 'hijax-loading', fallbackClass: 'hijax-js-fallback', contentClass: 'hijax-content', url: '/index.php?id=|'};
+					var EXTBASE_HIJAX = {bodyClass: 'hijax-js-off', loadingClass: 'hijax-loading', fallbackClass: 'hijax-js-fallback', contentClass: 'hijax-content'
+			)
+			
+			30 = TEXT
+			30.data = LLL:EXT:extbase_hijax/Resources/Private/Language/locallang.xml:server-error
+			30.htmlSpecialChars = 1
+			30.wrap = , errorMessage: "|"
+
+			40 = TEXT
+			40.data = register:currentUrl
+			40.wrap = , url: '|'
+			
+			50 = TEXT
+			50.value (					
+					};
 					try {
 						var body = document.getElementsByTagName("body")[0];
 						body.className = body.className + ' hijax-js-on';
@@ -39,6 +63,8 @@
 					} catch(err) {}
 				//]]></script>
 			)
+			
+			60 = RESTORE_REGISTER
 		}
 
 			# end of FE

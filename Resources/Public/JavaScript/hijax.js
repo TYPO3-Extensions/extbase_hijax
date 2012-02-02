@@ -304,7 +304,7 @@
 								},
 								error: function(jqXHR, textStatus, errorThrown) {
 									this.pendingElement.hideHijaxLoader();
-									this.pendingElement.showMessage('Oops... An error occurred.');
+									this.pendingElement.showMessage(EXTBASE_HIJAX.errorMessage);
 								}
 							});	
 						});
