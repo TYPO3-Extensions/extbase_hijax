@@ -2,8 +2,7 @@
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2011 Nikola Stojiljkovic <nikola.stojiljkovic@essentialdots.com>
- *  
+ *  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic@essentialdots.com>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is

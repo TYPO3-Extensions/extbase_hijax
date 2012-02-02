@@ -2,7 +2,7 @@
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2011 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+ *  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -22,35 +22,6 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-/**
- * Form view helper. Generates a <form> Tag.
- *
- * = Basic usage =
- *
- * Use <f:form> to output an HTML <form> tag which is targeted at the specified action, in the current controller and package.
- * It will submit the form data via a POST request. If you want to change this, use method="get" as an argument.
- * <code title="Example">
- * <f:form action="...">...</f:form>
- * </code>
- *
- * = A complex form with a specified encoding type =
- *
- * <code title="Form with enctype set">
- * <f:form action=".." controller="..." package="..." enctype="multipart/form-data">...</f:form>
- * </code>
- *
- * = A Form which should render a domain object =
- *
- * <code title="Binding a domain object to a form">
- * <f:form action="..." name="customer" object="{customer}">
- *   <f:form.hidden property="id" />
- *   <f:form.textbox property="name" />
- * </f:form>
- * </code>
- * This automatically inserts the value of {customer.name} inside the textbox and adjusts the name of the textbox accordingly.
- *
- * @license http://opensource.org/licenses/gpl-license.php GNU Public License, version 2
- */
 class Tx_ExtbaseHijax_ViewHelpers_FormViewHelper extends Tx_Fluid_ViewHelpers_FormViewHelper {
 
 	/**
@@ -65,8 +36,6 @@ class Tx_ExtbaseHijax_ViewHelpers_FormViewHelper extends Tx_Fluid_ViewHelpers_Fo
 		
 	/**
 	 * Constructor
-	 *
-	 * @api
 	 */
 	public function __construct() {
 		parent::__construct();

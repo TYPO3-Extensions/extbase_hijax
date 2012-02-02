@@ -2,7 +2,7 @@
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2011 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+ *  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -22,12 +22,6 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-/**
- * ViewHelper for tracking record display (as a helper for clearing the cache)
- * 
- * @license http://www.gnu.org/licenses/lgpl.html GNU Lesser General Public License, version 3 or later
- * @api
- */
 class Tx_ExtbaseHijax_ViewHelpers_TrackRecordViewHelper extends Tx_Fluid_Core_ViewHelper_AbstractViewHelper {
 
 	/**
@@ -49,7 +43,6 @@ class Tx_ExtbaseHijax_ViewHelpers_TrackRecordViewHelper extends Tx_Fluid_Core_Vi
 	 * @param Tx_Extbase_DomainObject_AbstractDomainObject $object Object to use
 	 * @param boolean $clearCacheOnAllHashesForCurrentPage Clear cache on all hashes for current page
 	 * @return string the rendered string
-	 * @api
 	 */
 	public function render(Tx_Extbase_DomainObject_AbstractDomainObject $object = NULL, $clearCacheOnAllHashesForCurrentPage = false) {
 		if ($clearCacheOnAllHashesForCurrentPage) {
