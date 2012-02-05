@@ -80,7 +80,10 @@ class Tx_ExtbaseHijax_ViewHelpers_FormViewHelper extends Tx_Fluid_ViewHelpers_Fo
 		
 		if ($resultTarget) {
 			$this->tag->addAttribute('data-hijax-result-target', $resultTarget);
-		}	
+		} else {
+			$this->tag->addAttribute('data-hijax-result-target', 'this');
+			$this->tag->addAttribute('data-hijax-result-wrap', 'false');
+		}
 			
 		parent::render($action, $arguments, $controller, $extensionName, $pluginName, $pageUid, $object, $pageType, $noCache, $noCacheHash, $section, $format, $additionalParams, $absolute, $addQueryString, $argumentsToBeExcludedFromQueryString, $fieldNamePrefix, $actionUri, $objectName);
 		

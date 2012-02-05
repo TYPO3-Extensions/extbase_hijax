@@ -286,6 +286,12 @@
 								dataType: "json",
 								pendingElement: $(element),
 								success: function(data, textStatus, jqXHR) {
+									$.each(EXTBASE_HIJAX.beforeLoadElement, function(i, f) {
+										try {
+											eval(f);
+										} catch (err) {
+										}
+									});
 									this.pendingElement.hideHijaxLoader();
 									$.each(data['original'], function(i, r) {
 										var element = $('#'+r['id']);
@@ -300,6 +306,12 @@
 												element.loadHijaxData(r['response']);
 											}
 										});
+									});
+									$.each(EXTBASE_HIJAX.onLoadElement, function(i, f) {
+										try {
+											eval(f);
+										} catch (err) {
+										}
 									});
 								},
 								error: function(jqXHR, textStatus, errorThrown) {
@@ -419,7 +431,10 @@
 			element.removeClass(EXTBASE_HIJAX.fallbackClass);
 			
 			var startingHeight = content.height();
-			element = content.outer(response).css('height', startingHeight);
+			element = content.outer(response);
+			if (startingHeight > 0) {
+				element.css('height', startingHeight);
+			}
 			content = element.find('> .'+EXTBASE_HIJAX.contentClass);
 
 			var newElements = element.find('.hijax-element');
@@ -428,11 +443,13 @@
 			}
 			newElements.extbaseHijax(true);
 			
-			element.stop().animate({
-				height: content.outerHeight()
-			}, 500, function() {
-					// Animation complete.
-			});
+			if (startingHeight > 0) {
+				element.stop().animate({
+					height: content.outerHeight()
+				}, 500, function() {
+						// Animation complete.
+				});
+			}
 		}
 		
 		ajaxCallback = false;

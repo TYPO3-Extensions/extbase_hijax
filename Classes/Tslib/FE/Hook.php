@@ -140,6 +140,26 @@ class Tx_ExtbaseHijax_Tslib_FE_Hook implements t3lib_Singleton {
 			$this->hijaxEventDispatcher->replaceXMLCommentsWithDivs($pObj->content);
 		}
 	}
+
+	/**
+	 * @param array $params
+	 * @param tslib_fe $pObj
+	 */	
+	public function initFEuser($params, $pObj) {
+			/* @var $fe_user tslib_feUserAuth */ 
+		$fe_user = $pObj->fe_user;
+		
+		if ($fe_user->user && t3lib_div::_GP($fe_user->formfield_status)=='login') {
+			$event = new Tx_ExtbaseHijax_Event_Event('user-loggedIn', array('user'=>$fe_user->user));
+			$this->hijaxEventDispatcher->notify($event);
+		} elseif (!$fe_user->user && t3lib_div::_GP($fe_user->formfield_status)=='logout') {
+			$event = new Tx_ExtbaseHijax_Event_Event('user-loggedOut');
+			$this->hijaxEventDispatcher->notify($event);
+		} elseif (!$fe_user->user && t3lib_div::_GP($fe_user->formfield_status)=='login') {
+			$event = new Tx_ExtbaseHijax_Event_Event('user-loginFailure');
+			$this->hijaxEventDispatcher->notify($event);
+		}
+	}
 }
 
 ?>

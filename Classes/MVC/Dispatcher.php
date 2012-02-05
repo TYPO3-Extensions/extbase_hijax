@@ -87,8 +87,8 @@ class Tx_ExtbaseHijax_MVC_Dispatcher extends Tx_Extbase_MVC_Dispatcher {
 		if (defined('TYPO3_cliMode') && TYPO3_cliMode === TRUE) {
 			parent::dispatch($request, $response);
 		} else {
-			$this->currentListener = t3lib_div::makeInstance('Tx_ExtbaseHijax_Event_Listener', $request);
 			array_push($this->listenersStack, $this->currentListener);
+			$this->currentListener = t3lib_div::makeInstance('Tx_ExtbaseHijax_Event_Listener', $request);
 			$this->hijaxEventDispatcher->startContentElement();
 			
 			parent::dispatch($request, $response);

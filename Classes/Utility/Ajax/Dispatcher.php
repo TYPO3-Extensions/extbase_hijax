@@ -89,6 +89,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 			$this->initializeDatabase();
 			$this->initializeTca();
 			$this->initializeTsfe();
+			$this->hijaxEventDispatcher->promoteNextPhaseEvents();
 			
 			$responses = array(
 					'original' => array(),
@@ -124,6 +125,10 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 				$responses['original'][] = array( 'id' => $r['id'], 'response' => $content );
 			}
 			
+				// see if there are affected elements on the page as well
+				// and run their code generation again
+			$this->parseAndRunEventListeners($responses, $eventsToListen, FALSE);
+				
 			while ($this->hijaxEventDispatcher->hasPendingNextPhaseEvents()) {
 				$this->hijaxEventDispatcher->promoteNextPhaseEvents();
 				$this->parseAndRunEventListeners($responses, $eventsToListen);
@@ -136,7 +141,6 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 			
 			foreach ($responses['original'] as $i=>$response) {
 				$this->hijaxEventDispatcher->replaceXMLCommentsWithDivs($responses['original'][$i]['response']);
-				
 			}
 			foreach ($responses['affected'] as $i=>$response) {
 				$this->hijaxEventDispatcher->replaceXMLCommentsWithDivs($responses['affected'][$i]['response']);
@@ -189,9 +193,11 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 	 * @param tslib_fe $pObj
 	 * @return void
 	 */
-	protected function parseAndRunEventListeners(&$responses, $eventsToListen) {
-		foreach ($responses['original'] as $response) {
-			$this->hijaxEventDispatcher->parseAndRunEventListeners($response['response']);
+	protected function parseAndRunEventListeners(&$responses, $eventsToListen, $processOriginal=TRUE) {
+		if ($processOriginal) {
+			foreach ($responses['original'] as $response) {
+				$this->hijaxEventDispatcher->parseAndRunEventListeners($response['response']);
+			}
 		}
 		foreach ($eventsToListen as $listenerId => $eventNames) {
 			$shouldProcess = FALSE;
@@ -203,7 +209,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 			}
 
 			if ($shouldProcess) {
-				/* @var $listener Tx_ExtbaseHijax_Event_Listener */
+					/* @var $listener Tx_ExtbaseHijax_Event_Listener */
 				$listener = $this->listenerFactory->findById($listenerId);
 			
 				$bootstrap = t3lib_div::makeInstance('Tx_Extbase_Core_Bootstrap');

@@ -85,6 +85,7 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 	 */
 	public function connect($name, $callback = null, $listener = null) {
 		if (!$listener) {
+			/* @var $listener Tx_ExtbaseHijax_Event_Listener */
 			$listener = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager')->get('Tx_ExtbaseHijax_MVC_Dispatcher')->getCurrentListener();
 		}
 		
@@ -277,7 +278,7 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 	 */
 	public function parseAndRunEventListeners(&$content) {
 		$tempContent = preg_replace_callback('/<!-- ###EVENT_LISTENER_(?P<elementId>\d*)### START (?P<listenerDefinition>.*) -->(?P<content>.*?)<!-- ###EVENT_LISTENER_(\\1)### END -->/msU', array($this, 'parseAndRunEventListenersCallback'), $content);
-		$content = $tempContent;
+		$content = $tempContent;			
 	}
 	
 	/**
@@ -328,7 +329,11 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 	 * @return void
 	 */
 	public function replaceXMLCommentsWithDivs(&$content) {
-		$content = preg_replace_callback('/<!-- ###EVENT_LISTENER_(?P<elementId>\d*)### START (?P<listenerDefinition>.*) -->(?P<content>.*?)<!-- ###EVENT_LISTENER_(\\1)### END -->/msU', array($this, 'replaceXMLCommentsWithDivsCallback'), $content);
+		$this->replaceXMLCommentsWithDivsFound = TRUE;
+		while ($this->replaceXMLCommentsWithDivsFound) {
+			$this->replaceXMLCommentsWithDivsFound = FALSE;
+			$content = preg_replace_callback('/<!-- ###EVENT_LISTENER_(?P<elementId>\d*)### START (?P<listenerDefinition>.*) -->(?P<content>.*?)<!-- ###EVENT_LISTENER_(\\1)### END -->/msU', array($this, 'replaceXMLCommentsWithDivsCallback'), $content);
+		}
 	}
 	
 	/**
@@ -336,6 +341,7 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 	 * @return string
 	 */
 	protected function replaceXMLCommentsWithDivsCallback($match) {
+		$this->replaceXMLCommentsWithDivsFound = TRUE;
 		$matchesListenerDef = array();
 		preg_match('/(?P<listenerId>[a-z0-9_]*)\((?P<eventNames>.*)\);/msU', $match['listenerDefinition'], $matchesListenerDef);
 			
