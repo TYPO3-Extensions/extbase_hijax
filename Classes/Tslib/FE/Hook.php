@@ -127,8 +127,16 @@ class Tx_ExtbaseHijax_Tslib_FE_Hook implements t3lib_Singleton {
 		}
 		
 		while ($this->hijaxEventDispatcher->hasPendingNextPhaseEvents()) {
+				// trick to force double rendering of some content elements
+			$GLOBALS['TSFE']->recordRegister = array();
+				// trick to force loading of full TS template
+			if (!$pObj->tmpl->loaded) {
+				$pObj->forceTemplateParsing = TRUE;
+				$pObj->getConfigArray();
+			}
 			$this->hijaxEventDispatcher->promoteNextPhaseEvents();
 			$this->hijaxEventDispatcher->parseAndRunEventListeners($pObj->content);
+			$pObj->INTincScript();
 			
 			if (self::$loopCount++>99) {
 					// preventing dead loops

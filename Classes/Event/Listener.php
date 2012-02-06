@@ -130,7 +130,7 @@ class Tx_ExtbaseHijax_Event_Listener {
 	}	
 
 	/**
-	 * @return the $cObj
+	 * @return tslib_cObj $cObj
 	 */
 	public function getCObj() {
 		return $this->cObj;

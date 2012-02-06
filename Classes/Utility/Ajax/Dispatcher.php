@@ -122,6 +122,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 					
 				$content = $response->getContent();
 				$this->processAbsRefPrefix($content, $configuration['settings']['absRefPrefix']);
+				$this->processIntScripts($content);
 				$responses['original'][] = array( 'id' => $r['id'], 'response' => $content );
 			}
 			
@@ -190,6 +191,17 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 	}	
 	
 	/**
+	 * Processes INT scripts
+	 * 
+	 * @param string $content
+	 */
+	protected function processIntScripts(&$content) {
+		$GLOBALS['TSFE']->content = $content;
+		$GLOBALS['TSFE']->INTincScript();
+		$content = $GLOBALS['TSFE']->content;
+	}
+	
+	/**
 	 * @param tslib_fe $pObj
 	 * @return void
 	 */
@@ -225,6 +237,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 				
 				$content = $response->getContent();
 				$this->processAbsRefPrefix($content, $configuration['settings']['absRefPrefix']);
+				$this->processIntScripts($content);
 				$responses['affected'][] = array( 'id' => $listenerId, 'response' => $content );
 			}			
 		}
