@@ -286,33 +286,37 @@
 								dataType: "json",
 								pendingElement: $(element),
 								success: function(data, textStatus, jqXHR) {
-									$.each(EXTBASE_HIJAX.beforeLoadElement, function(i, f) {
-										try {
-											eval(f);
-										} catch (err) {
-										}
-									});
-									this.pendingElement.hideHijaxLoader();
-									$.each(data['original'], function(i, r) {
-										var element = $('#'+r['id']);
-										if (element) {
-											element.loadHijaxData(r['response']);
-										}
-									});
-									$.each(data['affected'], function(i, r) {
-										$.each(listeners[r['id']], function(i, element) {	
-											element = $(element);
+									if (data['redirect'] && data['redirect'].url) {
+										window.location = data['redirect'].url;
+									} else {
+										$.each(EXTBASE_HIJAX.beforeLoadElement, function(i, f) {
+											try {
+												eval(f);
+											} catch (err) {
+											}
+										});
+										this.pendingElement.hideHijaxLoader();
+										$.each(data['original'], function(i, r) {
+											var element = $('#'+r['id']);
 											if (element) {
 												element.loadHijaxData(r['response']);
 											}
 										});
-									});
-									$.each(EXTBASE_HIJAX.onLoadElement, function(i, f) {
-										try {
-											eval(f);
-										} catch (err) {
-										}
-									});
+										$.each(data['affected'], function(i, r) {
+											$.each(listeners[r['id']], function(i, element) {	
+												element = $(element);
+												if (element) {
+													element.loadHijaxData(r['response']);
+												}
+											});
+										});
+										$.each(EXTBASE_HIJAX.onLoadElement, function(i, f) {
+											try {
+												eval(f);
+											} catch (err) {
+											}
+										});
+									}
 								},
 								error: function(jqXHR, textStatus, errorThrown) {
 									this.pendingElement.hideHijaxLoader();

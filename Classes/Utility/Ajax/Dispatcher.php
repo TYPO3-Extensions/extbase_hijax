@@ -148,6 +148,13 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 			}
 			
 			$this->cleanShutDown();
+		} catch (Tx_ExtbaseHijax_MVC_Exception_RedirectAction $redirectException) {
+			$responses = array(
+				'redirect' => array(
+					'url' => $redirectException->getUrl(),
+					'code' => $redirectException->getHttpStatus()	
+				)
+			);
 		} catch (Exception $e) {
 			header('HTTP/1.1 503 Service Unavailable');
 			header('Status: 503 Service Unavailable');
