@@ -121,8 +121,8 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 				$dispatcher->dispatch($request, $response);
 					
 				$content = $response->getContent();
-				$this->processAbsRefPrefix($content, $configuration['settings']['absRefPrefix']);
 				$this->processIntScripts($content);
+				$this->processAbsRefPrefix($content, $configuration['settings']['absRefPrefix']);
 				$responses['original'][] = array( 'id' => $r['id'], 'response' => $content );
 			}
 			
@@ -181,19 +181,33 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 	 */
 	protected function processAbsRefPrefix(&$content, $absRefPrefix)	{
 		if ($absRefPrefix)	{
-			$content = str_replace('"media/', '"'.t3lib_extMgm::siteRelPath('cms').'tslib/media/', $content);
-			$content = str_replace('"typo3temp/', '"' . $absRefPrefix . 'typo3temp/', $content);
-			$content = str_replace('"typo3conf/ext/', '"'.$absRefPrefix.'typo3conf/ext/', $content);
-			$content = str_replace('"' . TYPO3_mainDir . 'contrib/', '"' . $absRefPrefix . TYPO3_mainDir . 'contrib/', $content);
-			$content = str_replace('"' . TYPO3_mainDir . 'ext/', '"' . $absRefPrefix . TYPO3_mainDir . 'ext/', $content);
-			$content = str_replace('"' . TYPO3_mainDir . 'sysext/' , '"' . $absRefPrefix . TYPO3_mainDir . 'sysext/', $content);
-			$content = str_replace('"'.$GLOBALS['TYPO3_CONF_VARS']['BE']['fileadminDir'], '"'.$absRefPrefix.$GLOBALS['TYPO3_CONF_VARS']['BE']['fileadminDir'], $content);
-			$content = str_replace('"' . $GLOBALS['TYPO3_CONF_VARS']['BE']['RTE_imageStorageDir'], '"' . $absRefPrefix . $GLOBALS['TYPO3_CONF_VARS']['BE']['RTE_imageStorageDir'], $content);
-			// Process additional directories
-			$directories = t3lib_div::trimExplode(',', $GLOBALS['TYPO3_CONF_VARS']['FE']['additionalAbsRefPrefixDirectories'], TRUE);
-			foreach ($directories as $directory) {
-				$content = str_replace('"' . $directory, '"' . $absRefPrefix . $directory, $content);
+			$this->absRefPrefix = $absRefPrefix;
+			$this->absRefPrefixCallbackAttribute = "href";
+			$content = preg_replace_callback('/href="(?P<url>[^"].*)"/msU', array($this, 'processAbsRefPrefixCallback'), $content);
+			$this->absRefPrefixCallbackAttribute = "src";
+			$content = preg_replace_callback('/src="(?P<url>[^"].*)"/msU', array($this, 'processAbsRefPrefixCallback'), $content);
+		}
+	}	
+	
+	/**
+	 * @param array $match
+	 * @return string
+	 */
+	protected function processAbsRefPrefixCallback($match) {
+		$url = $match['url'];
+		$urlInfo = parse_url($url);
+		if (!$urlInfo['scheme']) {
+			if (substr($url, 0, strlen($this->absRefPrefix))==$this->absRefPrefix) {
+					// don't change the URL
+					// it already starts with absRefPrefix
+				return $match[0];
+			} else {
+				return "{$this->absRefPrefixCallbackAttribute}=\"{$this->absRefPrefix}{$url}\"";
 			}
+		} else {
+				// don't change the URL
+				// it has scheme so we assume it's full URL
+			return $match[0];
 		}
 	}	
 	
@@ -243,8 +257,8 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 				$dispatcher->dispatch($request, $response);
 				
 				$content = $response->getContent();
-				$this->processAbsRefPrefix($content, $configuration['settings']['absRefPrefix']);
 				$this->processIntScripts($content);
+				$this->processAbsRefPrefix($content, $configuration['settings']['absRefPrefix']);
 				$responses['affected'][] = array( 'id' => $listenerId, 'response' => $content );
 			}			
 		}
