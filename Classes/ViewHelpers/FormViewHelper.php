@@ -95,7 +95,7 @@ class Tx_ExtbaseHijax_ViewHelpers_FormViewHelper extends Tx_Fluid_ViewHelpers_Fo
 	/**
 	 * Renders hijax-related data attributes
 	 *
-	 * @return string Hidden fields with referrer information
+	 * @return void
 	 */
 	protected function renderHijaxDataAttributes($action = NULL, array $arguments = array(), $controller = NULL, $extensionName = NULL, $pluginName = NULL) {
 		$request = $this->controllerContext->getRequest();
@@ -130,7 +130,11 @@ class Tx_ExtbaseHijax_ViewHelpers_FormViewHelper extends Tx_Fluid_ViewHelpers_Fo
 		}
 		$this->tag->addAttribute('data-hijax-plugin', $pluginName);
 		
-		$this->tag->addAttribute('data-hijax-arguments', htmlspecialchars(serialize($request->getArguments())));
+		if ($arguments) {
+			$this->tag->addAttribute('data-hijax-arguments', htmlspecialchars(serialize($arguments)));
+		} else {
+			$this->tag->addAttribute('data-hijax-arguments', htmlspecialchars(serialize($request->getArguments())));
+		}
 		
 		$frameworkConfiguration = $this->configurationManager->getConfiguration(Tx_Extbase_Configuration_ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK);
 		$settingsHashKey = 's-'.md5(serialize($frameworkConfiguration));
@@ -141,8 +145,6 @@ class Tx_ExtbaseHijax_ViewHelpers_FormViewHelper extends Tx_Fluid_ViewHelpers_Fo
 		
 		$pluginNamespace = $this->extensionService->getPluginNamespace($extensionName, $pluginName);
 		$this->tag->addAttribute('data-hijax-namespace', $pluginNamespace);
-		
-		return $result;
 	}
 }
 

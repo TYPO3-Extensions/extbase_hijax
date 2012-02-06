@@ -158,6 +158,8 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 		} catch (Exception $e) {
 			header('HTTP/1.1 503 Service Unavailable');
 			header('Status: 503 Service Unavailable');
+			
+			//error_log($e->getMessage());
 			$responses = array('success'=>false, 'code'=>$e->getCode());
 		}
 		
@@ -186,6 +188,8 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 			$content = preg_replace_callback('/href="(?P<url>[^"].*)"/msU', array($this, 'processAbsRefPrefixCallback'), $content);
 			$this->absRefPrefixCallbackAttribute = "src";
 			$content = preg_replace_callback('/src="(?P<url>[^"].*)"/msU', array($this, 'processAbsRefPrefixCallback'), $content);
+			$this->absRefPrefixCallbackAttribute = "action";
+			$content = preg_replace_callback('/action="(?P<url>[^"].*)"/msU', array($this, 'processAbsRefPrefixCallback'), $content);
 		}
 	}	
 	
@@ -194,6 +198,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 	 * @return string
 	 */
 	protected function processAbsRefPrefixCallback($match) {
+		
 		$url = $match['url'];
 		$urlInfo = parse_url($url);
 		if (!$urlInfo['scheme']) {

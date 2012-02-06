@@ -32,8 +32,8 @@
 			10.currentUrl.cObject {
 				typolink {
 					parameter.data = TSFE:id
-					addQueryString = 1
-					addQueryString.exclude = id
+					#addQueryString = 1
+					#addQueryString.exclude = id
 					returnLast = url
 				}
 			}
