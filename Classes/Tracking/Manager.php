@@ -73,7 +73,7 @@ class Tx_ExtbaseHijax_Tracking_Manager implements t3lib_Singleton {
 	 */
 	public function __construct() {
 		$this->fe = $GLOBALS['TSFE'];
-		$this->trackingCache = $GLOBALS['typo3CacheManager']->getCache('extbase_hijax');
+		$this->trackingCache = $GLOBALS['typo3CacheManager']->getCache('extbase_hijax_tracking');
 		$this->objectManager = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager');
 		$this->dataMapper = $this->objectManager->get('Tx_Extbase_Persistence_Mapper_DataMapper');
 		$this->pageCache = $GLOBALS['typo3CacheManager']->getCache('cache_pages');

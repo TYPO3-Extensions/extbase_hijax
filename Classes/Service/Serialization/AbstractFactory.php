@@ -41,7 +41,7 @@ abstract class Tx_ExtbaseHijax_Service_Serialization_AbstractFactory implements 
 	
 	public function __construct() {
 		$this->objectContainer = t3lib_div::makeInstance('Tx_Extbase_Object_Container_Container');	
-		$this->storage = $GLOBALS['typo3CacheManager']->getCache('extbase_hijax');
+		$this->storage = $GLOBALS['typo3CacheManager']->getCache('extbase_hijax_storage');
 	}
 	
 	/**

@@ -33,7 +33,7 @@ class Tx_ExtbaseHijax_Service_AutoIDService implements t3lib_Singleton {
 	 * Constructor
 	 */
 	public function __construct() {
-		$this->trackingCache = $GLOBALS['typo3CacheManager']->getCache('extbase_hijax');
+		$this->trackingCache = $GLOBALS['typo3CacheManager']->getCache('extbase_hijax_storage');
 	}
 	
 	/**

@@ -41,11 +41,6 @@ class Tx_ExtbaseHijax_MVC_Dispatcher extends Tx_Extbase_MVC_Dispatcher {
 	protected $extensionConfiguration;	
 	
 	/**
-	 * @var t3lib_cache_frontend_VariableFrontend
-	 */
-	protected $cacheInstance;
-	
-	/**
 	 * @var Tx_ExtbaseHijax_Event_Listener
 	 */
 	protected $currentListener;
@@ -69,7 +64,6 @@ class Tx_ExtbaseHijax_MVC_Dispatcher extends Tx_Extbase_MVC_Dispatcher {
 		parent::__construct($objectManager);
 		$this->configurationManager = $this->objectManager->get('Tx_Extbase_Configuration_ConfigurationManagerInterface');
 		$this->hijaxEventDispatcher = $this->objectManager->get('Tx_ExtbaseHijax_Event_Dispatcher');
-		$this->cacheInstance = $GLOBALS['typo3CacheManager']->getCache('extbase_hijax');
 		$this->extensionConfiguration = $this->objectManager->get('Tx_ExtbaseHijax_Configuration_ExtensionInterface');
 		self::$id = $this->extensionConfiguration->getNextElementId();
 		$this->listenersStack = array();
