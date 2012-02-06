@@ -94,3 +94,20 @@
 	-moz-opacity:0.0; 
 	opacity:0.0;
 }
+
+
+.hijax-js-off .hijax-displayed-with-js-only {
+	display: none;
+}
+
+.hijax-js-on .hijax-displayed-without-js-only {
+	display: none;
+}
+
+.hijax-js-off .hijax-visible-with-js-only {
+	visibility: hidden;
+}
+
+.hijax-js-on .hijax-visible-without-js-only {
+	visibility: hidden;
+}
