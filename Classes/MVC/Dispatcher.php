@@ -91,7 +91,39 @@ class Tx_ExtbaseHijax_MVC_Dispatcher extends Tx_Extbase_MVC_Dispatcher {
 			$this->currentListener = t3lib_div::makeInstance('Tx_ExtbaseHijax_Event_Listener', $request);
 			$this->hijaxEventDispatcher->startContentElement();
 			
-			parent::dispatch($request, $response);
+			try {
+				parent::dispatch($request, $response);
+			} catch (Tx_Extbase_MVC_Controller_Exception_RequiredArgumentMissingException $requiredArgumentMissingException) {
+				try {
+						// this happens with simple reload on pages where some argument is required
+					$configuration = $this->configurationManager->getConfiguration(Tx_Extbase_Configuration_ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK);
+					
+					$defaultControllerName = current(array_keys($configuration['controllerConfiguration']));
+
+					$allowedControllerActions = array();
+					foreach ($configuration['controllerConfiguration'] as $controllerName => $controllerActions) {
+						$allowedControllerActions[$controllerName] = $controllerActions['actions'];
+					}
+					$defaultActionName = is_array($allowedControllerActions[$request->getControllerName()]) ? current($allowedControllerActions[$request->getControllerName()]) : '';
+				
+						// try to run the current controller with the default action
+					$request->setDispatched(false);
+					$request->setControllerActionName($defaultActionName);
+
+					parent::dispatch($request, $response);
+						
+				} catch (Tx_Extbase_MVC_Controller_Exception_RequiredArgumentMissingException $requiredArgumentMissingException) {
+					if ($defaultControllerName!=$request->getControllerName()) {
+						$request->setControllerName($defaultControllerName);
+						$defaultActionName = is_array($allowedControllerActions[$defaultControllerName]) ? current($allowedControllerActions[$defaultControllerName]) : '';
+
+							// try to run the default plugin controller with the default action
+						$request->setDispatched(false);
+						$request->setControllerActionName($defaultActionName);
+						parent::dispatch($request, $response);
+					}
+				}
+			}
 			
 			if ($this->hijaxEventDispatcher->hasListeners('', TRUE)) {
 				$currentListeners = $this->hijaxEventDispatcher->getListeners('', TRUE);
