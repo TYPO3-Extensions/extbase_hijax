@@ -159,7 +159,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 			header('HTTP/1.1 503 Service Unavailable');
 			header('Status: 503 Service Unavailable');
 			
-			//error_log($e->getMessage());
+			error_log($e->getMessage());
 			$responses = array('success'=>false, 'code'=>$e->getCode());
 		}
 		
@@ -185,11 +185,11 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 		if ($absRefPrefix)	{
 			$this->absRefPrefix = $absRefPrefix;
 			$this->absRefPrefixCallbackAttribute = "href";
-			$content = preg_replace_callback('/href="(?P<url>[^"].*)"/msU', array($this, 'processAbsRefPrefixCallback'), $content);
+			$content = preg_replace_callback('/\shref="(?P<url>[^"].*)"/msU', array($this, 'processAbsRefPrefixCallback'), $content);
 			$this->absRefPrefixCallbackAttribute = "src";
-			$content = preg_replace_callback('/src="(?P<url>[^"].*)"/msU', array($this, 'processAbsRefPrefixCallback'), $content);
+			$content = preg_replace_callback('/\ssrc="(?P<url>[^"].*)"/msU', array($this, 'processAbsRefPrefixCallback'), $content);
 			$this->absRefPrefixCallbackAttribute = "action";
-			$content = preg_replace_callback('/action="(?P<url>[^"].*)"/msU', array($this, 'processAbsRefPrefixCallback'), $content);
+			$content = preg_replace_callback('/\saction="(?P<url>[^"].*)"/msU', array($this, 'processAbsRefPrefixCallback'), $content);
 		}
 	}	
 	
@@ -207,7 +207,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 					// it already starts with absRefPrefix
 				return $match[0];
 			} else {
-				return "{$this->absRefPrefixCallbackAttribute}=\"{$this->absRefPrefix}{$url}\"";
+				return " {$this->absRefPrefixCallbackAttribute}=\"{$this->absRefPrefix}{$url}\"";
 			}
 		} else {
 				// don't change the URL
