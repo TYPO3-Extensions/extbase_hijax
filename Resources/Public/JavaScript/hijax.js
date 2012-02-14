@@ -433,8 +433,7 @@
 		
 		if (content) {
 			element.removeClass(EXTBASE_HIJAX.fallbackClass);
-			
-			var startingHeight = content.height();
+			var startingHeight = content.css('overflow', 'hidden').height();
 			element = content.outer(response);
 			if (startingHeight > 0) {
 				element.css('height', startingHeight);
@@ -446,13 +445,20 @@
 				newElements.push(element[0]);
 			}
 			newElements.extbaseHijax(true);
+			var contentStartingOverflow = content.css('overflow');
+			var endingHeight = content.css('overflow', 'hidden').outerHeight();
 			
-			if (startingHeight > 0) {
+			if (startingHeight != endingHeight && startingHeight > 0 && endingHeight > 0) {
 				element.stop().animate({
-					height: content.outerHeight()
+					height: endingHeight
 				}, 500, function() {
 						// Animation complete.
+					$(this).css('height', 'auto');
+					$(this).find('> .'+EXTBASE_HIJAX.contentClass).css('overflow', contentStartingOverflow);
 				});
+			} else {
+				content.css('overflow', contentStartingOverflow);
+				element.css('height', 'auto');
 			}
 		}
 		
