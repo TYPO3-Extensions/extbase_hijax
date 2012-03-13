@@ -27,6 +27,7 @@ class Tx_ExtbaseHijax_Service_Serialization_ListenerFactory extends Tx_ExtbaseHi
 	/**
 	 * @var array
 	 */
-	protected $properties = array('cObj', 'configuration', 'id', 'serializedRequest');
-
+	//protected $properties = array('cObj', 'configuration', 'id', 'serializedRequest');
+	protected $properties = array('configuration', 'id', 'serializedRequest');
+	
 }

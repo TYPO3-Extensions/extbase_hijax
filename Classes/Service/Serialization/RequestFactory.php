@@ -27,6 +27,19 @@ class Tx_ExtbaseHijax_Service_Serialization_RequestFactory extends Tx_ExtbaseHij
 	/**
 	 * @var array
 	 */
-	protected $properties = array('format', 'method', 'isCached', 'requestUri', 'baseUri', 'controllerObjectName', 'pluginName', 'controllerExtensionName', 'controllerExtensionKey', 'controllerSubpackageKey', 'controllerName', 'controllerActionName', 'arguments', 'internalArguments');
-
+	protected $properties = array('format', 'method', 'isCached', 'baseUri', 'controllerObjectName', 'pluginName', 'controllerExtensionName', 'controllerExtensionKey', 'controllerSubpackageKey', 'controllerName', 'controllerActionName');//, 'arguments', 'internalArguments');
+	
+	/**
+	 * Unserialize an object
+	 *
+	 * @param string $str
+	 * @return object
+	 */
+	public function unserialize($str) {
+		$object = parent::unserialize($str);
+	
+		$object->setRequestUri(t3lib_div::getIndpEnv('TYPO3_REQUEST_URL'));
+		
+		return $object;
+	}	
 }

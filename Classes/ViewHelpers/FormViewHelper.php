@@ -132,17 +132,14 @@ class Tx_ExtbaseHijax_ViewHelpers_FormViewHelper extends Tx_Fluid_ViewHelpers_Fo
 		
 		if ($arguments) {
 			$this->tag->addAttribute('data-hijax-arguments', htmlspecialchars(serialize($arguments)));
-		} else {
-			$this->tag->addAttribute('data-hijax-arguments', htmlspecialchars(serialize($request->getArguments())));
+		//} else {
+		//	$this->tag->addAttribute('data-hijax-arguments', htmlspecialchars(serialize($request->getArguments())));
 		}
 		
-		$frameworkConfiguration = $this->configurationManager->getConfiguration(Tx_Extbase_Configuration_ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK);
-		$settingsHashKey = 's-'.md5(serialize($frameworkConfiguration));
-		if (!$this->cacheInstance->has($settingsHashKey)) {
-			$this->cacheInstance->set($settingsHashKey, $frameworkConfiguration);
-		}
-		$this->tag->addAttribute('data-hijax-settings', $settingsHashKey);
-		
+		/* @var $listener Tx_ExtbaseHijax_Event_Listener */
+		$listener = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager')->get('Tx_ExtbaseHijax_MVC_Dispatcher')->getCurrentListener();
+		$this->tag->addAttribute('data-hijax-settings', $listener->getId());
+	
 		$pluginNamespace = $this->extensionService->getPluginNamespace($extensionName, $pluginName);
 		$this->tag->addAttribute('data-hijax-namespace', $pluginNamespace);
 	}

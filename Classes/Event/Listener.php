@@ -112,7 +112,6 @@ class Tx_ExtbaseHijax_Event_Listener {
 		//$this->id = $this->autoIDService->getAutoId(get_class($this));
 			// new logic - determine the id based on md5 hash
 		$this->id = md5($listenerFactory->serialize($this));
-		$listenerFactory->persist($this);
 	}
 
 	/**

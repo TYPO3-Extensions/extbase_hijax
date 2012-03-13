@@ -44,6 +44,11 @@ class Tx_ExtbaseHijax_MVC_Dispatcher extends Tx_Extbase_MVC_Dispatcher {
 	 * @var Tx_ExtbaseHijax_Event_Listener
 	 */
 	protected $currentListener;
+	
+	/**
+	 * @var Tx_ExtbaseHijax_Service_Serialization_ListenerFactory
+	 */
+	protected $listenerFactory;	
 
 	/**
 	 * @var int
@@ -65,6 +70,7 @@ class Tx_ExtbaseHijax_MVC_Dispatcher extends Tx_Extbase_MVC_Dispatcher {
 		$this->configurationManager = $this->objectManager->get('Tx_Extbase_Configuration_ConfigurationManagerInterface');
 		$this->hijaxEventDispatcher = $this->objectManager->get('Tx_ExtbaseHijax_Event_Dispatcher');
 		$this->extensionConfiguration = $this->objectManager->get('Tx_ExtbaseHijax_Configuration_ExtensionInterface');
+		$this->listenerFactory = $this->objectManager->get('Tx_ExtbaseHijax_Service_Serialization_ListenerFactory');
 		self::$id = $this->extensionConfiguration->getNextElementId();
 		$this->listenersStack = array();
 	}
@@ -74,15 +80,20 @@ class Tx_ExtbaseHijax_MVC_Dispatcher extends Tx_Extbase_MVC_Dispatcher {
 	 *
 	 * @param Tx_Extbase_MVC_RequestInterface $request The request to dispatch
 	 * @param Tx_Extbase_MVC_ResponseInterface $response The response, to be modified by the controller
+	 * @param Tx_ExtbaseHijax_Event_Listener $listener Listener
 	 * @return void
 	 */
-	public function dispatch(Tx_Extbase_MVC_RequestInterface $request, Tx_Extbase_MVC_ResponseInterface $response) {
-
+	public function dispatch(Tx_Extbase_MVC_RequestInterface $request, Tx_Extbase_MVC_ResponseInterface $response, Tx_ExtbaseHijax_Event_Listener $listener = NULL) {	
+		
 		if (defined('TYPO3_cliMode') && TYPO3_cliMode === TRUE) {
 			parent::dispatch($request, $response);
 		} else {
 			array_push($this->listenersStack, $this->currentListener);
-			$this->currentListener = t3lib_div::makeInstance('Tx_ExtbaseHijax_Event_Listener', $request);
+			if ($listener) {
+				$this->currentListener = $listener;
+			} else {
+				$this->currentListener = t3lib_div::makeInstance('Tx_ExtbaseHijax_Event_Listener', $request);
+			}
 			$this->hijaxEventDispatcher->startContentElement();
 			
 			try {
@@ -139,6 +150,8 @@ class Tx_ExtbaseHijax_MVC_Dispatcher extends Tx_Extbase_MVC_Dispatcher {
 	 * @return Tx_ExtbaseHijax_Event_Listener
 	 */
 	public function getCurrentListener() {
+		$this->listenerFactory->persist($this->currentListener);
+				
 		return $this->currentListener;
 	}
 	

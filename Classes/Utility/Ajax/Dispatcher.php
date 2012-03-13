@@ -100,26 +100,25 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 				$configuration = array();
 				$configuration['extensionName'] = $r['extension'];
 				$configuration['pluginName']    = $r['plugin'];
-					
-				// load settings saved under settingsHash
-				if ($r['settingsHash'] && $this->cacheInstance->has($r['settingsHash'])) {
-					$tryConfiguration = $this->cacheInstance->get($r['settingsHash']);
-					if ($configuration['extensionName']==$tryConfiguration['extensionName'] && $configuration['pluginName']==$tryConfiguration['pluginName']) {
-						$configuration = $tryConfiguration;
-					}
-				}
 
+				/* @var $listener Tx_ExtbaseHijax_Event_Listener */
+				$listener = $this->listenerFactory->findById($r['settingsHash']);
+					// load settings saved under settingsHash
+				$configuration = $listener->getConfiguration();
+			
 				$bootstrap = t3lib_div::makeInstance('Tx_Extbase_Core_Bootstrap');
 				$bootstrap->initialize($configuration);
 			
-				$request  = $this->buildRequest($r);
-					
+				$request = $listener->getRequest();	
+				$request = $this->buildRequest($r, $request);
+				
 				/* @var $response Tx_Extbase_MVC_Web_Response */
 				$response = $this->objectManager->create('Tx_Extbase_MVC_Web_Response');
 			
-				$dispatcher = $this->objectManager->get('Tx_Extbase_MVC_Dispatcher');
-				$dispatcher->dispatch($request, $response);
-					
+				/* @var $dispatcher Tx_ExtbaseHijax_MVC_Dispatcher */
+				$dispatcher = $this->objectManager->get('Tx_ExtbaseHijax_MVC_Dispatcher');
+				$dispatcher->dispatch($request, $response, $listener);
+									
 				$content = $response->getContent();
 				$this->processIntScripts($content);
 				$this->processAbsRefPrefix($content, $configuration['settings']['absRefPrefix']);
@@ -258,8 +257,9 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 				/* @var $response Tx_Extbase_MVC_Web_Response */
 				$response = $this->objectManager->create('Tx_Extbase_MVC_Web_Response');
 			
-				$dispatcher = $this->objectManager->get('Tx_Extbase_MVC_Dispatcher');
-				$dispatcher->dispatch($request, $response);
+				/* @var $dispatcher Tx_ExtbaseHijax_MVC_Dispatcher */
+				$dispatcher = $this->objectManager->get('Tx_ExtbaseHijax_MVC_Dispatcher');
+				$dispatcher->dispatch($request, $response, $listener);
 				
 				$content = $response->getContent();
 				$this->processIntScripts($content);
@@ -318,21 +318,22 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 	/**
 	 * Build a request object
 	 * 
-	 * @param $r array
-	 * 
-	 * @return Tx_Extbase_MVC_Web_Request $request
+	 * @param array $r
+	 * @param Tx_Extbase_MVC_Web_Request $request
+	 * @return Tx_Extbase_MVC_Request
 	 */
-	protected function buildRequest($r) {
+	protected function buildRequest($r, &$request = null) {
 		
-			/* @var $request Tx_Extbase_MVC_Request */
-		$request = $this->objectManager->get('Tx_Extbase_MVC_Web_Request');
-		 
+		if (!$request) {
+			$request = $this->objectManager->get('Tx_Extbase_MVC_Web_Request');
+		}
+		
 		$request->setControllerExtensionName($r['extension']);
 		$request->setPluginName($r['plugin']);
 		$request->setControllerName($r['controller']);
 		$request->setControllerActionName($r['action']);
-		$request->setArguments(!is_array($r['arguments']) ? array() : $r['arguments']);
-		
+		$request->setArguments(t3lib_div::array_merge_recursive_overrule($request->getArguments(), !is_array($r['arguments']) ? array() : $r['arguments']));
+				
 		return $request;
 	}
 	

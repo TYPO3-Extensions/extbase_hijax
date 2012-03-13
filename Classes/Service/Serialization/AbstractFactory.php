@@ -89,7 +89,9 @@ abstract class Tx_ExtbaseHijax_Service_Serialization_AbstractFactory implements 
 	public function persist($object) {
 		$id = $this->getIdForObject($object);
 		if ($id) {
-			$this->storage->set($id, $this->serialize($object));
+			if (!$this->storage->has($id)) {
+				$this->storage->set($id, $this->serialize($object));
+			}
 			$result = true;
 		} else {
 			$result = false;
