@@ -434,7 +434,7 @@
 		if (content) {
 			element.removeClass(EXTBASE_HIJAX.fallbackClass);
 			var startingHeight = content.css('overflow', 'hidden').height();
-			element = content.outer(response);
+			element = jQuery(content.outer(response));
 			if (startingHeight > 0) {
 				element.css('height', startingHeight);
 			}

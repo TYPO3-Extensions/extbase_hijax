@@ -27,7 +27,7 @@ class Tx_ExtbaseHijax_Service_Serialization_RequestFactory extends Tx_ExtbaseHij
 	/**
 	 * @var array
 	 */
-	protected $properties = array('format', 'method', 'isCached', 'baseUri', 'controllerObjectName', 'pluginName', 'controllerExtensionName', 'controllerExtensionKey', 'controllerSubpackageKey', 'controllerName', 'controllerActionName');//, 'arguments', 'internalArguments');
+	protected $properties = array('format', 'method', 'isCached', 'baseUri', 'controllerObjectName', 'pluginName', 'controllerExtensionName', 'controllerExtensionKey', 'controllerSubpackageKey', 'controllerName', 'controllerActionName');
 	
 	/**
 	 * Unserialize an object

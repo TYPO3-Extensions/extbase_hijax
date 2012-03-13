@@ -132,8 +132,6 @@ class Tx_ExtbaseHijax_ViewHelpers_FormViewHelper extends Tx_Fluid_ViewHelpers_Fo
 		
 		if ($arguments) {
 			$this->tag->addAttribute('data-hijax-arguments', htmlspecialchars(serialize($arguments)));
-		//} else {
-		//	$this->tag->addAttribute('data-hijax-arguments', htmlspecialchars(serialize($request->getArguments())));
 		}
 		
 		/* @var $listener Tx_ExtbaseHijax_Event_Listener */
