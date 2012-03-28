@@ -303,6 +303,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 		$GLOBALS['TSFE']->initTemplate();
 		$GLOBALS['TSFE']->getConfigArray();
 		$GLOBALS['TSFE']->newCObj();
+		$GLOBALS['TSFE']->sys_language_uid = intval(t3lib_div::_GP('L'));
 	}
 	
 	/**

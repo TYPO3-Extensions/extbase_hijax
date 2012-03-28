@@ -276,7 +276,7 @@
 							$.each(fields, function(i, f) {
 								fields[i]['name'] = fields[i]['name'].replace(pluginNameSpace, 'r[0][arguments]');
 							});
-							$data = $.param({r: requests, e: eventsToListen})+'&'+$.param(fields)+'&eID=extbase_hijax_dispatcher';
+							$data = $.param({r: requests, e: eventsToListen})+'&'+$.param(fields)+'&eID=extbase_hijax_dispatcher&L='+EXTBASE_HIJAX.sys_language_uid;
 							
 							var ajaxRequest = $.ajax({
 								url: EXTBASE_HIJAX.url,
@@ -346,7 +346,7 @@
 			});
 			
 			if (requests.length>0) {
-				$data = {r: requests}+'&eID=extbase_hijax_dispatcher';
+				$data = {r: requests}+'&eID=extbase_hijax_dispatcher&L='+EXTBASE_HIJAX.sys_language_uid;
 				
 				var ajaxRequest = $.ajax({
 					url: EXTBASE_HIJAX.url,

@@ -54,7 +54,12 @@
 			40.wrap = , url: '|'
 			
 			50 = TEXT
-			50.value (					
+			50.data = TSFE:sys_language_uid
+			50.intval = 1
+			50.wrap = , sys_language_uid: '|'
+			
+			60 = TEXT
+			60.value (					
 					};
 					try {
 						var body = document.getElementsByTagName("body")[0];
@@ -64,7 +69,7 @@
 				//]]></script>
 			)
 			
-			60 = RESTORE_REGISTER
+			70 = RESTORE_REGISTER
 		}
 
 			# end of FE
