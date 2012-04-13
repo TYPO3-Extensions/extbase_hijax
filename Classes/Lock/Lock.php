@@ -173,7 +173,7 @@ class Tx_ExtbaseHijax_Lock_Lock {
 					$success = FALSE;
 				}
 				fclose($this->filepointer);
-				if (t3lib_div::isAllowedAbsPath($this->resource) && t3lib_div::isFirstPartOfStr($this->resource, PATH_site . 'typo3temp/locks/')) {
+				if (t3lib_div::isAllowedAbsPath($this->resource) && t3lib_div::isFirstPartOfStr($this->resource, PATH_site . 'typo3temp/extbase_hijax/locks/')) {
 					unlink($this->resource);
 				}
 				break;
