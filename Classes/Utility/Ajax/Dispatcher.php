@@ -239,7 +239,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 		foreach ($eventsToListen as $listenerId => $eventNames) {
 			$shouldProcess = FALSE;
 			foreach ($eventNames as $eventName) {
-				if ($this->hijaxEventDispatcher->hasPendingEventWithName($eventName)) {
+				if ($this->hijaxEventDispatcher->hasPendingEventWithName($eventName, $listenerId)) {
 					$shouldProcess = TRUE;
 					break;
 				}

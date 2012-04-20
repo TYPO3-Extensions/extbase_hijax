@@ -59,6 +59,16 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 	protected $nextPhasePendingEventNames = array();
 
 	/**
+	 * @var array
+	 */
+	protected $skipPendingEvents = array();
+
+	/**
+	 * @var array
+	 */
+	protected $nextPhaseSkipPendingEvents = array();
+
+	/**
 	 * @var Tx_Extbase_Object_ObjectManagerInterface
 	 */
 	protected $objectManager;
@@ -154,14 +164,27 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 	 * Notifies all listeners of a given event.
 	 *
 	 * @param Tx_ExtbaseHijax_Event_Event $event A Tx_ExtbaseHijax_Event_Event instance
+	 * @param boolean $skipNotifier Skips notifier when processing the event (prevents dead loops)
+	 * @param Tx_ExtbaseHijax_Event_Listener	$listener TYPO3 Extbase listener
 	 *
 	 * @return Tx_ExtbaseHijax_Event_Event The Tx_ExtbaseHijax_Event_Event instance
 	 */
-	public function notify(Tx_ExtbaseHijax_Event_Event $event) {
+	public function notify(Tx_ExtbaseHijax_Event_Event $event, $skipNotifier = false, $listener = null) {
 		if (!isset($this->nextPhasePendingEvents[$event->getName()])) {
 			$this->nextPhasePendingEvents[$event->getName()] = array();
 		}
 		$this->nextPhasePendingEvents[$event->getName()][] = $event;
+		
+		if ($skipNotifier) {
+			if (!$listener) {
+				/* @var $listener Tx_ExtbaseHijax_Event_Listener */
+				$listener = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager')->get('Tx_ExtbaseHijax_MVC_Dispatcher')->getCurrentListener();
+			}
+			
+			if (!in_array($event->getName(), $this->nextPhaseSkipPendingEvents)) {
+				$this->nextPhaseSkipPendingEvents[] = $event->getName().';'.$listener->getId();
+			}
+		}
 		
 		if (!in_array($event->getName(), $this->nextPhasePendingEventNames)) {
 			$this->nextPhasePendingEventNames[] = $event->getName();
@@ -176,9 +199,11 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 	public function promoteNextPhaseEvents() {
 		$this->pendingEvents = $this->nextPhasePendingEvents;
 		$this->pendingEventNames = $this->nextPhasePendingEventNames;
+		$this->skipPendingEvents = $this->nextPhaseSkipPendingEvents;
 		
 		$this->nextPhasePendingEvents = array();
 		$this->nextPhasePendingEventNames = array();
+		$this->nextPhaseSkipPendingEvents = array();
 	}
 	
 	/**
@@ -198,8 +223,8 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 	/**
 	 * @return boolean
 	 */
-	public function hasPendingEventWithName($name) {
-		return in_array($name, $this->pendingEventNames);
+	public function hasPendingEventWithName($eventName, $listenerId) {
+		return in_array($name, $this->pendingEventNames) && !in_array($eventName.';'.$listenerId, $this->skipPendingEvents);
 	}
 
 	/**
@@ -296,7 +321,7 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 		$shouldProcess = FALSE;
 			
 		foreach ($eventNames as $eventName) {
-			if ($this->hasPendingEventWithName($eventName)) {
+			if ($this->hasPendingEventWithName($eventName, $listenerId)) {
 				$shouldProcess = TRUE;
 				break;
 			}
