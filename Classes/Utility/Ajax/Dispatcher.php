@@ -333,6 +333,9 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 		$request->setPluginName($r['plugin']);
 		$request->setControllerName($r['controller']);
 		$request->setControllerActionName($r['action']);
+		if ($r['arguments'] && !is_array($r['arguments'])) {
+			$r['arguments'] = unserialize($r['arguments']);
+		}
 		$request->setArguments(t3lib_div::array_merge_recursive_overrule($request->getArguments(), !is_array($r['arguments']) ? array() : $r['arguments']));
 				
 		return $request;

@@ -33,7 +33,12 @@ class Tx_ExtbaseHijax_ViewHelpers_FormViewHelper extends Tx_Fluid_ViewHelpers_Fo
 	 * @var t3lib_cache_frontend_VariableFrontend
 	 */
 	protected $cacheInstance;
-		
+	
+	/**
+	 * @var Tx_ExtbaseHijax_Event_Dispatcher
+	 */
+	protected $hijaxEventDispatcher;
+	
 	/**
 	 * Constructor
 	 */
@@ -49,6 +54,16 @@ class Tx_ExtbaseHijax_ViewHelpers_FormViewHelper extends Tx_Fluid_ViewHelpers_Fo
 	public function injectConfigurationManager(Tx_Extbase_Configuration_ConfigurationManagerInterface $configurationManager) {
 		$this->configurationManager = $configurationManager;
 	}	
+		
+	/**
+	 * Injects the event dispatcher
+	 *
+	 * @param Tx_ExtbaseHijax_Event_Dispatcher $eventDispatcher
+	 * @return void
+	 */
+	public function injectEventDispatcher(Tx_ExtbaseHijax_Event_Dispatcher $eventDispatcher) {
+		$this->hijaxEventDispatcher = $eventDispatcher;
+	}
 	
 	/**
 	 * Render the form.
@@ -77,11 +92,14 @@ class Tx_ExtbaseHijax_ViewHelpers_FormViewHelper extends Tx_Fluid_ViewHelpers_Fo
 	 */
 	public function render($action = NULL, array $arguments = array(), $controller = NULL, $extensionName = NULL, $pluginName = NULL, $pageUid = NULL, $object = NULL, $pageType = 0, $noCache = FALSE, $noCacheHash = FALSE, $section = '', $format = '', array $additionalParams = array(), $absolute = FALSE, $addQueryString = FALSE, array $argumentsToBeExcludedFromQueryString = array(), $fieldNamePrefix = NULL, $actionUri = NULL, $objectName = NULL, $resultTarget = NULL) {
 		$this->renderHijaxDataAttributes($action, $arguments, $controller, $extensionName, $pluginName);
-		
+		$this->hijaxEventDispatcher->setIsHijaxElement(true);
+				
 		if ($resultTarget) {
 			$this->tag->addAttribute('data-hijax-result-target', $resultTarget);
 		} else {
-			$this->tag->addAttribute('data-hijax-result-target', 'this');
+			/* @var $listener Tx_ExtbaseHijax_Event_Listener */
+			$listener = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager')->get('Tx_ExtbaseHijax_MVC_Dispatcher')->getCurrentListener();				
+			$this->tag->addAttribute('data-hijax-result-target', "jQuery(this).parents('.hijax-element[data-hijax-listener-id=".$listener->getId()."]')");
 			$this->tag->addAttribute('data-hijax-result-wrap', 'false');
 		}
 			
@@ -99,7 +117,6 @@ class Tx_ExtbaseHijax_ViewHelpers_FormViewHelper extends Tx_Fluid_ViewHelpers_Fo
 	 */
 	protected function renderHijaxDataAttributes($action = NULL, array $arguments = array(), $controller = NULL, $extensionName = NULL, $pluginName = NULL) {
 		$request = $this->controllerContext->getRequest();
-
 		
 		$this->tag->addAttribute('data-hijax-element-type', 'form');
 		$this->tag->addAttribute('class', trim($this->arguments['class'].' hijax-element'));
@@ -123,7 +140,7 @@ class Tx_ExtbaseHijax_ViewHelpers_FormViewHelper extends Tx_Fluid_ViewHelpers_Fo
 		$this->tag->addAttribute('data-hijax-extension', $extensionName);
 		
 		if ($pluginName === NULL && TYPO3_MODE === 'FE') {
-			$pluginName = $this->extensionService->getPluginNameByAction($extensionName, $controller, $controllerArguments['action']);
+			$pluginName = $this->extensionService->getPluginNameByAction($extensionName, $controller, $action);
 		}
 		if ($pluginName === NULL) {
 			$pluginName = $request->getPluginName();
@@ -131,7 +148,7 @@ class Tx_ExtbaseHijax_ViewHelpers_FormViewHelper extends Tx_Fluid_ViewHelpers_Fo
 		$this->tag->addAttribute('data-hijax-plugin', $pluginName);
 		
 		if ($arguments) {
-			$this->tag->addAttribute('data-hijax-arguments', htmlspecialchars(serialize($arguments)));
+			$this->tag->addAttribute('data-hijax-arguments', serialize($arguments));
 		}
 		
 		/* @var $listener Tx_ExtbaseHijax_Event_Listener */

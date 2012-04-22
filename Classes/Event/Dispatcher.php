@@ -79,6 +79,11 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 	protected $listenerFactory;	
 	
 	/**
+	 * @var boolean
+	 */
+	protected $isHijaxElement;
+	
+	/**
 	 * Constructor
 	 */
 	public function __construct() {
@@ -94,6 +99,7 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 	 * @param Tx_ExtbaseHijax_Event_Listener	$listener TYPO3 Extbase listener
 	 */
 	public function connect($name, $callback = null, $listener = null) {
+		$this->setIsHijaxElement(true);
 		if (!$listener) {
 			/* @var $listener Tx_ExtbaseHijax_Event_Listener */
 			$listener = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager')->get('Tx_ExtbaseHijax_MVC_Dispatcher')->getCurrentListener();
@@ -123,6 +129,21 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 		$this->currentElementListeners[$name][] = array('listener' => $listener, 'callback' => $callback);
 	}
 
+	/**
+	 * @param boolean $isHijaxElement
+	 * @return void
+	 */
+	public function setIsHijaxElement($isHijaxElement) {
+		$this->isHijaxElement = $isHijaxElement;
+	}
+	
+	/**
+	 * @return boolean
+	 */
+	public function getIsHijaxElement() {
+		return $this->isHijaxElement;
+	}
+	
 	/**
 	 * Disconnects a listener for a given event name.
 	 *
@@ -204,6 +225,7 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 		$this->nextPhasePendingEvents = array();
 		$this->nextPhasePendingEventNames = array();
 		$this->nextPhaseSkipPendingEvents = array();
+		$this->isHijaxElement = false;
 	}
 	
 	/**
@@ -224,7 +246,7 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 	 * @return boolean
 	 */
 	public function hasPendingEventWithName($eventName, $listenerId) {
-		return in_array($name, $this->pendingEventNames) && !in_array($eventName.';'.$listenerId, $this->skipPendingEvents);
+		return in_array($eventName, $this->pendingEventNames) && !in_array($eventName.';'.$listenerId, $this->skipPendingEvents);
 	}
 
 	/**

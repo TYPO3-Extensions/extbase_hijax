@@ -75,8 +75,10 @@
 			var el = $(element);
 			if (el.attr('data-hijax-element-type')=='listener') {
 				var listenerId = el.attr('data-hijax-listener-id');
-				var eventNames = _parseCSV(el.attr('data-hijax-listener-events'));
 				updatedListenerIds.push(listenerId);
+				if (typeof listeners[listenerId] == 'undefined') {
+					listeners[listenerId] = [];
+				}
 				listeners[listenerId] = $.grep(listeners[listenerId], function(lEl) {
 					return el[0]!=lEl[0];
 				})
@@ -87,8 +89,10 @@
 			eventsToListen[listenerId] = [];
 			$.each(listeners[listenerId], function(i, element) {
 				var el = $(element);
-				var eventNames = _parseCSV(el.attr('data-hijax-listener-events'));
-				_addEvents(listenerId, eventNames[0]);
+				if (el.attr('data-hijax-listener-events') && el.attr('data-hijax-listener-events').length > 0) {
+					var eventNames = _parseCSV(el.attr('data-hijax-listener-events'));
+					_addEvents(listenerId, eventNames[0]);
+				}
 			});
 		});
 
@@ -215,13 +219,15 @@
 				switch (el.attr('data-hijax-element-type')) {
 					case 'listener':
 						var listenerId = el.attr('data-hijax-listener-id');
-						var eventNames = _parseCSV(el.attr('data-hijax-listener-events'));
-						if (eventNames.length && eventNames[0].length) {
-							_addEvents(listenerId, eventNames[0]);
-							if (!listeners[listenerId]) {
-								listeners[listenerId] = [];
+						if (el.attr('data-hijax-listener-events') && el.attr('data-hijax-listener-events').length > 0) {
+							var eventNames = _parseCSV(el.attr('data-hijax-listener-events'));
+							if (eventNames.length && eventNames[0].length) {
+								_addEvents(listenerId, eventNames[0]);
+								if (!listeners[listenerId]) {
+									listeners[listenerId] = [];
+								}
+								listeners[listenerId].push(el);
 							}
-							listeners[listenerId].push(el);
 						}
 						break;
 					case 'conditional':
@@ -340,6 +346,74 @@
 						
 						requests.push(el);
 						break;
+					case 'link':
+						el.bind('click', function(e) {
+							e.preventDefault(); // <-- important
+							var requests = [];
+							var target = $(element).parents('.hijax-element[data-hijax-listener-id='+$(this).attr('data-hijax-settings')+']');
+							var el = {
+									id: target.attr('id'),
+									extension: $(this).attr('data-hijax-extension'),
+									plugin: $(this).attr('data-hijax-plugin'),
+									controller: $(this).attr('data-hijax-controller'),
+									action: $(this).attr('data-hijax-action'),
+									arguments: $(this).attr('data-hijax-arguments'),
+									settingsHash: $(this).attr('data-hijax-settings')
+								};
+							
+							target.showHijaxLoader();
+							
+							requests.push(el);
+							
+							$data = $.param({r: requests, e: eventsToListen})+'&eID=extbase_hijax_dispatcher&L='+EXTBASE_HIJAX.sys_language_uid;
+	
+							var ajaxRequest = $.ajax({
+								url: EXTBASE_HIJAX.url,
+								type: "POST",
+								//crossDomain: true,
+								data: $data,
+								dataType: "json",
+								pendingElement: target,
+								success: function(data, textStatus, jqXHR) {
+									if (data['redirect'] && data['redirect'].url) {
+										window.location = data['redirect'].url;
+									} else {
+										$.each(EXTBASE_HIJAX.beforeLoadElement, function(i, f) {
+											try {
+												eval(f);
+											} catch (err) {
+											}
+										});
+										this.pendingElement.hideHijaxLoader();
+										$.each(data['original'], function(i, r) {
+											var element = $('#'+r['id']);
+											if (element) {
+												element.loadHijaxData(r['response']);
+											}
+										});
+										$.each(data['affected'], function(i, r) {
+											$.each(listeners[r['id']], function(i, element) {	
+												element = $(element);
+												if (element) {
+													element.loadHijaxData(r['response']);
+												}
+											});
+										});
+										$.each(EXTBASE_HIJAX.onLoadElement, function(i, f) {
+											try {
+												eval(f);
+											} catch (err) {
+											}
+										});
+									}
+								},
+								error: function(jqXHR, textStatus, errorThrown) {
+									this.pendingElement.hideHijaxLoader();
+									this.pendingElement.showMessage(EXTBASE_HIJAX.errorMessage);
+								}
+							});	
+						});
+						break;
 					default: 
 						break;
 				}
@@ -422,7 +496,7 @@
 		
 		if (element.attr('data-hijax-result-target')) {
 			content = eval(element.attr('data-hijax-result-target'));
-			var wrapResult = true;
+			var wrapResult = false;
 			if (element.attr('data-hijax-result-wrap')) {
 				wrapResult = eval(element.attr('data-hijax-result-wrap'));
 			}

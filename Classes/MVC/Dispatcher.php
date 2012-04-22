@@ -130,7 +130,7 @@ class Tx_ExtbaseHijax_MVC_Dispatcher extends Tx_Extbase_MVC_Dispatcher {
 				}
 			}
 			
-			if ($this->hijaxEventDispatcher->hasListeners('', TRUE)) {
+			if ($this->hijaxEventDispatcher->getIsHijaxElement()) {
 				$currentListeners = $this->hijaxEventDispatcher->getListeners('', TRUE);
 					
 				$signature = $this->getCurrentListener()->getId().'('.$this->convertArrayToCSV(array_keys($currentListeners)).'); ';
