@@ -7,6 +7,13 @@
 	<data type="array">
 		<languageKey index="default" type="array">
 			<label index="server-error">Oops... An error occurred.</label>
+			<label index="pager.back">Back</label>
+			<label index="pager.next">Next</label>
+		</languageKey>
+		<languageKey index="de" type="array">
+			<label index="server-error">Ein Fehler ist aufgetreten.</label>
+			<label index="pager.back">Zurück</label>
+			<label index="pager.next">Weiter</label>
 		</languageKey>
 	</data>
 </T3locallang>
