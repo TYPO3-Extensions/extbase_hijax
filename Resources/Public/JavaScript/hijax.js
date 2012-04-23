@@ -535,6 +535,13 @@
 				element.css('height', 'auto');
 			}
 		}
+
+		$.each(EXTBASE_HIJAX.initElement, function(i, f) {
+			try {
+				f(element);
+			} catch (err) {
+			}
+		});
 		
 		ajaxCallback = false;
 		

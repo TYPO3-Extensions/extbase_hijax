@@ -41,7 +41,7 @@
 			20 = TEXT
 			20.wrap (
 				<script type="text/javascript">//<![CDATA[
-					var EXTBASE_HIJAX = {onLoadElement: [], beforeLoadElement: [], bodyClass: 'hijax-js-off', loadingClass: 'hijax-loading', fallbackClass: 'hijax-js-fallback', contentClass: 'hijax-content'
+					var EXTBASE_HIJAX = {initElement: [], onLoadElement: [], beforeLoadElement: [], bodyClass: 'hijax-js-off', loadingClass: 'hijax-loading', fallbackClass: 'hijax-js-fallback', contentClass: 'hijax-content'
 			)
 			
 			30 = TEXT
