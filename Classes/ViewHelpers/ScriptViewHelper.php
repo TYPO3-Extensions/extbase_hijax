@@ -38,6 +38,21 @@ class Tx_ExtbaseHijax_ViewHelpers_ScriptViewHelper extends Tx_Fluid_Core_ViewHel
 	}
 
 	/**
+	 * @var Tx_ExtbaseHijax_Utility_Ajax_Dispatcher
+	 */
+	protected $ajaxDispatcher;
+	
+	/**
+	 * Injects the event dispatcher
+	 *
+	 * @param Tx_ExtbaseHijax_Utility_Ajax_Dispatcher $ajaxDispatcher
+	 * @return void
+	 */
+	public function injectAjaxDispatcher(Tx_ExtbaseHijax_Utility_Ajax_Dispatcher $ajaxDispatcher) {
+		$this->ajaxDispatcher = $ajaxDispatcher;
+	}	
+	
+	/**
 	 * @var t3lib_PageRenderer
 	 */
 	protected $pageRenderer;
@@ -67,33 +82,46 @@ class Tx_ExtbaseHijax_ViewHelpers_ScriptViewHelper extends Tx_Fluid_Core_ViewHel
 	 * @param string $allWrap
 	 * @param boolean $excludeFromConcatenation
 	 * @param string $section
+	 * @param boolean $preventMarkupUpdateOnAjaxLoad
 	 * 
-     * @return void
+     * @return string
 	 */
-	public function render($src="", $type = 'text/javascript', $compress = TRUE, $forceOnTop = FALSE, $allWrap = '', $excludeFromConcatenation = FALSE, $section = 'footer') {
+	public function render($src="", $type = 'text/javascript', $compress = TRUE, $forceOnTop = FALSE, $allWrap = '', $excludeFromConcatenation = FALSE, $section = 'footer', $preventMarkupUpdateOnAjaxLoad = false) {
         $content = $this->renderChildren();
   
-        if ($this->isCached()) {
+        if ($this->ajaxDispatcher->getIsActive()) {
+        	if ($preventMarkupUpdateOnAjaxLoad) {
+        		$this->ajaxDispatcher->setPreventMarkupUpdateOnAjaxLoad(true);
+        	}
+        		// need to just echo the code in ajax call
         	if (!$src) {
-        		if ($section=='footer') {
-        			$this->pageRenderer->addJsFooterInlineCode(md5($content), $content, $compress, $forceOnTop);
-        		} else {
-        			$this->pageRenderer->addJsInlineCode(md5($content), $content, $compress, $forceOnTop);
-        		}
+        		return t3lib_div::wrapJS($content);
         	} else {
-        		if ($section=='footer') {
-	        		$this->pageRenderer->addJsFooterFile($src, $type, $compress, $forceOnTop, $allWrap, $excludeFromConcatenation);
-        		} else {
-        			$this->pageRenderer->addJsFile($src, $type, $compress, $forceOnTop, $allWrap, $excludeFromConcatenation);
-        		}
+        		return '<script type="'.htmlspecialchars($type).'" src="'.htmlspecialchars($src).'"></script>';
         	}
         } else {
-        		// additionalFooterData not possible in USER_INT
-        	if (!$src) {
-        		$GLOBALS['TSFE']->additionalHeaderData[md5($content)] = t3lib_div::wrapJS($content);
-        	} else {
-        		$GLOBALS['TSFE']->additionalHeaderData[md5($src)] = '<script type="'.htmlspecialchars($type).'" src="'.htmlspecialchars($src).'"></script>';
-        	}
+	        if ($this->isCached()) {
+	        	if (!$src) {
+	        		if ($section=='footer') {
+	        			$this->pageRenderer->addJsFooterInlineCode(md5($content), $content, $compress, $forceOnTop);
+	        		} else {
+	        			$this->pageRenderer->addJsInlineCode(md5($content), $content, $compress, $forceOnTop);
+	        		}
+	        	} else {
+	        		if ($section=='footer') {
+		        		$this->pageRenderer->addJsFooterFile($src, $type, $compress, $forceOnTop, $allWrap, $excludeFromConcatenation);
+	        		} else {
+	        			$this->pageRenderer->addJsFile($src, $type, $compress, $forceOnTop, $allWrap, $excludeFromConcatenation);
+	        		}
+	        	}
+	        } else {
+	        		// additionalFooterData not possible in USER_INT
+	        	if (!$src) {
+	        		$GLOBALS['TSFE']->additionalHeaderData[md5($content)] = t3lib_div::wrapJS($content);
+	        	} else {
+	        		$GLOBALS['TSFE']->additionalHeaderData[md5($src)] = '<script type="'.htmlspecialchars($type).'" src="'.htmlspecialchars($src).'"></script>';
+	        	}
+	        }
         }
 	}
 }

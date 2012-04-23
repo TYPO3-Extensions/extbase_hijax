@@ -64,6 +64,11 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 	protected $listenerFactory;
 	
 	/**
+	 * @var boolean
+	 */
+	protected $preventMarkupUpdateOnAjaxLoad;
+	
+	/**
 	 * Constructor
 	 */
 	public function __construct() {
@@ -71,6 +76,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 		$this->hijaxEventDispatcher = $this->objectManager->get('Tx_ExtbaseHijax_Event_Dispatcher');
 		$this->listenerFactory = $this->objectManager->get('Tx_ExtbaseHijax_Service_Serialization_ListenerFactory');
 		$this->cacheInstance = $GLOBALS['typo3CacheManager']->getCache('extbase_hijax_storage');
+		$this->preventMarkupUpdateOnAjaxLoad = false;
 	}
 	
 	/**
@@ -108,7 +114,8 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 			
 				$bootstrap = t3lib_div::makeInstance('Tx_Extbase_Core_Bootstrap');
 				$bootstrap->initialize($configuration);
-			
+				$this->setPreventMarkupUpdateOnAjaxLoad(false);
+				
 				$request = $listener->getRequest();	
 				$request = $this->buildRequest($r, $request);
 				
@@ -122,7 +129,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 				$content = $response->getContent();
 				$this->processIntScripts($content);
 				$this->processAbsRefPrefix($content, $configuration['settings']['absRefPrefix']);
-				$responses['original'][] = array( 'id' => $r['id'], 'response' => $content );
+				$responses['original'][] = array( 'id' => $r['id'], 'response' => $content, 'preventMarkupUpdate' => $this->getPreventMarkupUpdateOnAjaxLoad() );
 			}
 			
 				// see if there are affected elements on the page as well
@@ -253,6 +260,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 				$configuration = $listener->getConfiguration();
 				$bootstrap->initialize($configuration);
 				$request = $listener->getRequest();
+				$this->setPreventMarkupUpdateOnAjaxLoad(false);
 				
 				/* @var $response Tx_Extbase_MVC_Web_Response */
 				$response = $this->objectManager->create('Tx_Extbase_MVC_Web_Response');
@@ -264,7 +272,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 				$content = $response->getContent();
 				$this->processIntScripts($content);
 				$this->processAbsRefPrefix($content, $configuration['settings']['absRefPrefix']);
-				$responses['affected'][] = array( 'id' => $listenerId, 'response' => $content );
+				$responses['affected'][] = array( 'id' => $listenerId, 'response' => $content, 'preventMarkupUpdate' => $this->getPreventMarkupUpdateOnAjaxLoad() );
 			}			
 		}
 	}	
@@ -353,6 +361,20 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 	 */
 	protected function setIsActive($isActive) {
 		$this->isActive = $isActive;
+	}
+	
+	/**
+	 * @return the $preventMarkupUpdateOnAjaxLoad
+	 */
+	public function getPreventMarkupUpdateOnAjaxLoad() {
+		return $this->preventMarkupUpdateOnAjaxLoad;
+	}
+
+	/**
+	 * @param boolean $preventMarkupUpdateOnAjaxLoad
+	 */
+	public function setPreventMarkupUpdateOnAjaxLoad($preventMarkupUpdateOnAjaxLoad) {
+		$this->preventMarkupUpdateOnAjaxLoad = $preventMarkupUpdateOnAjaxLoad;
 	}
 }
 

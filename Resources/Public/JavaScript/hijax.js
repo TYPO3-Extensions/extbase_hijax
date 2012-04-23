@@ -209,7 +209,55 @@
 
         // Return the parsed data.
         return( arrData );
-    };	
+    };
+    
+    _ajaxRequest = function ($data, pendingElement) {
+		var ajaxRequest = $.ajax({
+			url: EXTBASE_HIJAX.url,
+			type: "POST",
+			//crossDomain: true,
+			data: $data,
+			dataType: "json",
+			pendingElement: pendingElement,
+			success: function(data, textStatus, jqXHR) {
+				if (data['redirect'] && data['redirect'].url) {
+					window.location = data['redirect'].url;
+				} else {
+					$.each(EXTBASE_HIJAX.beforeLoadElement, function(i, f) {
+						try {
+							eval(f);
+						} catch (err) {
+						}
+					});
+					this.pendingElement.hideHijaxLoader();
+					$.each(data['original'], function(i, r) {
+						var element = $('#'+r['id']);
+						if (element) {
+							element.loadHijaxData(r['response'], r['preventMarkupUpdate']);
+						}
+					});
+					$.each(data['affected'], function(i, r) {
+						$.each(listeners[r['id']], function(i, element) {	
+							element = $(element);
+							if (element) {
+								element.loadHijaxData(r['response'], r['preventMarkupUpdate']);
+							}
+						});
+					});
+					$.each(EXTBASE_HIJAX.onLoadElement, function(i, f) {
+						try {
+							eval(f);
+						} catch (err) {
+						}
+					});
+				}
+			},
+			error: function(jqXHR, textStatus, errorThrown) {
+				this.pendingElement.hideHijaxLoader();
+				this.pendingElement.showMessage(EXTBASE_HIJAX.errorMessage);
+			}
+		});	    	
+    };
 	
 	_process = function (elements) {
 		if (elements && elements.length > 0) {
@@ -284,51 +332,7 @@
 							});
 							$data = $.param({r: requests, e: eventsToListen})+'&'+$.param(fields)+'&eID=extbase_hijax_dispatcher&L='+EXTBASE_HIJAX.sys_language_uid;
 							
-							var ajaxRequest = $.ajax({
-								url: EXTBASE_HIJAX.url,
-								type: "POST",
-								//crossDomain: true,
-								data: $data,
-								dataType: "json",
-								pendingElement: $(element),
-								success: function(data, textStatus, jqXHR) {
-									if (data['redirect'] && data['redirect'].url) {
-										window.location = data['redirect'].url;
-									} else {
-										$.each(EXTBASE_HIJAX.beforeLoadElement, function(i, f) {
-											try {
-												eval(f);
-											} catch (err) {
-											}
-										});
-										this.pendingElement.hideHijaxLoader();
-										$.each(data['original'], function(i, r) {
-											var element = $('#'+r['id']);
-											if (element) {
-												element.loadHijaxData(r['response']);
-											}
-										});
-										$.each(data['affected'], function(i, r) {
-											$.each(listeners[r['id']], function(i, element) {	
-												element = $(element);
-												if (element) {
-													element.loadHijaxData(r['response']);
-												}
-											});
-										});
-										$.each(EXTBASE_HIJAX.onLoadElement, function(i, f) {
-											try {
-												eval(f);
-											} catch (err) {
-											}
-										});
-									}
-								},
-								error: function(jqXHR, textStatus, errorThrown) {
-									this.pendingElement.hideHijaxLoader();
-									this.pendingElement.showMessage(EXTBASE_HIJAX.errorMessage);
-								}
-							});	
+							_ajaxRequest($data, $(element));
 						});
 						break;
 					case 'ajax':
@@ -367,51 +371,7 @@
 							
 							$data = $.param({r: requests, e: eventsToListen})+'&eID=extbase_hijax_dispatcher&L='+EXTBASE_HIJAX.sys_language_uid;
 	
-							var ajaxRequest = $.ajax({
-								url: EXTBASE_HIJAX.url,
-								type: "POST",
-								//crossDomain: true,
-								data: $data,
-								dataType: "json",
-								pendingElement: target,
-								success: function(data, textStatus, jqXHR) {
-									if (data['redirect'] && data['redirect'].url) {
-										window.location = data['redirect'].url;
-									} else {
-										$.each(EXTBASE_HIJAX.beforeLoadElement, function(i, f) {
-											try {
-												eval(f);
-											} catch (err) {
-											}
-										});
-										this.pendingElement.hideHijaxLoader();
-										$.each(data['original'], function(i, r) {
-											var element = $('#'+r['id']);
-											if (element) {
-												element.loadHijaxData(r['response']);
-											}
-										});
-										$.each(data['affected'], function(i, r) {
-											$.each(listeners[r['id']], function(i, element) {	
-												element = $(element);
-												if (element) {
-													element.loadHijaxData(r['response']);
-												}
-											});
-										});
-										$.each(EXTBASE_HIJAX.onLoadElement, function(i, f) {
-											try {
-												eval(f);
-											} catch (err) {
-											}
-										});
-									}
-								},
-								error: function(jqXHR, textStatus, errorThrown) {
-									this.pendingElement.hideHijaxLoader();
-									this.pendingElement.showMessage(EXTBASE_HIJAX.errorMessage);
-								}
-							});	
+							_ajaxRequest($data, target);
 						});
 						break;
 					default: 
@@ -432,7 +392,7 @@
 						$.each(data, function(i, r) {
 							var element = $('#'+r['id']);
 							if (element) {
-								element.loadHijaxData(r['response']);
+								element.loadHijaxData(r['response'], r['preventMarkupUpdate']);
 							}
 						});
 					}
@@ -488,60 +448,68 @@
 		return this;
 	};	
 	
-	$.fn.loadHijaxData = function(response) {
+	$.fn.loadHijaxData = function(response, preventMarkupUpdate) {
 		ajaxCallback = true;
-
-		var element = $(this);
-		var content = element.find('> .'+EXTBASE_HIJAX.contentClass);
 		
-		if (element.attr('data-hijax-result-target')) {
-			content = eval(element.attr('data-hijax-result-target'));
-			var wrapResult = false;
-			if (element.attr('data-hijax-result-wrap')) {
-				wrapResult = eval(element.attr('data-hijax-result-wrap'));
-			}
-			if (wrapResult) {
-				response = '<div class="hijax-element"><div class="'+EXTBASE_HIJAX.contentClass+'">'+response+'</div><div class="'+EXTBASE_HIJAX.loadingClass+'"></div></div>';
-			}
-		}
-		
-		if (content) {
-			element.removeClass(EXTBASE_HIJAX.fallbackClass);
-			var startingHeight = content.css('overflow', 'hidden').height();
-			element = jQuery(content.outer(response));
-			if (startingHeight > 0) {
-				element.css('height', startingHeight);
-			}
-			content = element.find('> .'+EXTBASE_HIJAX.contentClass);
-
-			var newElements = element.find('.hijax-element');
-			if (jQuery(element[0]).hasClass('hijax-element')) {
-				newElements.push(element[0]);
-			}
-			newElements.extbaseHijax(true);
-			var contentStartingOverflow = content.css('overflow');
-			var endingHeight = content.css('overflow', 'hidden').outerHeight();
-			
-			if (startingHeight != endingHeight && startingHeight > 0 && endingHeight > 0) {
-				element.stop().animate({
-					height: endingHeight
-				}, 500, function() {
-						// Animation complete.
-					$(this).css('height', 'auto');
-					$(this).find('> .'+EXTBASE_HIJAX.contentClass).css('overflow', contentStartingOverflow);
-				});
+		if (preventMarkupUpdate) {
+			if ($('#extbase_hijax_js_callback').length>0) {
+				$('#extbase_hijax_js_callback').html(response);
 			} else {
-				content.css('overflow', contentStartingOverflow);
-				element.css('height', 'auto');
+				$('body').append('<div id="extbase_hijax_js_callback" style="display: none !important;">'+response+'</div>');
 			}
-		}
+		} else {
+			var element = $(this);
+			var content = element.find('> .'+EXTBASE_HIJAX.contentClass);
+			
+			if (element.attr('data-hijax-result-target')) {
+				content = eval(element.attr('data-hijax-result-target'));
+				var wrapResult = false;
+				if (element.attr('data-hijax-result-wrap')) {
+					wrapResult = eval(element.attr('data-hijax-result-wrap'));
+				}
+				if (wrapResult) {
+					response = '<div class="hijax-element"><div class="'+EXTBASE_HIJAX.contentClass+'">'+response+'</div><div class="'+EXTBASE_HIJAX.loadingClass+'"></div></div>';
+				}
+			}
+			
+			if (content) {
+				element.removeClass(EXTBASE_HIJAX.fallbackClass);
+				var startingHeight = content.css('overflow', 'hidden').height();
+				element = jQuery(content.outer(response));
+				if (startingHeight > 0) {
+					element.css('height', startingHeight);
+				}
+				content = element.find('> .'+EXTBASE_HIJAX.contentClass);
 
-		$.each(EXTBASE_HIJAX.initElement, function(i, f) {
-			try {
-				f(element);
-			} catch (err) {
+				var newElements = element.find('.hijax-element');
+				if (jQuery(element[0]).hasClass('hijax-element')) {
+					newElements.push(element[0]);
+				}
+				newElements.extbaseHijax(true);
+				var contentStartingOverflow = content.css('overflow');
+				var endingHeight = content.css('overflow', 'hidden').outerHeight();
+				
+				if (startingHeight != endingHeight && startingHeight > 0 && endingHeight > 0) {
+					element.stop().animate({
+						height: endingHeight
+					}, 500, function() {
+							// Animation complete.
+						$(this).css('height', 'auto');
+						$(this).find('> .'+EXTBASE_HIJAX.contentClass).css('overflow', contentStartingOverflow);
+					});
+				} else {
+					content.css('overflow', contentStartingOverflow);
+					element.css('height', 'auto');
+				}
 			}
-		});
+
+			$.each(EXTBASE_HIJAX.initElement, function(i, f) {
+				try {
+					f(element);
+				} catch (err) {
+				}
+			});			
+		}
 		
 		ajaxCallback = false;
 		

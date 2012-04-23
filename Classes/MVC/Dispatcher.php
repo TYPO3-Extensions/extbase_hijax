@@ -59,6 +59,11 @@ class Tx_ExtbaseHijax_MVC_Dispatcher extends Tx_Extbase_MVC_Dispatcher {
 	 * @var array
 	 */
 	protected $listenersStack;
+		
+	/**
+	 * @var Tx_ExtbaseHijax_Utility_Ajax_Dispatcher
+	 */
+	protected $ajaxDispatcher;
 	
 	/**
 	 * Constructs the global dispatcher
@@ -69,6 +74,7 @@ class Tx_ExtbaseHijax_MVC_Dispatcher extends Tx_Extbase_MVC_Dispatcher {
 		parent::__construct($objectManager);
 		$this->configurationManager = $this->objectManager->get('Tx_Extbase_Configuration_ConfigurationManagerInterface');
 		$this->hijaxEventDispatcher = $this->objectManager->get('Tx_ExtbaseHijax_Event_Dispatcher');
+		$this->ajaxDispatcher = $this->objectManager->get('Tx_ExtbaseHijax_Utility_Ajax_Dispatcher');
 		$this->extensionConfiguration = $this->objectManager->get('Tx_ExtbaseHijax_Configuration_ExtensionInterface');
 		$this->listenerFactory = $this->objectManager->get('Tx_ExtbaseHijax_Service_Serialization_ListenerFactory');
 		self::$id = $this->extensionConfiguration->getNextElementId();
@@ -130,7 +136,7 @@ class Tx_ExtbaseHijax_MVC_Dispatcher extends Tx_Extbase_MVC_Dispatcher {
 				}
 			}
 			
-			if ($this->hijaxEventDispatcher->getIsHijaxElement()) {
+			if ($this->hijaxEventDispatcher->getIsHijaxElement() && !$this->ajaxDispatcher->getPreventMarkupUpdateOnAjaxLoad()) {
 				$currentListeners = $this->hijaxEventDispatcher->getListeners('', TRUE);
 					
 				$signature = $this->getCurrentListener()->getId().'('.$this->convertArrayToCSV(array_keys($currentListeners)).'); ';
