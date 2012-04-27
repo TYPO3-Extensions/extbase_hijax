@@ -44,17 +44,10 @@ class Tx_ExtbaseHijax_Persistence_Storage_Typo3DbBackend extends Tx_Extbase_Pers
 			
 			$sqlParser = Tx_ExtbaseHijax_Persistence_Parser_SQL::ParseString($sql);
 			
-				// If limit is set, we need to count the rows "manually" as COUNT(*) ignores LIMIT constraints
-			if ($sqlParser->getLimitStatement()) {
-				$result = $this->databaseHandle->sql_query($sql);
-				$this->checkSqlErrors($statement);
-				$count = $this->databaseHandle->sql_num_rows($result);
-			} else {
-				$result = $this->databaseHandle->sql_query($sqlParser->getCountQuery());
-				$this->checkSqlErrors($statement);
-				$rows = $this->getRowsFromResult($query->getSource(), $result);
-				$count = current(current($rows));
-			}
+			$result = $this->databaseHandle->sql_query($sqlParser->getCountQuery());
+			$this->checkSqlErrors($statement);
+			$rows = $this->getRowsFromResult($query->getSource(), $result);
+			$count = current(current($rows));
 			$this->databaseHandle->sql_free_result($result);
 		} else {
 				/*

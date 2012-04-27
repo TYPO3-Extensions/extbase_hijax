@@ -277,17 +277,6 @@ class Tx_ExtbaseHijax_Persistence_Parser_SQL {
 	}
 
 	/**
-	 * Returns manipulated sql to get the unlimited number of rows in the query.
-	 *
-	 * @return string sql
-	 */
-	public function getLimitedCountQuery() {
-
-		$this->query['select'] = 'select count(*) as `count` ';
-		return implode('', $this->query);
-	}
-
-	/**
 	 * Returns the select section of the query.
 	 *
 	 * @return string sql
@@ -326,6 +315,18 @@ class Tx_ExtbaseHijax_Persistence_Parser_SQL {
 
 		return $this->query['limit'];
 	}
+	
+	/**
+	 * Sets the limit section of the query.
+	 *
+	 * @return Tx_ExtbaseHijax_Persistence_Parser_SQL
+	 */
+	public function setLimitStatement($limit) {
+	
+		$this->query['limit'] = $limit;
+		
+		return $this;
+	}
 
 	/**
 	 * Returns the specified section of the query.
@@ -348,4 +349,11 @@ class Tx_ExtbaseHijax_Persistence_Parser_SQL {
 
 		return $this->query;
 	}
+	
+	/**
+	 * @return string sql
+	 */
+	public function toString() {
+		return implode('', $this->query);
+	}	
 }
