@@ -32,37 +32,37 @@ class Tx_ExtbaseHijax_Persistence_Storage_Typo3DbBackend extends Tx_Extbase_Pers
 	 * @return integer The number of matching tuples
 	 */
 	public function getObjectCountByQuery(Tx_Extbase_Persistence_QueryInterface $query) {
-		$constraint = $query->getConstraint();
-		if($constraint instanceof Tx_Extbase_Persistence_QOM_StatementInterface) {
-			throw new Tx_Extbase_Persistence_Storage_Exception_BadConstraint('Could not execute count on queries with a constraint of type Tx_Extbase_Persistence_QOM_StatementInterface', 1256661045);
-		}
 		$parameters = array();
-		
 		$statement = $query->getStatement();
 		if($statement instanceof Tx_Extbase_Persistence_QOM_Statement) {
+				/*
+				 * Overriding default extbase logic for manually passed SQL
+				 */
 			$sql = $statement->getStatement();
 			$parameters = $statement->getBoundVariables();
+			$this->replacePlaceholders($sql, $parameters);
+			
+			$sqlParser = Tx_ExtbaseHijax_Persistence_Parser_SQL::ParseString($sql);
+			
+				// If limit is set, we need to count the rows "manually" as COUNT(*) ignores LIMIT constraints
+			if ($sqlParser->getLimitStatement()) {
+				$result = $this->databaseHandle->sql_query($sql);
+				$this->checkSqlErrors($statement);
+				$count = $this->databaseHandle->sql_num_rows($result);
+			} else {
+				$result = $this->databaseHandle->sql_query($sqlParser->getCountQuery());
+				$this->checkSqlErrors($statement);
+				$rows = $this->getRowsFromResult($query->getSource(), $result);
+				$count = current(current($rows));
+			}
+			$this->databaseHandle->sql_free_result($result);
 		} else {
-			$parameters = array();
-			$statementParts = $this->parseQuery($query, $parameters);
-			$sql = $this->buildQuery($statementParts, $parameters);
+				/*
+				 * Default Extbase logic
+				 */
+			$count = parent::getObjectCountByQuery($query);
 		}
-		$this->replacePlaceholders($sql, $parameters);
 
-		$sqlParser = Tx_ExtbaseHijax_Persistence_Parser_SQL::ParseString($sql);
-				
-			// if limit is set, we need to count the rows "manually" as COUNT(*) ignores LIMIT constraints
-		if ($sqlParser->getLimitStatement()) {
-			$result = $this->databaseHandle->sql_query($sql);
-			$this->checkSqlErrors($statement);
-			$count = $this->databaseHandle->sql_num_rows($result);
-		} else {
-			$result = $this->databaseHandle->sql_query($sqlParser->getCountQuery());
-			$this->checkSqlErrors($statement);
-			$rows = $this->getRowsFromResult($query->getSource(), $result);
-			$count = current(current($rows));
-		}
-		$this->databaseHandle->sql_free_result($result);
 		return (int)$count;
 	}
 }
