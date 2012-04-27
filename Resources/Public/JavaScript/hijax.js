@@ -475,6 +475,12 @@
 			if (content) {
 				element.removeClass(EXTBASE_HIJAX.fallbackClass);
 				var startingHeight = content.css('overflow', 'hidden').height();
+				$.each(EXTBASE_HIJAX.unloadElement, function(i, f) {
+					try {
+						f(content);
+					} catch (err) {
+					}
+				});			
 				element = jQuery(content.outer(response));
 				if (startingHeight > 0) {
 					element.css('height', startingHeight);
