@@ -51,7 +51,9 @@ $GLOBALS ['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['pro
 $GLOBALS ['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['processCmdmapClass'][] =
 	'EXT:extbase_hijax/Classes/TCEmain/Hooks.php:Tx_ExtbaseHijax_TCEmain_Hooks';
 
-$objectContainer = t3lib_div::makeInstance('Tx_Extbase_Object_Container_Container');
-$objectContainer->registerImplementation('Tx_Extbase_MVC_Dispatcher', 'Tx_ExtbaseHijax_MVC_Dispatcher');
+$extbaseObjectContainer = t3lib_div::makeInstance('Tx_Extbase_Object_Container_Container'); // Singleton
+$extbaseObjectContainer->registerImplementation('Tx_Extbase_MVC_Dispatcher', 'Tx_ExtbaseHijax_MVC_Dispatcher');
+$extbaseObjectContainer->registerImplementation('Tx_Extbase_Persistence_Storage_BackendInterface', 'Tx_ExtbaseHijax_Persistence_Storage_Typo3DbBackend');
+unset($extbaseObjectContainer);
 
 ?>
