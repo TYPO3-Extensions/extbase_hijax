@@ -110,13 +110,18 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 				/* @var $listener Tx_ExtbaseHijax_Event_Listener */
 				$listener = $this->listenerFactory->findById($r['settingsHash']);
 					// load settings saved under settingsHash
-				$configuration = $listener->getConfiguration();
-			
+				if ($listener) {
+					$configuration = $listener->getConfiguration();
+					$request = $listener->getRequest();	
+				} else {
+					$configuration['controller']    = $r['controller'];
+					$configuration['action']        = $r['action'];
+				}
+				
 				$bootstrap = t3lib_div::makeInstance('Tx_Extbase_Core_Bootstrap');
 				$bootstrap->initialize($configuration);
 				$this->setPreventMarkupUpdateOnAjaxLoad(false);
 				
-				$request = $listener->getRequest();	
 				$request = $this->buildRequest($r, $request);
 				
 				/* @var $response Tx_Extbase_MVC_Web_Response */
