@@ -37,6 +37,25 @@ class Tx_ExtbaseHijax_ViewHelpers_Widget_LinkViewHelper extends Tx_Fluid_ViewHel
 	protected $hijaxEventDispatcher;
 	
 	/**
+	 * @var	tslib_cObj
+	 */
+	protected $contentObject;
+	
+	/**
+	 * @var Tx_Extbase_Configuration_ConfigurationManagerInterface
+	 */
+	protected $configurationManager;
+	
+	/**
+	 * @param Tx_Extbase_Configuration_ConfigurationManagerInterface $configurationManager
+	 * @return void
+	 */
+	public function injectConfigurationManager(Tx_Extbase_Configuration_ConfigurationManagerInterface $configurationManager) {
+		$this->configurationManager = $configurationManager;
+		$this->contentObject = $this->configurationManager->getContentObject();
+	}
+	
+	/**
 	 * @param Tx_Extbase_Service_ExtensionService $extensionService
 	 * @return void
 	 */
@@ -66,10 +85,7 @@ class Tx_ExtbaseHijax_ViewHelpers_Widget_LinkViewHelper extends Tx_Fluid_ViewHel
 	 * @api
 	 */
 	public function render($action = NULL, $arguments = array(), $section = '', $format = '', $ajax = TRUE) {
-		if ($ajax === TRUE) {
-			$this->renderHijaxDataAttributes($action, $arguments, $controller = null, $extensionName = null, $pluginName = null);
-		}
-		$uri = $this->getWidgetUri();
+		$uri = $this->getWidgetUri($action, $arguments, $ajax);
 		$this->tag->addAttribute('href', $uri);
 		$this->tag->setContent($this->renderChildren());
 
@@ -81,53 +97,84 @@ class Tx_ExtbaseHijax_ViewHelpers_Widget_LinkViewHelper extends Tx_Fluid_ViewHel
 	 *
 	 * @return void
 	 */
-	protected function renderHijaxDataAttributes($action = NULL, array $arguments = array(), $controller = NULL, $extensionName = NULL, $pluginName = NULL) {
+	protected function getWidgetUri($action = NULL, array $arguments = array(), $ajax = TRUE) {
 		$this->hijaxEventDispatcher->setIsHijaxElement(true);		
 		
 		$request = $this->controllerContext->getRequest();
 			/* @var $widgetContext Tx_ExtbaseHijax_Core_Widget_WidgetContext */
 		$widgetContext = $request->getWidgetContext();
-	
-		$this->tag->addAttribute('data-hijax-element-type', 'link');
-		$this->tag->addAttribute('class', trim($this->arguments['class'].' hijax-element'));
-	
+		
+		if ($ajax) {
+			$this->tag->addAttribute('data-hijax-element-type', 'link');
+			$this->tag->addAttribute('class', trim($this->arguments['class'].' hijax-element'));
+		}
 	
 		if ($action === NULL) {
 			$action = $widgetContext->getParentControllerContext()->getRequest()->getControllerActionName();
 		}
-		$this->tag->addAttribute('data-hijax-action', $action);
-	
-	
-		if ($controller === NULL) {
-			$controller = $widgetContext->getParentControllerContext()->getRequest()->getControllerName();
+		if ($ajax) {
+			$this->tag->addAttribute('data-hijax-action', $action);
 		}
-		$this->tag->addAttribute('data-hijax-controller', $controller);
 	
-	
-		if ($extensionName === NULL) {
-			$extensionName = $widgetContext->getParentControllerContext()->getRequest()->getControllerExtensionName();
+		$controller = $widgetContext->getParentControllerContext()->getRequest()->getControllerName();
+		if ($ajax) {
+			$this->tag->addAttribute('data-hijax-controller', $controller);
 		}
-		$this->tag->addAttribute('data-hijax-extension', $extensionName);
 	
-		if ($pluginName === NULL && TYPO3_MODE === 'FE') {
+		$extensionName = $widgetContext->getParentControllerContext()->getRequest()->getControllerExtensionName();
+		if ($ajax) {
+			$this->tag->addAttribute('data-hijax-extension', $extensionName);
+		}
+		
+		if (TYPO3_MODE === 'FE') {
 			$pluginName = $this->extensionService->getPluginNameByAction($extensionName, $controller, $action);
-		}
-		if ($pluginName === NULL) {
+		} 
+		if (!$pluginName) {
 			$pluginName = $request->getPluginName();
 		}
-		$this->tag->addAttribute('data-hijax-plugin', $pluginName);
-	
-		$requestArguments = $widgetContext->getParentControllerContext()->getRequest()->getArguments();
-		$requestArguments[$widgetContext->getWidgetIdentifier()] = ($arguments && is_array($arguments)) ? $arguments : array();				
-		$this->tag->addAttribute('data-hijax-arguments', serialize($requestArguments));
+		if (!$pluginName) {
+			$pluginName = $widgetContext->getParentPluginName();
+		}
+		if ($ajax) {
+			$this->tag->addAttribute('data-hijax-plugin', $pluginName);
+		}
 		
+		$requestArguments = $widgetContext->getParentControllerContext()->getRequest()->getArguments();
+		$requestArguments = array_merge($requestArguments, $this->hijaxEventDispatcher->getContextArguments());
+		$requestArguments[$widgetContext->getWidgetIdentifier()] = ($arguments && is_array($arguments)) ? $arguments : array();
+		if ($ajax) {
+			$this->tag->addAttribute('data-hijax-arguments', serialize($requestArguments));
+		}
+			
 			/* @var $listener Tx_ExtbaseHijax_Event_Listener */
 		$listener = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager')->get('Tx_ExtbaseHijax_MVC_Dispatcher')->getCurrentListener();
-		$this->tag->addAttribute('data-hijax-settings', $listener->getId());
-	
+		if ($ajax) {
+			$this->tag->addAttribute('data-hijax-settings', $listener->getId());
+		}
+		
 		$pluginNamespace = $this->extensionService->getPluginNamespace($extensionName, $pluginName);
-		$this->tag->addAttribute('data-hijax-namespace', $pluginNamespace);
-	}
+		if ($ajax) {
+			$this->tag->addAttribute('data-hijax-namespace', $pluginNamespace);
+		}
+
+		$uriBuilder = $this->controllerContext->getUriBuilder();
+
+		$argumentPrefix = $this->controllerContext->getRequest()->getArgumentPrefix();
+		
+		if ($this->hasArgument('format') && $this->arguments['format'] !== '') {
+			$requestArguments['format'] = $this->arguments['format'];
+		}
+			
+		return $uriBuilder
+			->reset()
+			->setUseCacheHash($this->contentObject->getUserObjectType() === tslib_cObj::OBJECTTYPE_USER)
+			->setArguments(array($pluginNamespace => $requestArguments))
+			->setSection($this->arguments['section'])
+			->setAddQueryString(TRUE)
+			->setArgumentsToBeExcludedFromQueryString(array($argumentPrefix, 'cHash'))
+			->setFormat($this->arguments['format'])
+			->build();
+	}	
 }
 
 ?>

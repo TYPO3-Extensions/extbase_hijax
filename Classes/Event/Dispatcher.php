@@ -109,13 +109,18 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 			$this->listeners[$name] = array();
 		}
 		
-		if ($callback && in_array($name, $this->pendingEventNames)) {
+		$events = array();
+		
+		if (in_array($name, $this->pendingEventNames)) {
 			foreach ($this->pendingEvents[$name] as $event) {
 				/* @var $event Tx_ExtbaseHijax_Event_Event */
-				if (is_string($callback)) {
-					t3lib_div::callUserFunction($callback, $event, $this, $checkPrefix = false);
-				} else {
-					call_user_func($callback, $event);
+				$events[] = $event;
+				if ($callback) {
+					if (is_string($callback)) {
+						t3lib_div::callUserFunction($callback, $event, $this, $checkPrefix = false);
+					} else {
+						call_user_func($callback, $event);
+					}
 				}
 			}
 		}
@@ -127,6 +132,8 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 		}
 		
 		$this->currentElementListeners[$name][] = array('listener' => $listener, 'callback' => $callback);
+		
+		return $events;
 	}
 
 	/**
@@ -308,6 +315,7 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 	public function startContentElement() {
 		array_push($this->currentElementListenersStack, $this->currentElementListeners);
 		$this->currentElementListeners = array();
+		$this->resetContextArguments();
 	}
 	
 	/**
@@ -381,6 +389,34 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 			$this->replaceXMLCommentsWithDivsFound = FALSE;
 			$content = preg_replace_callback('/<!-- ###EVENT_LISTENER_(?P<elementId>\d*)### START (?P<listenerDefinition>.*) -->(?P<content>.*?)<!-- ###EVENT_LISTENER_(\\1)### END -->/msU', array($this, 'replaceXMLCommentsWithDivsCallback'), $content);
 		}
+	}
+	
+	/**
+	 * @var array
+	 */
+	protected $contextArguments = array();
+	
+	/**
+	 * @param array $contextArguments
+	 * 
+	 * @return void
+	 */
+	public function registerContextArguments($contextArguments) {
+		$this->contextArguments = array_merge($this->contextArguments, $contextArguments);
+	}
+	
+	/**
+	 * @return array
+	 */
+	public function getContextArguments() {
+		return $this->contextArguments;
+	}
+	
+	/**
+	 * @return void
+	 */
+	protected function resetContextArguments() {
+		$this->contextArguments = array();
 	}
 	
 	/**

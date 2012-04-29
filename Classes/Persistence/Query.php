@@ -138,7 +138,7 @@ class Tx_ExtbaseHijax_Persistence_Query extends Tx_Extbase_Persistence_Query {
 	 */
 	protected function getLimitStatement() {
 		if ($this->limit || $this->offset) {
-			$limitStatement = 'LIMIT ';
+			$limitStatement = ' LIMIT ';
 			if ($this->limit) {
 				$limitStatement .= $this->limit;
 			} else {
