@@ -209,7 +209,7 @@ abstract class Tx_ExtbaseHijax_Core_Widget_AbstractWidgetViewHelper extends Tx_F
 		} else {
 			$widgetCounter = $this->viewHelperVariableContainer->get('Tx_Fluid_Core_Widget_AbstractWidgetViewHelper', 'nextWidgetNumber');
 		}
-		$widgetIdentifier = '@widget_' . $widgetCounter;
+		$widgetIdentifier = '__widget_' . $widgetCounter;
 		$this->viewHelperVariableContainer->addOrUpdate('Tx_Fluid_Core_Widget_AbstractWidgetViewHelper', 'nextWidgetNumber', $widgetCounter + 1);
 
 		$this->widgetContext->setWidgetIdentifier($widgetIdentifier);
