@@ -54,6 +54,7 @@ $GLOBALS ['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['pro
 $extbaseObjectContainer = t3lib_div::makeInstance('Tx_Extbase_Object_Container_Container'); // Singleton
 $extbaseObjectContainer->registerImplementation('Tx_Extbase_MVC_Dispatcher', 'Tx_ExtbaseHijax_MVC_Dispatcher');
 $extbaseObjectContainer->registerImplementation('Tx_Extbase_Persistence_Storage_BackendInterface', 'Tx_ExtbaseHijax_Persistence_Storage_Typo3DbBackend');
+$extbaseObjectContainer->registerImplementation('Tx_Extbase_Persistence_BackendInterface', 'Tx_ExtbaseHijax_Persistence_Backend');
 $extbaseObjectContainer->registerImplementation('Tx_Extbase_Persistence_QueryInterface', 'Tx_ExtbaseHijax_Persistence_Query');
 
 unset($extbaseObjectContainer);

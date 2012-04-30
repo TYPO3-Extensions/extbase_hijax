@@ -139,13 +139,13 @@ class Tx_ExtbaseHijax_Persistence_Query extends Tx_Extbase_Persistence_Query {
 	protected function getLimitStatement() {
 		if ($this->limit || $this->offset) {
 			$limitStatement = ' LIMIT ';
+			if ($this->offset) {
+				$limitStatement .= $this->offset.', ';
+			}
 			if ($this->limit) {
 				$limitStatement .= $this->limit;
 			} else {
 				$limitStatement .= ' 18446744073709551615';
-			}
-			if ($this->offset) {
-				$limitStatement .= ' OFFSET '.$this->offset;
 			}
 		}
 		
