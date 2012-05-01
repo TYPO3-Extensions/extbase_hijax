@@ -167,7 +167,7 @@ class Tx_ExtbaseHijax_ViewHelpers_Widget_LinkViewHelper extends Tx_Fluid_ViewHel
 			
 		return $uriBuilder
 			->reset()
-			->setUseCacheHash($this->contentObject->getUserObjectType() === tslib_cObj::OBJECTTYPE_USER)
+			//->setUseCacheHash($this->contentObject->getUserObjectType() === tslib_cObj::OBJECTTYPE_USER)
 			->setArguments(array($pluginNamespace => $requestArguments))
 			->setSection($this->arguments['section'])
 			->setAddQueryString(TRUE)
