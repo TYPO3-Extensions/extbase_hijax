@@ -106,9 +106,9 @@ class Tx_ExtbaseHijax_MVC_Dispatcher extends Tx_Extbase_MVC_Dispatcher {
 			} else {
 				$this->currentListener = t3lib_div::makeInstance('Tx_ExtbaseHijax_Event_Listener', $request);
 			}
-			$this->listenerFactory->persist($this->currentListener);
 				
 			if (!$this->serviceContent->getExecuteExtbasePlugins()) {
+				$this->listenerFactory->persist($this->currentListener);
 				$this->serviceContent->setCurrentListener($this->currentListener);				
 			} else {
 				$this->hijaxEventDispatcher->startContentElement();
@@ -147,7 +147,12 @@ class Tx_ExtbaseHijax_MVC_Dispatcher extends Tx_Extbase_MVC_Dispatcher {
 					}
 				}
 				
+				if ($this->hijaxEventDispatcher->getIsHijaxElement()) {
+					$this->listenerFactory->persist($this->currentListener);
+				}
+				
 				if ($this->hijaxEventDispatcher->getIsHijaxElement() && !$this->ajaxDispatcher->getPreventMarkupUpdateOnAjaxLoad()) {
+					
 					$currentListeners = $this->hijaxEventDispatcher->getListeners('', TRUE);
 						
 					$signature = $this->getCurrentListener()->getId().'('.$this->convertArrayToCSV(array_keys($currentListeners)).'); ';

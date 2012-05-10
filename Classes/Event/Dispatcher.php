@@ -316,6 +316,7 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 		array_push($this->currentElementListenersStack, $this->currentElementListeners);
 		$this->currentElementListeners = array();
 		$this->resetContextArguments();
+		$this->setIsHijaxElement(false);
 	}
 	
 	/**
