@@ -40,17 +40,23 @@ abstract class Tx_ExtbaseHijax_Service_Serialization_AbstractFactory implements 
 	protected $objectContainer;
 	
 	/**
+	 * @var Tx_Extbase_Object_ObjectManager
+	 */
+	protected $objectManager;	
+	
+	/**
 	 * @var array
 	 */
-	protected $listenerCache;
+	protected $objectCache;
 	
 	/**
 	 * Constructor
 	 */
 	public function __construct() {
 		$this->objectContainer = t3lib_div::makeInstance('Tx_Extbase_Object_Container_Container');	
+		$this->objectManager = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager');
 		$this->storage = $GLOBALS['typo3CacheManager']->getCache('extbase_hijax_storage');
-		$this->listenerCache = array();
+		$this->objectCache = array();
 	}
 	
 	/**
@@ -115,11 +121,11 @@ abstract class Tx_ExtbaseHijax_Service_Serialization_AbstractFactory implements 
 		$fullId = 'serialized-'.get_class($this).'-'.$id;
 		$object = null;
 		
-		if ($this->listenerCache[$fullId]) {
-			$object = $this->listenerCache[$fullId];
+		if ($this->objectCache[$fullId]) {
+			$object = $this->objectCache[$fullId];
 		} elseif ($this->storage->has($fullId)) {
 			$object = $this->unserialize($this->storage->get($fullId));
-			$this->listenerCache[$fullId] = $object;
+			$this->objectCache[$fullId] = $object;
 		}
 		
 		return $object;

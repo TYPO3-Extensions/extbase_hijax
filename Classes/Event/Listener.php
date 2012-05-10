@@ -93,7 +93,8 @@ class Tx_ExtbaseHijax_Event_Listener {
 		$this->injectAutoIDService($this->objectManager->get('Tx_ExtbaseHijax_Service_AutoIDService'));
 		
 		$this->request = $request;
-				
+		$this->request->setMethod('GET');
+		
 		if ($configuration) {
 			$this->configuration = $configuration;
 		} else {
@@ -111,7 +112,7 @@ class Tx_ExtbaseHijax_Event_Listener {
 			// old logic - using autoincrement
 		//$this->id = $this->autoIDService->getAutoId(get_class($this));
 			// new logic - determine the id based on md5 hash
-		$this->id = md5($listenerFactory->serialize($this));
+		$this->id = str_replace(':', '-', $this->cObj->currentRecord).'-'.md5($listenerFactory->serialize($this));
 	}
 
 	/**
@@ -126,6 +127,13 @@ class Tx_ExtbaseHijax_Event_Listener {
 	 */
 	public function getSerializedRequest() {
 		return $this->objectManager->get('Tx_ExtbaseHijax_Service_Serialization_RequestFactory')->serialize($this->request);
+	}
+	
+	/**
+	 * @return the $request
+	 */
+	public function getSerializedCObj() {
+		return $this->objectManager->get('Tx_ExtbaseHijax_Service_Serialization_CObjFactory')->serialize(t3lib_div::makeInstance('Tx_ExtbaseHijax_Event_CObj', $this->cObj));
 	}	
 
 	/**
@@ -162,6 +170,16 @@ class Tx_ExtbaseHijax_Event_Listener {
 	public function setSerializedRequest($request) {
 		$this->request = $this->objectManager->get('Tx_ExtbaseHijax_Service_Serialization_RequestFactory')->unserialize($request);
 	}
+	
+	/**
+	 * @param string $cObj
+	 */
+	public function setSerializedCObj($cObj) {
+			/* @var $eventCObj Tx_ExtbaseHijax_Event_CObj */
+		$eventCObj = $this->objectManager->get('Tx_ExtbaseHijax_Service_Serialization_CObjFactory')->unserialize($cObj);
+		$eventCObj->reconstitute();
+		$this->cObj = $eventCObj->getCObj();
+	}	
 	
 	/**
 	 * @param tslib_cObj $cObj

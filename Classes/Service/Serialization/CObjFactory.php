@@ -22,47 +22,10 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-class Tx_ExtbaseHijax_Service_Serialization_ListenerFactory extends Tx_ExtbaseHijax_Service_Serialization_AbstractFactory {
+class Tx_ExtbaseHijax_Service_Serialization_CObjFactory extends Tx_ExtbaseHijax_Service_Serialization_AbstractFactory {
 	
-	/**
-	 * @var Tx_ExtbaseHijax_Service_Content
-	 */
-	protected $serviceContent;
-
 	/**
 	 * @var array
 	 */
-	protected $properties = array('configuration', 'id', 'serializedRequest', 'serializedCObj');
-
-	/**
-	 * Constructor
-	 */
-	public function __construct() {
-		parent::__construct();
-		$this->serviceContent = $this->objectManager->get('Tx_ExtbaseHijax_Service_Content');
-	}
-	
-	/**
-	 * @param string $listenerId
-	 * @return object
-	 */
-	public function findById($listenerId) {
-		if ($listenerId) {
-			$object = parent::findById($listenerId);
-			
-			if (!$object) {
-				list($table, $uid, $rawListenerId) = t3lib_div::trimExplode('-', $listenerId);
-				
-					// try to generate the listener cache
-				$this->serviceContent->generateListenerCache($table, $uid);	
-					
-				$object = parent::findById($listenerId);			
-			}
-		
-			return $object;
-		} else {
-			return null;
-		}
-	}	
-	
+	protected $properties = array('data', 'table');
 }

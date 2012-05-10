@@ -342,7 +342,7 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 	 */
 	protected function parseAndRunEventListenersCallback($match) {
 		$matchesListenerDef = array();
-		preg_match('/(?P<listenerId>[a-z0-9_]*)\((?P<eventNames>.*)\);/msU', $match['listenerDefinition'], $matchesListenerDef);
+		preg_match('/(?P<listenerId>[a-z0-9_-]*)\((?P<eventNames>.*)\);/msU', $match['listenerDefinition'], $matchesListenerDef);
 			
 		$elementId = $match['elementId'];
 		$listenerId = $matchesListenerDef['listenerId'];
@@ -360,18 +360,25 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 		if ($shouldProcess) {
 			/* @var $listener Tx_ExtbaseHijax_Event_Listener */
 			$listener = $this->listenerFactory->findById($listenerId);
-	
-			$bootstrap = t3lib_div::makeInstance('Tx_Extbase_Core_Bootstrap');
-			$bootstrap->initialize($listener->getConfiguration());
-			$request = $listener->getRequest();
-	
-			/* @var $response Tx_Extbase_MVC_Web_Response */
-			$response = $this->objectManager->create('Tx_Extbase_MVC_Web_Response');
-	
-			$dispatcher = $this->objectManager->get('Tx_Extbase_MVC_Dispatcher');
-			$dispatcher->dispatch($request, $response);
-				
-			$result = $response->getContent();
+			
+			if ($listener) {
+				/* @var $bootstrap Tx_Extbase_Core_Bootstrap */
+				$bootstrap = t3lib_div::makeInstance('Tx_Extbase_Core_Bootstrap');
+				$bootstrap->cObj = $listener->getCObj();
+				$bootstrap->initialize($listener->getConfiguration());
+				$request = $listener->getRequest();
+		
+				/* @var $response Tx_Extbase_MVC_Web_Response */
+				$response = $this->objectManager->create('Tx_Extbase_MVC_Web_Response');
+		
+				$dispatcher = $this->objectManager->get('Tx_Extbase_MVC_Dispatcher');
+				$dispatcher->dispatch($request, $response);
+					
+				$result = $response->getContent();
+			} else {
+				// TODO: log error message
+				$result = $match[0];
+			}
 		} else {
 			$result = $match[0];
 		}
@@ -426,7 +433,7 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 	protected function replaceXMLCommentsWithDivsCallback($match) {
 		$this->replaceXMLCommentsWithDivsFound = TRUE;
 		$matchesListenerDef = array();
-		preg_match('/(?P<listenerId>[a-z0-9_]*)\((?P<eventNames>.*)\);/msU', $match['listenerDefinition'], $matchesListenerDef);
+		preg_match('/(?P<listenerId>[a-z0-9_-]*)\((?P<eventNames>.*)\);/msU', $match['listenerDefinition'], $matchesListenerDef);
 			
 		$elementId = $match['elementId'];
 		$listenerId = $matchesListenerDef['listenerId'];

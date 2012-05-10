@@ -66,6 +66,11 @@ class Tx_ExtbaseHijax_MVC_Dispatcher extends Tx_Extbase_MVC_Dispatcher {
 	protected $ajaxDispatcher;
 	
 	/**
+	 * @var Tx_ExtbaseHijax_Service_Content
+	 */
+	protected $serviceContent;	
+	
+	/**
 	 * Constructs the global dispatcher
 	 *
 	 * @param Tx_Extbase_Object_ObjectManagerInterface $objectManager A reference to the object manager
@@ -77,6 +82,7 @@ class Tx_ExtbaseHijax_MVC_Dispatcher extends Tx_Extbase_MVC_Dispatcher {
 		$this->ajaxDispatcher = $this->objectManager->get('Tx_ExtbaseHijax_Utility_Ajax_Dispatcher');
 		$this->extensionConfiguration = $this->objectManager->get('Tx_ExtbaseHijax_Configuration_ExtensionInterface');
 		$this->listenerFactory = $this->objectManager->get('Tx_ExtbaseHijax_Service_Serialization_ListenerFactory');
+		$this->serviceContent = $this->objectManager->get('Tx_ExtbaseHijax_Service_Content');
 		self::$id = $this->extensionConfiguration->getNextElementId();
 		$this->listenersStack = array();
 	}
@@ -100,54 +106,58 @@ class Tx_ExtbaseHijax_MVC_Dispatcher extends Tx_Extbase_MVC_Dispatcher {
 			} else {
 				$this->currentListener = t3lib_div::makeInstance('Tx_ExtbaseHijax_Event_Listener', $request);
 			}
-			$this->hijaxEventDispatcher->startContentElement();
-			
-			try {
-				parent::dispatch($request, $response);
-			} catch (Tx_Extbase_MVC_Controller_Exception_RequiredArgumentMissingException $requiredArgumentMissingException) {
-				try {
-						// this happens with simple reload on pages where some argument is required
-					$configuration = $this->configurationManager->getConfiguration(Tx_Extbase_Configuration_ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK);
-					
-					$defaultControllerName = current(array_keys($configuration['controllerConfiguration']));
-
-					$allowedControllerActions = array();
-					foreach ($configuration['controllerConfiguration'] as $controllerName => $controllerActions) {
-						$allowedControllerActions[$controllerName] = $controllerActions['actions'];
-					}
-					$defaultActionName = is_array($allowedControllerActions[$request->getControllerName()]) ? current($allowedControllerActions[$request->getControllerName()]) : '';
+			$this->listenerFactory->persist($this->currentListener);
 				
-						// try to run the current controller with the default action
-					$request->setDispatched(false);
-					$request->setControllerActionName($defaultActionName);
-
+			if ($this->serviceContent->getExecuteExtbasePlugins()) {
+				$this->hijaxEventDispatcher->startContentElement();
+				
+				try {
 					parent::dispatch($request, $response);
-						
 				} catch (Tx_Extbase_MVC_Controller_Exception_RequiredArgumentMissingException $requiredArgumentMissingException) {
-					if ($defaultControllerName!=$request->getControllerName()) {
-						$request->setControllerName($defaultControllerName);
-						$defaultActionName = is_array($allowedControllerActions[$defaultControllerName]) ? current($allowedControllerActions[$defaultControllerName]) : '';
-
-							// try to run the default plugin controller with the default action
+					try {
+							// this happens with simple reload on pages where some argument is required
+						$configuration = $this->configurationManager->getConfiguration(Tx_Extbase_Configuration_ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK);
+						
+						$defaultControllerName = current(array_keys($configuration['controllerConfiguration']));
+	
+						$allowedControllerActions = array();
+						foreach ($configuration['controllerConfiguration'] as $controllerName => $controllerActions) {
+							$allowedControllerActions[$controllerName] = $controllerActions['actions'];
+						}
+						$defaultActionName = is_array($allowedControllerActions[$request->getControllerName()]) ? current($allowedControllerActions[$request->getControllerName()]) : '';
+					
+							// try to run the current controller with the default action
 						$request->setDispatched(false);
 						$request->setControllerActionName($defaultActionName);
+	
 						parent::dispatch($request, $response);
+							
+					} catch (Tx_Extbase_MVC_Controller_Exception_RequiredArgumentMissingException $requiredArgumentMissingException) {
+						if ($defaultControllerName!=$request->getControllerName()) {
+							$request->setControllerName($defaultControllerName);
+							$defaultActionName = is_array($allowedControllerActions[$defaultControllerName]) ? current($allowedControllerActions[$defaultControllerName]) : '';
+	
+								// try to run the default plugin controller with the default action
+							$request->setDispatched(false);
+							$request->setControllerActionName($defaultActionName);
+							parent::dispatch($request, $response);
+						}
 					}
 				}
+				
+				if ($this->hijaxEventDispatcher->getIsHijaxElement() && !$this->ajaxDispatcher->getPreventMarkupUpdateOnAjaxLoad()) {
+					$currentListeners = $this->hijaxEventDispatcher->getListeners('', TRUE);
+						
+					$signature = $this->getCurrentListener()->getId().'('.$this->convertArrayToCSV(array_keys($currentListeners)).'); ';
+						
+					$content = $response->getContent();
+				
+					$response->setContent('<!-- ###EVENT_LISTENER_'.self::$id.'### START '.$signature.' -->'.$content.'<!-- ###EVENT_LISTENER_'.self::$id.'### END -->');
+					$this->extensionConfiguration->setNextElementId(++self::$id);
+				}
+				
+				$this->hijaxEventDispatcher->endContentElement();
 			}
-			
-			if ($this->hijaxEventDispatcher->getIsHijaxElement() && !$this->ajaxDispatcher->getPreventMarkupUpdateOnAjaxLoad()) {
-				$currentListeners = $this->hijaxEventDispatcher->getListeners('', TRUE);
-					
-				$signature = $this->getCurrentListener()->getId().'('.$this->convertArrayToCSV(array_keys($currentListeners)).'); ';
-					
-				$content = $response->getContent();
-			
-				$response->setContent('<!-- ###EVENT_LISTENER_'.self::$id.'### START '.$signature.' -->'.$content.'<!-- ###EVENT_LISTENER_'.self::$id.'### END -->');
-				$this->extensionConfiguration->setNextElementId(++self::$id);
-			}
-			
-			$this->hijaxEventDispatcher->endContentElement();
 			$this->currentListener = array_pop($this->listenersStack);
 		}
 	}	
@@ -156,7 +166,7 @@ class Tx_ExtbaseHijax_MVC_Dispatcher extends Tx_Extbase_MVC_Dispatcher {
 	 * @return Tx_ExtbaseHijax_Event_Listener
 	 */
 	public function getCurrentListener() {
-		$this->listenerFactory->persist($this->currentListener);
+		//$this->listenerFactory->persist($this->currentListener);
 				
 		return $this->currentListener;
 	}

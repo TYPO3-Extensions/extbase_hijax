@@ -1,0 +1,127 @@
+<?php
+/***************************************************************
+ *  Copyright notice
+ *
+ *  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
+
+class Tx_ExtbaseHijax_Service_Content implements t3lib_Singleton {
+	
+	/**
+	 * @var string
+	 */
+	protected $absRefPrefix;
+	
+	/**
+	 * @var boolean
+	 */
+	protected $executeExtbasePlugins = TRUE;
+	
+	/**
+	 * @return the $executeExtbasePlugins
+	 */
+	public function getExecuteExtbasePlugins() {
+		return $this->executeExtbasePlugins;
+	}
+
+	/**
+	 * @param boolean $executeExtbasePlugins
+	 */
+	public function setExecuteExtbasePlugins($executeExtbasePlugins) {
+		$this->executeExtbasePlugins = $executeExtbasePlugins;
+	}
+
+	/**
+	 * @param string $table
+	 * @param int $uid
+	 * 
+	 * @return void
+	 */
+	public function generateListenerCache($table, $uid) {
+			/* @var $tslib_cObj tslib_cObj */
+		$tslib_cObj = t3lib_div::makeInstance('tslib_cObj');
+		$data = t3lib_BEfunc::getRecord($table, $uid);
+		if ($data) {
+				// make sure that the actual controller action IS NOT executed
+			$this->setExecuteExtbasePlugins(FALSE);
+			$tslib_cObj->start($data, $table);
+			$dummyContent = $tslib_cObj->RECORDS(array(
+					'source' => $uid,
+					'tables' => $table
+			));
+			$this->processIntScripts($dummyContent);
+				// make sure that any following controller action IS executed
+			$this->setExecuteExtbasePlugins(TRUE);
+		}
+	}
+	
+	/**
+	 * Processes INT scripts
+	 *
+	 * @param string $content
+	 */
+	public function processIntScripts(&$content) {
+		$GLOBALS['TSFE']->content = $content;
+		$GLOBALS['TSFE']->INTincScript();
+		$content = $GLOBALS['TSFE']->content;
+	}
+	
+	/**
+	 * Converts relative paths in the HTML source to absolute paths for fileadmin/, typo3conf/ext/ and media/ folders.
+	 *
+	 * @param string $content
+	 * @param string $absRefPrefix
+	 * @return	void
+	 */
+	public function processAbsRefPrefix(&$content, $absRefPrefix)	{
+		if ($absRefPrefix)	{
+			$this->absRefPrefix = $absRefPrefix;
+			$this->absRefPrefixCallbackAttribute = "href";
+			$content = preg_replace_callback('/\shref="(?P<url>[^"].*)"/msU', array($this, 'processAbsRefPrefixCallback'), $content);
+			$this->absRefPrefixCallbackAttribute = "src";
+			$content = preg_replace_callback('/\ssrc="(?P<url>[^"].*)"/msU', array($this, 'processAbsRefPrefixCallback'), $content);
+			$this->absRefPrefixCallbackAttribute = "action";
+			$content = preg_replace_callback('/\saction="(?P<url>[^"].*)"/msU', array($this, 'processAbsRefPrefixCallback'), $content);
+		}
+	}
+	
+	/**
+	 * @param array $match
+	 * @return string
+	 */
+	protected function processAbsRefPrefixCallback($match) {
+	
+		$url = $match['url'];
+		$urlInfo = parse_url($url);
+		if (!$urlInfo['scheme']) {
+			if (substr($url, 0, strlen($this->absRefPrefix))==$this->absRefPrefix) {
+				// don't change the URL
+				// it already starts with absRefPrefix
+				return $match[0];
+			} else {
+				return " {$this->absRefPrefixCallbackAttribute}=\"{$this->absRefPrefix}{$url}\"";
+			}
+		} else {
+			// don't change the URL
+			// it has scheme so we assume it's full URL
+			return $match[0];
+		}
+	}	
+}

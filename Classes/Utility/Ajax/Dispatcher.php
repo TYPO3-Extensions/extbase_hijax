@@ -64,6 +64,11 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 	protected $listenerFactory;
 	
 	/**
+	 * @var Tx_ExtbaseHijax_Service_Content
+	 */
+	protected $serviceContent;
+	
+	/**
 	 * @var boolean
 	 */
 	protected $preventMarkupUpdateOnAjaxLoad;
@@ -74,6 +79,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 	public function __construct() {
 		$this->objectManager = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager');
 		$this->hijaxEventDispatcher = $this->objectManager->get('Tx_ExtbaseHijax_Event_Dispatcher');
+		$this->serviceContent = $this->objectManager->get('Tx_ExtbaseHijax_Service_Content');
 		$this->listenerFactory = $this->objectManager->get('Tx_ExtbaseHijax_Service_Serialization_ListenerFactory');
 		$this->cacheInstance = $GLOBALS['typo3CacheManager']->getCache('extbase_hijax_storage');
 		$this->preventMarkupUpdateOnAjaxLoad = false;
@@ -103,38 +109,46 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 			);
 			
 			foreach ($requests as $r) {
+				$skipProcessing = FALSE;
 				$configuration = array();
 				$configuration['extensionName'] = $r['extension'];
 				$configuration['pluginName']    = $r['plugin'];
 
 				/* @var $listener Tx_ExtbaseHijax_Event_Listener */
 				$listener = $this->listenerFactory->findById($r['settingsHash']);
+				
+				$bootstrap = t3lib_div::makeInstance('Tx_Extbase_Core_Bootstrap');
+				
 					// load settings saved under settingsHash
 				if ($listener) {
 					$configuration = $listener->getConfiguration();
 					$request = $listener->getRequest();	
-				} else {
+					$bootstrap->cObj = $listener->getCObj();
+				} elseif (Tx_ExtbaseHijax_Utility_Extension::isAllowedHijaxAction($r['extension'], $r['controller'], $r['action'])) {
 					$configuration['controller']    = $r['controller'];
 					$configuration['action']        = $r['action'];
+				} else {
+					$skipProcessing = TRUE;
 				}
 				
-				$bootstrap = t3lib_div::makeInstance('Tx_Extbase_Core_Bootstrap');
-				$bootstrap->initialize($configuration);
-				$this->setPreventMarkupUpdateOnAjaxLoad(false);
+				if (!$skipProcessing) {
+					$bootstrap->initialize($configuration);
+					$this->setPreventMarkupUpdateOnAjaxLoad(false);
+					
+					$request = $this->buildRequest($r, $request);
+					
+					/* @var $response Tx_Extbase_MVC_Web_Response */
+					$response = $this->objectManager->create('Tx_Extbase_MVC_Web_Response');
 				
-				$request = $this->buildRequest($r, $request);
-				
-				/* @var $response Tx_Extbase_MVC_Web_Response */
-				$response = $this->objectManager->create('Tx_Extbase_MVC_Web_Response');
-			
-				/* @var $dispatcher Tx_ExtbaseHijax_MVC_Dispatcher */
-				$dispatcher = $this->objectManager->get('Tx_ExtbaseHijax_MVC_Dispatcher');
-				$dispatcher->dispatch($request, $response, $listener);
-									
-				$content = $response->getContent();
-				$this->processIntScripts($content);
-				$this->processAbsRefPrefix($content, $configuration['settings']['absRefPrefix']);
-				$responses['original'][] = array( 'id' => $r['id'], 'response' => $content, 'preventMarkupUpdate' => $this->getPreventMarkupUpdateOnAjaxLoad() );
+					/* @var $dispatcher Tx_ExtbaseHijax_MVC_Dispatcher */
+					$dispatcher = $this->objectManager->get('Tx_ExtbaseHijax_MVC_Dispatcher');
+					$dispatcher->dispatch($request, $response, $listener);
+										
+					$content = $response->getContent();
+					$this->serviceContent->processIntScripts($content);
+					$this->serviceContent->processAbsRefPrefix($content, $configuration['settings']['absRefPrefix']);
+					$responses['original'][] = array( 'id' => $r['id'], 'response' => $content, 'preventMarkupUpdate' => $this->getPreventMarkupUpdateOnAjaxLoad() );
+				}
 			}
 			
 				// see if there are affected elements on the page as well
@@ -184,59 +198,6 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 		
 		$this->setIsActive(false);
 	}
-
-	/**
-	 * Converts relative paths in the HTML source to absolute paths for fileadmin/, typo3conf/ext/ and media/ folders.
-	 *
-	 * @param string $content
-	 * @param string $absRefPrefix
-	 * @return	void
-	 */
-	protected function processAbsRefPrefix(&$content, $absRefPrefix)	{
-		if ($absRefPrefix)	{
-			$this->absRefPrefix = $absRefPrefix;
-			$this->absRefPrefixCallbackAttribute = "href";
-			$content = preg_replace_callback('/\shref="(?P<url>[^"].*)"/msU', array($this, 'processAbsRefPrefixCallback'), $content);
-			$this->absRefPrefixCallbackAttribute = "src";
-			$content = preg_replace_callback('/\ssrc="(?P<url>[^"].*)"/msU', array($this, 'processAbsRefPrefixCallback'), $content);
-			$this->absRefPrefixCallbackAttribute = "action";
-			$content = preg_replace_callback('/\saction="(?P<url>[^"].*)"/msU', array($this, 'processAbsRefPrefixCallback'), $content);
-		}
-	}	
-	
-	/**
-	 * @param array $match
-	 * @return string
-	 */
-	protected function processAbsRefPrefixCallback($match) {
-		
-		$url = $match['url'];
-		$urlInfo = parse_url($url);
-		if (!$urlInfo['scheme']) {
-			if (substr($url, 0, strlen($this->absRefPrefix))==$this->absRefPrefix) {
-					// don't change the URL
-					// it already starts with absRefPrefix
-				return $match[0];
-			} else {
-				return " {$this->absRefPrefixCallbackAttribute}=\"{$this->absRefPrefix}{$url}\"";
-			}
-		} else {
-				// don't change the URL
-				// it has scheme so we assume it's full URL
-			return $match[0];
-		}
-	}	
-	
-	/**
-	 * Processes INT scripts
-	 * 
-	 * @param string $content
-	 */
-	protected function processIntScripts(&$content) {
-		$GLOBALS['TSFE']->content = $content;
-		$GLOBALS['TSFE']->INTincScript();
-		$content = $GLOBALS['TSFE']->content;
-	}
 	
 	/**
 	 * @param tslib_fe $pObj
@@ -260,24 +221,29 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 			if ($shouldProcess) {
 					/* @var $listener Tx_ExtbaseHijax_Event_Listener */
 				$listener = $this->listenerFactory->findById($listenerId);
-			
-				$bootstrap = t3lib_div::makeInstance('Tx_Extbase_Core_Bootstrap');
-				$configuration = $listener->getConfiguration();
-				$bootstrap->initialize($configuration);
-				$request = $listener->getRequest();
-				$this->setPreventMarkupUpdateOnAjaxLoad(false);
 				
-				/* @var $response Tx_Extbase_MVC_Web_Response */
-				$response = $this->objectManager->create('Tx_Extbase_MVC_Web_Response');
-			
-				/* @var $dispatcher Tx_ExtbaseHijax_MVC_Dispatcher */
-				$dispatcher = $this->objectManager->get('Tx_ExtbaseHijax_MVC_Dispatcher');
-				$dispatcher->dispatch($request, $response, $listener);
+				if ($listener) {
+					$bootstrap = t3lib_div::makeInstance('Tx_Extbase_Core_Bootstrap');
+					$bootstrap->cObj = $listener->getCObj();
+					$bootstrap->initialize($listener->getConfiguration());
+					
+					$request = $listener->getRequest();
+					$this->setPreventMarkupUpdateOnAjaxLoad(false);
+					
+					/* @var $response Tx_Extbase_MVC_Web_Response */
+					$response = $this->objectManager->create('Tx_Extbase_MVC_Web_Response');
 				
-				$content = $response->getContent();
-				$this->processIntScripts($content);
-				$this->processAbsRefPrefix($content, $configuration['settings']['absRefPrefix']);
-				$responses['affected'][] = array( 'id' => $listenerId, 'response' => $content, 'preventMarkupUpdate' => $this->getPreventMarkupUpdateOnAjaxLoad() );
+					/* @var $dispatcher Tx_ExtbaseHijax_MVC_Dispatcher */
+					$dispatcher = $this->objectManager->get('Tx_ExtbaseHijax_MVC_Dispatcher');
+					$dispatcher->dispatch($request, $response, $listener);
+					
+					$content = $response->getContent();
+					$this->serviceContent->processIntScripts($content);
+					$this->serviceContent->processAbsRefPrefix($content, $configuration['settings']['absRefPrefix']);
+					$responses['affected'][] = array( 'id' => $listenerId, 'response' => $content, 'preventMarkupUpdate' => $this->getPreventMarkupUpdateOnAjaxLoad() );
+				} else {
+					// TODO: log error message
+				}
 			}			
 		}
 	}	
