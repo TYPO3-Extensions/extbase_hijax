@@ -54,9 +54,7 @@ class Tx_ExtbaseHijax_Service_Serialization_ListenerFactory extends Tx_ExtbaseHi
 				list($table, $uid, $rawListenerId) = t3lib_div::trimExplode('-', $listenerId);
 				
 					// try to generate the listener cache
-				$this->serviceContent->generateListenerCache($table, $uid);	
-					
-				$object = parent::findById($listenerId);			
+				$object = $this->serviceContent->generateListenerCache($table, $uid);	
 			}
 		
 			return $object;

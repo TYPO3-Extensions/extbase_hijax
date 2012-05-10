@@ -55,7 +55,7 @@ class Tx_ExtbaseHijax_Event_Listener {
 	protected $configuration;
 
 	/**
-	 * @var int
+	 * @var string
 	 */
 	protected $id;
 	
@@ -112,7 +112,9 @@ class Tx_ExtbaseHijax_Event_Listener {
 			// old logic - using autoincrement
 		//$this->id = $this->autoIDService->getAutoId(get_class($this));
 			// new logic - determine the id based on md5 hash
-		$this->id = str_replace(':', '-', $this->cObj->currentRecord).'-'.md5($listenerFactory->serialize($this));
+		$this->id = ''; // resetting the id so it doesn't affect the hash
+		$serialized = $listenerFactory->serialize($this);
+		$this->id = str_replace(':', '-', $this->cObj->currentRecord).'-'.md5($serialized);
 	}
 
 	/**

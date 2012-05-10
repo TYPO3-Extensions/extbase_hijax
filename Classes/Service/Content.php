@@ -35,6 +35,11 @@ class Tx_ExtbaseHijax_Service_Content implements t3lib_Singleton {
 	protected $executeExtbasePlugins = TRUE;
 	
 	/**
+	 * @var Tx_ExtbaseHijax_Event_Listener
+	 */
+	protected $currentListener;
+	
+	/**
 	 * @return the $executeExtbasePlugins
 	 */
 	public function getExecuteExtbasePlugins() {
@@ -49,10 +54,24 @@ class Tx_ExtbaseHijax_Service_Content implements t3lib_Singleton {
 	}
 
 	/**
+	 * @return the $currentListener
+	 */
+	public function getCurrentListener() {
+		return $this->currentListener;
+	}
+
+	/**
+	 * @param Tx_ExtbaseHijax_Event_Listener $currentListener
+	 */
+	public function setCurrentListener($currentListener) {
+		$this->currentListener = $currentListener;
+	}
+
+	/**
 	 * @param string $table
 	 * @param int $uid
 	 * 
-	 * @return void
+	 * @return Tx_ExtbaseHijax_Event_Listener
 	 */
 	public function generateListenerCache($table, $uid) {
 			/* @var $tslib_cObj tslib_cObj */
@@ -69,7 +88,11 @@ class Tx_ExtbaseHijax_Service_Content implements t3lib_Singleton {
 			$this->processIntScripts($dummyContent);
 				// make sure that any following controller action IS executed
 			$this->setExecuteExtbasePlugins(TRUE);
+			$listener = $this->currentListener;
 		}
+		$this->currentListener = null;
+		
+		return $listener;
 	}
 	
 	/**

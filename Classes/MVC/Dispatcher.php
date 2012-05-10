@@ -108,7 +108,9 @@ class Tx_ExtbaseHijax_MVC_Dispatcher extends Tx_Extbase_MVC_Dispatcher {
 			}
 			$this->listenerFactory->persist($this->currentListener);
 				
-			if ($this->serviceContent->getExecuteExtbasePlugins()) {
+			if (!$this->serviceContent->getExecuteExtbasePlugins()) {
+				$this->serviceContent->setCurrentListener($this->currentListener);				
+			} else {
 				$this->hijaxEventDispatcher->startContentElement();
 				
 				try {
