@@ -30,6 +30,11 @@ class Tx_ExtbaseHijax_ViewHelpers_Widget_Controller_PaginateController extends T
 	 * @var array
 	 */
 	protected $configuration = array('itemsPerPage' => 10, 'insertAbove' => FALSE, 'insertBelow' => TRUE, 'pagerTemplate' => FALSE);
+	
+	/**
+	 * @var array
+	 */
+	protected $variables = array();
 
 	/**
 	 * @var Tx_Extbase_Persistence_QueryResultInterface
@@ -52,6 +57,8 @@ class Tx_ExtbaseHijax_ViewHelpers_Widget_Controller_PaginateController extends T
 	public function initializeAction() {
 		$this->objects = $this->widgetConfiguration['objects'];
 		$this->configuration = t3lib_div::array_merge_recursive_overrule($this->configuration, $this->widgetConfiguration['configuration'], TRUE);
+		$this->variables = $this->widgetConfiguration['variables'];
+		
 		$objectsCount = 0;
 		foreach ($this->objects as $objects) {
 			$objectsCount += count($objects);
@@ -106,6 +113,7 @@ class Tx_ExtbaseHijax_ViewHelpers_Widget_Controller_PaginateController extends T
 		));
 		$this->view->assign('configuration', $this->configuration);
 		$this->view->assign('pagination', $this->buildPagination());
+		$this->view->assign('variables', $this->variables);
 	}
 
 	/**

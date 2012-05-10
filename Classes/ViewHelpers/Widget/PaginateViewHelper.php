@@ -44,9 +44,10 @@ class Tx_ExtbaseHijax_ViewHelpers_Widget_PaginateViewHelper extends Tx_ExtbaseHi
 	 * @param mixed $objects
 	 * @param string $as
 	 * @param array $configuration
+	 * @param array $variables
 	 * @return string
 	 */
-	public function render($objects, $as, array $configuration = array('itemsPerPage' => 10, 'insertAbove' => FALSE, 'insertBelow' => TRUE, 'pagerTemplate' => FALSE, 'widgetIdentifier' => '')) {
+	public function render($objects, $as, array $configuration = array('itemsPerPage' => 10, 'insertAbove' => FALSE, 'insertBelow' => TRUE, 'pagerTemplate' => FALSE, 'widgetIdentifier' => ''), $variables = array()) {
 		if ($configuration['widgetIdentifier']) {
 			$this->widgetContext->setWidgetIdentifier($configuration['widgetIdentifier']);
 		}
