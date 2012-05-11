@@ -22,7 +22,7 @@
  ***************************************************************/
 
 ; (function($) {
-	var elements = [], eventsToListen = {}, listeners = [], startedTimer = false, timerInterval = 10000, currentTimerTime = 0, uniqueIDCounter = 0, ajaxCallback = false;
+	var elements = [], eventsToListen = {}, listeners = [], startedTimer = false, timerInterval = 10000, currentTimerTime = 0, uniqueIDCounter = 0, ajaxCallback = false, baseAnimationSpeed = 600;
 	
 	/*
 	 * Private methods 
@@ -211,7 +211,7 @@
         return( arrData );
     };
     
-    _ajaxRequest = function ($data, pendingElement) {
+    _ajaxRequest = function ($data, pendingElement, loaders) {
 		var ajaxRequest = $.ajax({
 			url: EXTBASE_HIJAX.url,
 			type: "POST",
@@ -219,6 +219,7 @@
 			data: $data,
 			dataType: "json",
 			pendingElement: pendingElement,
+			loaderElements: loaders,
 			success: function(data, textStatus, jqXHR) {
 				if (data['redirect'] && data['redirect'].url) {
 					window.location = data['redirect'].url;
@@ -229,7 +230,7 @@
 						} catch (err) {
 						}
 					});
-					this.pendingElement.hideHijaxLoader();
+					this.pendingElement.hideHijaxLoader(this.loaderElements);
 					$.each(data['original'], function(i, r) {
 						var element = $('#'+r['id']);
 						if (element) {
@@ -253,7 +254,7 @@
 				}
 			},
 			error: function(jqXHR, textStatus, errorThrown) {
-				this.pendingElement.hideHijaxLoader();
+				this.pendingElement.hideHijaxLoader(this.loaderElements);
 				this.pendingElement.showMessage(EXTBASE_HIJAX.errorMessage);
 			}
 		});	    	
@@ -293,7 +294,7 @@
 								if (!ajaxCallback) {
 									elseTarget.stop().css('height', startingHeight).animate({
 										height: targetHeight
-									}, 300, function() {
+									}, baseAnimationSpeed / 2, function() {
 											// Animation complete.
 										$(this).css('height', 'auto');
 									});
@@ -322,7 +323,12 @@
 									settingsHash: $(this).attr('data-hijax-settings')
 								};
 							
-							$(element).showHijaxLoader();
+							var target = $(this).parents('.hijax-element[data-hijax-listener-id='+$(this).attr('data-hijax-settings')+']');
+							var loaders = null;
+							if ($(this).attr('data-hijax-loaders')) {
+								loaders = eval($(this).attr('data-hijax-loaders'));
+							}
+							target.showHijaxLoader(loaders);
 							
 							requests.push(el);
 							var fields = $(this).formToArray();
@@ -332,7 +338,7 @@
 							});
 							$data = $.param({r: requests, e: eventsToListen})+'&'+$.param(fields)+'&eID=extbase_hijax_dispatcher&L='+EXTBASE_HIJAX.sys_language_uid;
 							
-							_ajaxRequest($data, $(element));
+							_ajaxRequest($data, target, loaders);
 						});
 						break;
 					case 'ajax':
@@ -354,7 +360,7 @@
 						el.bind('click', function(e) {
 							e.preventDefault(); // <-- important
 							var requests = [];
-							var target = $(element).parents('.hijax-element[data-hijax-listener-id='+$(this).attr('data-hijax-settings')+']');
+							var target = $(this).parents('.hijax-element[data-hijax-listener-id='+$(this).attr('data-hijax-settings')+']');
 							var el = {
 									id: target.attr('id'),
 									extension: $(this).attr('data-hijax-extension'),
@@ -365,13 +371,17 @@
 									settingsHash: $(this).attr('data-hijax-settings')
 								};
 							
-							target.showHijaxLoader();
+							var loaders = null;
+							if ($(this).attr('data-hijax-loaders')) {
+								loaders = eval($(this).attr('data-hijax-loaders'));
+							}
+							target.showHijaxLoader(loaders);
 							
 							requests.push(el);
 							
 							$data = $.param({r: requests, e: eventsToListen})+'&eID=extbase_hijax_dispatcher&L='+EXTBASE_HIJAX.sys_language_uid;
 	
-							_ajaxRequest($data, target);
+							_ajaxRequest($data, target, loaders);
 						});
 						break;
 					default: 
@@ -419,13 +429,13 @@
 		element.addClass('hijax-element-forced-visible-overflow');
 		element.stop().animate({
 			height: content.outerHeight()
-		}, 300, function() {
+		}, baseAnimationSpeed / 2, function() {
 				// Animation complete.
 		});
 		
 		content.find('> .hijax-error').animate({
 			opacity: 100
-		}, 600);
+		}, baseAnimationSpeed);
 		
 		setTimeout(
 			function() {
@@ -437,7 +447,7 @@
 					element.css('height', startingHeight);
 					element.stop().animate({
 						height: content.outerHeight()
-					}, 150, function() {
+					}, baseAnimationSpeed / 4, function() {
 							// Animation complete.
 						element.removeClass('hijax-element-forced-visible-overflow');
 					});
@@ -498,7 +508,7 @@
 				if (startingHeight != endingHeight && startingHeight > 0 && endingHeight > 0) {
 					element.stop().animate({
 						height: endingHeight
-					}, 500, function() {
+					}, baseAnimationSpeed, function() {
 							// Animation complete.
 						$(this).css('height', 'auto');
 						$(this).find('> .'+EXTBASE_HIJAX.contentClass).css('overflow', contentStartingOverflow);
@@ -522,47 +532,71 @@
 		return this;
 	};	
 	
-	$.fn.showHijaxLoader = function() {
+	$.fn.showHijaxLoader = function(loaders) {
 		var element = $(this);
 		if (element.attr('data-hijax-result-target')) {
 			element = eval(element.attr('data-hijax-result-target'));
 		}		
 
 		var content = element.find('> .'+EXTBASE_HIJAX.contentClass);
-		element.css('height', content.outerHeight());
-
-		var loader = element.find('> .'+EXTBASE_HIJAX.loadingClass);
-		if (!loader.data('targetOpacity')) {
-			loader.data('targetOpacity', loader.css('opacity'));
-			loader.css('opacity', 0);
+		
+		if (!loaders) {
+			if (element.attr('data-hijax-loaders')) {
+				loaders = eval(element.attr('data-hijax-loaders'));
+			} else {
+				loaders = element.find('> .'+EXTBASE_HIJAX.loadingClass);
+			}
 		}
-		loader.show();
-		loader.stop().animate({
-			opacity: loader.data('targetOpacity')
-		}, 500, function() {
-				// Animation complete.
-		});
+		
+		$.each(loaders, function(i, loader) {
+			try {
+				loader = $(loader);
+				if (!loader.data('targetOpacity')) {
+					loader.data('targetOpacity', loader.css('opacity'));
+					loader.css('opacity', 0);
+				}
+				loader.show();
+				loader.stop().animate({
+					opacity: loader.data('targetOpacity')
+				}, baseAnimationSpeed, function() {
+						// Animation complete.
+				});
+			} catch (err) {
+			}
+		});		
 		
 		return this;
 	};		
 	
-	$.fn.hideHijaxLoader = function() {
+	$.fn.hideHijaxLoader = function(loaders) {
 		var element = $(this);
 		if (element.attr('data-hijax-result-target')) {
 			element = eval(element.attr('data-hijax-result-target'));
-		}			
-		var loader = element.find('> .'+EXTBASE_HIJAX.loadingClass).show();
-		
-		if (!loader.data('targetOpacity')) {
-			loader.data('targetOpacity', loader.css('opacity'));
+		}
+		if (!loaders) {
+			if (element.attr('data-hijax-loaders')) {
+				loaders = eval(element.attr('data-hijax-loaders'));
+			} else {
+				loaders = element.find('> .'+EXTBASE_HIJAX.loadingClass);
+			}
 		}
 		
-		loader.stop().animate({
-			opacity: 0
-		}, 300, function() {
-				// Animation complete.
-			loader.hide();
-		});		
+		$.each(loaders, function(i, loader) {
+			try {
+				loader = $(loader);
+				if (!loader.data('targetOpacity')) {
+					loader.data('targetOpacity', loader.css('opacity'));
+				}
+				
+				loader.stop().animate({
+					opacity: 0
+				}, baseAnimationSpeed / 2, function() {
+						// Animation complete.
+					loader.hide();
+				});				
+			} catch (err) {
+			}
+		});
 	}
 	
 	$.fn.outer = function(val){

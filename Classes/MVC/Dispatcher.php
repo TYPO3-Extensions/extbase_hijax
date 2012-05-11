@@ -151,7 +151,7 @@ class Tx_ExtbaseHijax_MVC_Dispatcher extends Tx_Extbase_MVC_Dispatcher {
 					$this->listenerFactory->persist($this->currentListener);
 				}
 				
-				if ($this->hijaxEventDispatcher->getIsHijaxElement() && !$this->ajaxDispatcher->getPreventMarkupUpdateOnAjaxLoad()) {
+				if (($this->ajaxDispatcher->getIsActive() || $this->hijaxEventDispatcher->getIsHijaxElement()) && !$this->ajaxDispatcher->getPreventMarkupUpdateOnAjaxLoad()) {
 					
 					$currentListeners = $this->hijaxEventDispatcher->getListeners('', TRUE);
 						
