@@ -1,8 +1,1 @@
-<f:if condition="{settings.loadContentFromTypoScript}">
-	<f:then>
-		<f:cObject typoscriptObjectPath="{settings.loadContentFromTypoScript}" />
-	</f:then>
-	<f:else>
-		<f:format.raw>{rawContent}</f:format.raw>
-	</f:else>
-</f:if>
+	<f:cObject typoscriptObjectPath="{settings.loadContentFromTypoScript}" />

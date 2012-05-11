@@ -80,25 +80,13 @@ class Tx_ExtbaseHijax_Controller_ContentElementController extends Tx_Extbase_MVC
 	 * Renders content element (cacheable)
 	 */
 	public function userAction() {
-		if ($this->settings['content']) {
-			$contentSettings = $this->typoScriptService->convertPlainArrayToTypoScriptArray($this->settings['content']);
-				/* @var $cObj tslib_cObj */
-			$cObj = t3lib_div::makeInstance('tslib_cObj');
-			$rawContent = $cObj->cObjGetSingle($contentSettings['_typoScriptNodeValue'], $contentSettings);
-			$this->view->assign('rawContent', $rawContent);
-		}
+
 	}
 
 	/**
 	 * Renders content element (non-cacheable)
 	 */
 	public function userIntAction() {
-		if ($this->settings['content']) {
-			$contentSettings = $this->typoScriptService->convertPlainArrayToTypoScriptArray($this->settings['content']);
-			/* @var $cObj tslib_cObj */
-			$cObj = t3lib_div::makeInstance('tslib_cObj');
-			$rawContent = $cObj->cObjGetSingle($contentSettings['_typoScriptNodeValue'], $contentSettings);
-			$this->view->assign('rawContent', $rawContent);
-		}
+
 	}
 }
