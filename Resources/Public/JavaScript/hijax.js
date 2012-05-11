@@ -484,7 +484,7 @@
 			
 			if (content) {
 				element.removeClass(EXTBASE_HIJAX.fallbackClass);
-				var startingHeight = content.css('overflow', 'hidden').height();
+				var startingHeight = content.css('overflow', 'hidden').outerHeight();
 				$.each(EXTBASE_HIJAX.unloadElement, function(i, f) {
 					try {
 						f(content);
@@ -502,6 +502,14 @@
 					newElements.push(element[0]);
 				}
 				newElements.extbaseHijax(true);
+
+				$.each(EXTBASE_HIJAX.initElement, function(i, f) {
+					try {
+						f(element);
+					} catch (err) {
+					}
+				});	
+				
 				var contentStartingOverflow = content.css('overflow');
 				var endingHeight = content.css('overflow', 'hidden').outerHeight();
 				
@@ -517,14 +525,7 @@
 					content.css('overflow', contentStartingOverflow);
 					element.css('height', 'auto');
 				}
-			}
-
-			$.each(EXTBASE_HIJAX.initElement, function(i, f) {
-				try {
-					f(element);
-				} catch (err) {
-				}
-			});			
+			}		
 		}
 		
 		ajaxCallback = false;
