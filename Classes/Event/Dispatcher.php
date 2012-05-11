@@ -343,7 +343,7 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 	 */
 	protected function parseAndRunEventListenersCallback($match) {
 		$matchesListenerDef = array();
-		preg_match('/(?P<listenerId>[a-z0-9_-]*)\((?P<eventNames>.*)\);/msU', $match['listenerDefinition'], $matchesListenerDef);
+		preg_match('/(?P<listenerId>[a-zA-Z0-9_-]*)\((?P<eventNames>.*)\);/msU', $match['listenerDefinition'], $matchesListenerDef);
 			
 		$elementId = $match['elementId'];
 		$listenerId = $matchesListenerDef['listenerId'];
@@ -434,7 +434,7 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 	protected function replaceXMLCommentsWithDivsCallback($match) {
 		$this->replaceXMLCommentsWithDivsFound = TRUE;
 		$matchesListenerDef = array();
-		preg_match('/(?P<listenerId>[a-z0-9_-]*)\((?P<eventNames>.*)\);/msU', $match['listenerDefinition'], $matchesListenerDef);
+		preg_match('/(?P<listenerId>[a-zA-Z0-9_-]*)\((?P<eventNames>.*)\);/msU', $match['listenerDefinition'], $matchesListenerDef);
 			
 		$elementId = $match['elementId'];
 		$listenerId = $matchesListenerDef['listenerId'];

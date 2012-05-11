@@ -73,9 +73,10 @@ class Tx_ExtbaseHijax_Service_Content implements t3lib_Singleton {
 	 * 
 	 * @return Tx_ExtbaseHijax_Event_Listener
 	 */
-	public function generateListenerCache($table, $uid) {
+	public function generateListenerCacheForContentElement($table, $uid) {
 			/* @var $tslib_cObj tslib_cObj */
 		$tslib_cObj = t3lib_div::makeInstance('tslib_cObj');
+			// TODO: implement language overlay functions
 		$data = t3lib_BEfunc::getRecord($table, $uid);
 		if ($data) {
 				// make sure that the actual controller action IS NOT executed
@@ -94,6 +95,43 @@ class Tx_ExtbaseHijax_Service_Content implements t3lib_Singleton {
 		
 		return $listener;
 	}
+	
+	/**
+	 * 
+	 * @param string $loadContentFromTypoScript
+	 * @param string $eventsToListen
+	 * @param boolean $cached
+	 *
+	 * @return Tx_ExtbaseHijax_Event_Listener
+	 */
+	public function generateListenerCacheForHijaxPi1($loadContentFromTypoScript, $eventsToListen, $cached) {
+		/* @var $tslib_cObj tslib_cObj */
+		$tslib_cObj = t3lib_div::makeInstance('tslib_cObj');
+		
+		if ($loadContentFromTypoScript) {
+			// make sure that the actual controller action IS NOT executed
+			$this->setExecuteExtbasePlugins(FALSE);
+			$dummyContent = $tslib_cObj->USER(array(
+					'extensionName' => 'ExtbaseHijax',
+					'pluginName' => 'Pi1',
+					'userFunc' => 'tx_extbase_core_bootstrap->run',
+					'switchableControllerActions.' => array (
+						'ContentElement.' => array ('0' => $cached ? 'user' : 'userInt')
+					),
+					'settings.' => array (
+						'listenOnEvents' => implode(',', $eventsToListen),
+						'loadContentFromTypoScript' => $loadContentFromTypoScript
+					)
+			));
+			$this->processIntScripts($dummyContent);
+			// make sure that any following controller action IS executed
+			$this->setExecuteExtbasePlugins(TRUE);
+			$listener = $this->currentListener;
+		}
+		$this->currentListener = null;
+	
+		return $listener;
+	}	
 	
 	/**
 	 * Processes INT scripts

@@ -51,10 +51,20 @@ class Tx_ExtbaseHijax_Service_Serialization_ListenerFactory extends Tx_ExtbaseHi
 			$object = parent::findById($listenerId);
 			
 			if (!$object) {
-				list($table, $uid, $rawListenerId) = t3lib_div::trimExplode('-', $listenerId);
+				list($table, $uid, $rawListenerId) = t3lib_div::trimExplode('-', $listenerId, false, 3);
 				
 					// try to generate the listener cache
-				$object = $this->serviceContent->generateListenerCache($table, $uid);	
+				if ($table=='tt_content' && $uid) {
+					$object = $this->serviceContent->generateListenerCacheForContentElement($table, $uid);
+				} elseif ($table=='h' || $table=='hInt') {
+					$settingsHash = $uid;
+					$encodedSettings = $rawListenerId;
+					if (t3lib_div::hmac($encodedSettings)==$settingsHash) {
+						$loadContentFromTypoScript = str_replace('---', '.', $encodedSettings);
+						$eventsToListen = t3lib_div::_GP('e');
+						$object = $this->serviceContent->generateListenerCacheForHijaxPi1($loadContentFromTypoScript, $eventsToListen[$listenerId], $table=='h');
+					}
+				}
 			}
 		
 			return $object;

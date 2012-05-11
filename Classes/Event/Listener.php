@@ -87,7 +87,7 @@ class Tx_ExtbaseHijax_Event_Listener {
 	 * @param array 								$configuration 	Framework configuraiton
 	 * @param tslib_cObj	 						$cObj	 	An array of parameters
 	 */
-	public function __construct(Tx_Extbase_MVC_RequestInterface $request, $configuration=array(), $cObj = null) {
+	public function __construct(Tx_Extbase_MVC_RequestInterface $request, $configuration = null, $cObj = null) {
 		$this->injectObjectManager(t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager'));
 		$this->injectConfigurationManager($this->objectManager->get('Tx_Extbase_Configuration_ConfigurationManagerInterface'));
 		$this->injectAutoIDService($this->objectManager->get('Tx_ExtbaseHijax_Service_AutoIDService'));
@@ -114,7 +114,23 @@ class Tx_ExtbaseHijax_Event_Listener {
 			// new logic - determine the id based on md5 hash
 		$this->id = ''; // resetting the id so it doesn't affect the hash
 		$serialized = $listenerFactory->serialize($this);
-		$this->id = str_replace(':', '-', $this->cObj->currentRecord).'-'.md5($serialized);
+		list($table, $uid) = t3lib_div::trimExplode(':', $this->cObj->currentRecord);
+		if ($table=='tt_content' && $uid) {
+			$this->id = str_replace(':', '-', $this->cObj->currentRecord).'-'.md5($serialized);
+		} else {
+				// test if this is ExtbaseHijax Pi1
+			if ($this->request->getControllerExtensionName()=='ExtbaseHijax' && $this->request->getPluginName()=='Pi1') {
+				$encodedSettings = str_replace('.', '---', $this->configuration['settings']['loadContentFromTypoScript']);
+				$settingsHash = t3lib_div::hmac($encodedSettings);
+				if ($this->configuration['switchableControllerActions']['ContentElement'][0]=='user') {
+					$this->id = 'h-'.$settingsHash.'-'.$encodedSettings;
+				} else {
+					$this->id = 'hInt-'.$settingsHash.'-'.$encodedSettings;
+				}
+			} else {
+				$this->id = md5($serialized);
+			}
+		}
 	}
 
 	/**

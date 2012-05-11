@@ -47,10 +47,18 @@ class Tx_ExtbaseHijax_Event_CObj {
 	public function __construct($cObj = null) {
 		$this->cObj = $cObj;
 
+		$reset = true;
+		
 		if ($this->cObj && $this->cObj->currentRecord) {
-			$this->data = $this->cObj->data;
-			list($this->table) = t3lib_div::trimExplode(':', $this->cObj->currentRecord);
-		} else {
+			list($table, $uid) = t3lib_div::trimExplode(':', $this->cObj->currentRecord);
+			if ($table=='tt_content' && $uid) {
+				$this->data = $this->cObj->data;
+				list($this->table) = t3lib_div::trimExplode(':', $this->cObj->currentRecord);
+				$reset = false;
+			}
+		} 
+		
+		if ($reset) {
 			$this->data = array();
 			$this->table = '';
 			$this->cObj = t3lib_div::makeInstance('tslib_cObj');
