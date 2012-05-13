@@ -35,6 +35,11 @@ class Tx_ExtbaseHijax_TCEmain_Hooks implements t3lib_Singleton {
 	public function __construct() {
 		$this->trackingManager = t3lib_div::makeInstance('Tx_ExtbaseHijax_Tracking_Manager');
 	}
+	
+	/**
+	 * @var array
+	 */
+	protected $pendingIdentifiers = array();
 
 	/**
 	 * Clear cache post processor.
@@ -94,7 +99,22 @@ class Tx_ExtbaseHijax_TCEmain_Hooks implements t3lib_Singleton {
 	 * @access public
 	 */	
 	public function processCmdmap_preProcess($command, $table, $id, $value, $pObj) {
-		// not used atm
+		if (t3lib_utility_Math::canBeInterpretedAsInteger($id)) {
+			$objectIdentifier = $this->trackingManager->getObjectIdentifierForRecord($table, $id);
+			if (!in_array($objectIdentifier, $this->pendingIdentifiers)) {
+				$this->pendingIdentifiers[] = $objectIdentifier;
+			}
+			
+			$row = t3lib_BEfunc::getRecord($table, $id);
+			$pid = $row['pid'];
+				
+			if ($pid > 0) {
+				$objectIdentifier = $this->trackingManager->getObjectIdentifierForRepository($table, $pid);
+				if (!in_array($objectIdentifier, $this->pendingIdentifiers)) {
+					$this->pendingIdentifiers[] = $objectIdentifier;
+				}
+			}
+		}
 	}
 	
 	/**
@@ -109,8 +129,9 @@ class Tx_ExtbaseHijax_TCEmain_Hooks implements t3lib_Singleton {
 	 * @access public
 	 */
 	public function processCmdmap_postProcess($command, $table, $id, $value, $pObj) {
-		$objectIdentifier = $this->trackingManager->getObjectIdentifierForRecord($table, $id);
-		$this->trackingManager->clearPageCacheForObjectIdentifier($objectIdentifier);
+		while ($objectIdentifier = array_pop($this->pendingIdentifiers)) {
+			$this->trackingManager->clearPageCacheForObjectIdentifier($objectIdentifier);
+		}
 	}
 	
 	/**
@@ -127,12 +148,22 @@ class Tx_ExtbaseHijax_TCEmain_Hooks implements t3lib_Singleton {
 	 public function processDatamap_afterDatabaseOperations($status, $table, $rawId, $fieldArray, $pObj) {
 		if (!t3lib_utility_Math::canBeInterpretedAsInteger($rawId)) {
 			$rawId = $pObj->substNEWwithIDs[$rawId];
-			$objectIdentifier = $this->trackingManager->getObjectIdentifierForRepository($table, $fieldArray['pid']);
-			$this->trackingManager->clearPageCacheForObjectIdentifier($objectIdentifier);
 		}
 		if (t3lib_utility_Math::canBeInterpretedAsInteger($rawId)) {
 			$objectIdentifier = $this->trackingManager->getObjectIdentifierForRecord($table, $rawId);
 			$this->trackingManager->clearPageCacheForObjectIdentifier($objectIdentifier);
+			
+			if ($fieldArray['pid'] && t3lib_utility_Math::canBeInterpretedAsInteger($fieldArray['pid'])) {
+				$pid = $fieldArray['pid'];
+			} else {
+				$row = t3lib_BEfunc::getRecord($table, $rawId);
+				$pid = $row['pid'];
+			}
+			
+			if ($pid > 0) {
+				$objectIdentifier = $this->trackingManager->getObjectIdentifierForRepository($table, $pid);
+				$this->trackingManager->clearPageCacheForObjectIdentifier($objectIdentifier);
+			}
 		}
 	}
 }

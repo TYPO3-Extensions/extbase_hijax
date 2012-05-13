@@ -182,8 +182,8 @@ class Tx_ExtbaseHijax_Tracking_Manager implements t3lib_Singleton {
 	 * Tracks display of an object on a page
 	 *
 	 * @param mixed $object Repository/Object/table name
-	 * @param mixed $hash Hash or page id (depending on the type) for which the object display will be associated
 	 * @param string $type 'hash' (for only one hash) or 'id' (for complete page cache of a page, for all hash combinations)
+	 * @param mixed $hash Hash or page id (depending on the type) for which the object display will be associated
 	 * @return void
 	 */
 	public function trackRepositoryOnPage($object = NULL, $type = 'hash', $hash = false) {
