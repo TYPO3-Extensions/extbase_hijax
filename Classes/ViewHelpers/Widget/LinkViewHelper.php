@@ -78,14 +78,15 @@ class Tx_ExtbaseHijax_ViewHelpers_Widget_LinkViewHelper extends Tx_Fluid_ViewHel
 	 *
 	 * @param string $action Target action
 	 * @param array $arguments Arguments
+	 * @param array $contextArguments Context arguments
 	 * @param string $section The anchor to be added to the URI
 	 * @param string $format The requested format, e.g. ".html"
 	 * @param boolean $ajax TRUE if the URI should be to an AJAX widget, FALSE otherwise.
 	 * @return string The rendered link
 	 * @api
 	 */
-	public function render($action = NULL, $arguments = array(), $section = '', $format = '', $ajax = TRUE) {
-		$uri = $this->getWidgetUri($action, $arguments, $ajax);
+	public function render($action = NULL, $arguments = array(), $contextArguments = array(), $section = '', $format = '', $ajax = TRUE) {
+		$uri = $this->getWidgetUri($action, $arguments, $contextArguments, $ajax);
 		$this->tag->addAttribute('href', $uri);
 		$this->tag->setContent($this->renderChildren());
 
@@ -97,7 +98,7 @@ class Tx_ExtbaseHijax_ViewHelpers_Widget_LinkViewHelper extends Tx_Fluid_ViewHel
 	 *
 	 * @return void
 	 */
-	protected function getWidgetUri($action = NULL, array $arguments = array(), $ajax = TRUE) {
+	protected function getWidgetUri($action = NULL, array $arguments = array(), array $contextArguments = array(), $ajax = TRUE) {
 		$this->hijaxEventDispatcher->setIsHijaxElement(true);		
 		
 		$request = $this->controllerContext->getRequest();
@@ -141,6 +142,7 @@ class Tx_ExtbaseHijax_ViewHelpers_Widget_LinkViewHelper extends Tx_Fluid_ViewHel
 		
 		$requestArguments = $widgetContext->getParentControllerContext()->getRequest()->getArguments();
 		$requestArguments = array_merge($requestArguments, $this->hijaxEventDispatcher->getContextArguments());
+		$requestArguments = array_merge($requestArguments, $contextArguments);
 		$requestArguments[$widgetContext->getWidgetIdentifier()] = ($arguments && is_array($arguments)) ? $arguments : array();
 		if ($ajax) {
 			$this->tag->addAttribute('data-hijax-arguments', serialize($requestArguments));
