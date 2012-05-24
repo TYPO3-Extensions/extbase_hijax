@@ -144,7 +144,7 @@ class Tx_ExtbaseHijax_Tslib_FE_Hook implements t3lib_Singleton {
 			}
 		}
 		
-		if ($hookType=='output') {
+		if ($hookType=='output' || $pObj->isStaticCacheble()) {
 			$this->hijaxEventDispatcher->replaceXMLCommentsWithDivs($pObj->content);
 		}
 	}
