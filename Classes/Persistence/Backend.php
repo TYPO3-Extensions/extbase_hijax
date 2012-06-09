@@ -53,11 +53,13 @@ class Tx_ExtbaseHijax_Persistence_Backend extends Tx_Extbase_Persistence_Backend
 	 * @return void
 	 */
 	protected function insertObject(Tx_Extbase_DomainObject_DomainObjectInterface $object) {
+		$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'beforeInsertObject', array('object' => $object));
+	
 		parent::insertObject($object);
-		
+	
 		if ($object->getUid() >= 1) {
 			$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'afterInsertObject', array('object' => $object));
-		}		
+		}
 	}
 	
 	/**
@@ -68,12 +70,14 @@ class Tx_ExtbaseHijax_Persistence_Backend extends Tx_Extbase_Persistence_Backend
 	 * @return bool
 	 */
 	protected function updateObject(Tx_Extbase_DomainObject_DomainObjectInterface $object, array $row) {
+		$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'beforeUpdateObject', array('object' => $object));
+	
 		$result = parent::updateObject($object, $row);
-		
+	
 		if ($result === TRUE) {
 			$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'afterUpdateObject', array('object' => $object));
 		}
-		
+	
 		return $result;
 	}
 	
@@ -85,13 +89,16 @@ class Tx_ExtbaseHijax_Persistence_Backend extends Tx_Extbase_Persistence_Backend
 	 * @return void
 	 */
 	protected function removeObject(Tx_Extbase_DomainObject_DomainObjectInterface $object, $markAsDeleted = TRUE) {
+		$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'beforeRemoveObject', array('object' => $object));
+	
 		// TODO: check if object is not already deleted
-		
+	
 		parent::removeObject($object, $markAsDeleted);
-		
+	
 		// TODO: check if object is removed indeed
+	
 		$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'afterRemoveObject', array('object' => $object));
-	}	
+	}
 }
 
 ?>

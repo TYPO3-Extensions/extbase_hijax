@@ -391,11 +391,15 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 	 * @param tslib_fe $pObj
 	 * @return void
 	 */
-	public function replaceXMLCommentsWithDivs(&$content) {
-		$this->replaceXMLCommentsWithDivsFound = TRUE;
-		while ($this->replaceXMLCommentsWithDivsFound) {
-			$this->replaceXMLCommentsWithDivsFound = FALSE;
-			$content = preg_replace_callback('/<!-- ###EVENT_LISTENER_(?P<elementId>\d*)### START (?P<listenerDefinition>.*) -->(?P<content>.*?)<!-- ###EVENT_LISTENER_(\\1)### END -->/msU', array($this, 'replaceXMLCommentsWithDivsCallback'), $content);
+	public function replaceXMLCommentsWithDivs(&$content, $format = 'html') {
+		$this->xmlCommentsFound = TRUE;
+		while ($this->xmlCommentsFound) {
+			$this->xmlCommentsFound = FALSE;
+			if ($format == 'html') {
+				$content = preg_replace_callback('/<!-- ###EVENT_LISTENER_(?P<elementId>\d*)### START (?P<listenerDefinition>.*) -->(?P<content>.*?)<!-- ###EVENT_LISTENER_(\\1)### END -->/msU', array($this, 'replaceXMLCommentsWithDivsCallback'), $content);
+			} else {
+				$content = preg_replace_callback('/<!-- ###EVENT_LISTENER_(?P<elementId>\d*)### START (?P<listenerDefinition>.*) -->(?P<content>.*?)<!-- ###EVENT_LISTENER_(\\1)### END -->/msU', array($this, 'removeXMLCommentsCallback'), $content);
+			}
 		}
 	}
 	
@@ -431,8 +435,23 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 	 * @param array $match
 	 * @return string
 	 */
+	protected function removeXMLCommentsCallback($match) {
+		$this->xmlCommentsFound = TRUE;
+		$matchesListenerDef = array();
+		preg_match('/(?P<listenerId>[a-zA-Z0-9_-]*)\((?P<eventNames>.*)\);/msU', $match['listenerDefinition'], $matchesListenerDef);
+			
+		$elementId = $match['elementId'];
+		$listenerId = $matchesListenerDef['listenerId'];
+	
+		return trim($match['content']);
+	}
+		
+	/**
+	 * @param array $match
+	 * @return string
+	 */
 	protected function replaceXMLCommentsWithDivsCallback($match) {
-		$this->replaceXMLCommentsWithDivsFound = TRUE;
+		$this->xmlCommentsFound = TRUE;
 		$matchesListenerDef = array();
 		preg_match('/(?P<listenerId>[a-zA-Z0-9_-]*)\((?P<eventNames>.*)\);/msU', $match['listenerDefinition'], $matchesListenerDef);
 			

@@ -30,22 +30,9 @@ class Tx_ExtbaseHijax_ViewHelpers_FormViewHelper extends Tx_Fluid_ViewHelpers_Fo
 	protected $configurationManager;
 	
 	/**
-	 * @var t3lib_cache_frontend_VariableFrontend
-	 */
-	protected $cacheInstance;
-	
-	/**
 	 * @var Tx_ExtbaseHijax_Event_Dispatcher
 	 */
 	protected $hijaxEventDispatcher;
-	
-	/**
-	 * Constructor
-	 */
-	public function __construct() {
-		parent::__construct();
-		$this->cacheInstance = $GLOBALS['typo3CacheManager']->getCache('extbase_hijax_storage');
-	}
 	
 	/**
 	 * @param Tx_Extbase_Configuration_ConfigurationManagerInterface $configurationManager

@@ -46,6 +46,16 @@ class Tx_ExtbaseHijax_MVC_Dispatcher extends Tx_Extbase_MVC_Dispatcher {
 	protected $currentListener;
 	
 	/**
+	 * @var Tx_Extbase_MVC_RequestInterface
+	 */
+	protected $currentRequest;	
+	
+	/**
+	 * @var array
+	 */
+	protected $requestsStack;	
+	
+	/**
 	 * @var Tx_ExtbaseHijax_Service_Serialization_ListenerFactory
 	 */
 	protected $listenerFactory;	
@@ -85,6 +95,7 @@ class Tx_ExtbaseHijax_MVC_Dispatcher extends Tx_Extbase_MVC_Dispatcher {
 		$this->serviceContent = $this->objectManager->get('Tx_ExtbaseHijax_Service_Content');
 		self::$id = $this->extensionConfiguration->getNextElementId();
 		$this->listenersStack = array();
+		$this->requestsStack = array();
 	}
 		
 	/**
@@ -96,6 +107,9 @@ class Tx_ExtbaseHijax_MVC_Dispatcher extends Tx_Extbase_MVC_Dispatcher {
 	 * @return void
 	 */
 	public function dispatch(Tx_Extbase_MVC_RequestInterface $request, Tx_Extbase_MVC_ResponseInterface $response, Tx_ExtbaseHijax_Event_Listener $listener = NULL) {	
+		/* @var $request Tx_Extbase_MVC_Request */
+		$this->currentRequest = $request;
+		array_push($this->requestsStack, $this->currentRequest);
 		
 		if (defined('TYPO3_cliMode') && TYPO3_cliMode === TRUE) {
 			parent::dispatch($request, $response);
@@ -167,15 +181,22 @@ class Tx_ExtbaseHijax_MVC_Dispatcher extends Tx_Extbase_MVC_Dispatcher {
 			}
 			$this->currentListener = array_pop($this->listenersStack);
 		}
+		
+		$this->currentRequest = array_pop($this->requestsStack);
 	}	
 	
 	/**
 	 * @return Tx_ExtbaseHijax_Event_Listener
 	 */
 	public function getCurrentListener() {
-		//$this->listenerFactory->persist($this->currentListener);
-				
 		return $this->currentListener;
+	}
+	
+	/**
+	 * @return Tx_Extbase_MVC_Request
+	 */
+	public function getCurrentRequest() {
+		return $this->currentRequest;
 	}
 	
 	/**

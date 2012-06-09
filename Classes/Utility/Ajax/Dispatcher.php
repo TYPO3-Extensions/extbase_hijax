@@ -111,11 +111,11 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 			foreach ($requests as $r) {
 				$skipProcessing = FALSE;
 				$configuration = array();
-				$configuration['extensionName'] = $r['extension'];
-				$configuration['pluginName']    = $r['plugin'];
-
-				/* @var $listener Tx_ExtbaseHijax_Event_Listener */
-				$listener = $this->listenerFactory->findById($r['settingsHash']);
+				
+				if ($r['settingsHash']) {
+					/* @var $listener Tx_ExtbaseHijax_Event_Listener */
+					$listener = $this->listenerFactory->findById($r['settingsHash']);
+				}
 				
 				$bootstrap = t3lib_div::makeInstance('Tx_Extbase_Core_Bootstrap');
 				
@@ -125,6 +125,8 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 					$request = $listener->getRequest();	
 					$bootstrap->cObj = $listener->getCObj();
 				} elseif (Tx_ExtbaseHijax_Utility_Extension::isAllowedHijaxAction($r['extension'], $r['controller'], $r['action'])) {
+					$configuration['extensionName'] = $r['extension'];
+					$configuration['pluginName']    = $r['plugin'];
 					$configuration['controller']    = $r['controller'];
 					$configuration['action']        = $r['action'];
 				} else {
@@ -147,7 +149,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 					$content = $response->getContent();
 					$this->serviceContent->processIntScripts($content);
 					$this->serviceContent->processAbsRefPrefix($content, $configuration['settings']['absRefPrefix']);
-					$responses['original'][] = array( 'id' => $r['id'], 'response' => $content, 'preventMarkupUpdate' => $this->getPreventMarkupUpdateOnAjaxLoad() );
+					$responses['original'][] = array( 'id' => $r['id'], 'format' => $request->getFormat(), 'response' => $content, 'preventMarkupUpdate' => $this->getPreventMarkupUpdateOnAjaxLoad() );
 				}
 			}
 			
@@ -166,10 +168,18 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 			}
 			
 			foreach ($responses['original'] as $i=>$response) {
-				$this->hijaxEventDispatcher->replaceXMLCommentsWithDivs($responses['original'][$i]['response']);
+				$this->hijaxEventDispatcher->replaceXMLCommentsWithDivs($responses['original'][$i]['response'], $responses['original'][$i]['format']);
+				if ($responses['original'][$i]['format']=='json') {
+						// yes, non-optimal, but no time for now to change the extbase core...
+					$responses['original'][$i]['response'] = json_decode($responses['original'][$i]['response']);
+				}
 			}
 			foreach ($responses['affected'] as $i=>$response) {
-				$this->hijaxEventDispatcher->replaceXMLCommentsWithDivs($responses['affected'][$i]['response']);
+				$this->hijaxEventDispatcher->replaceXMLCommentsWithDivs($responses['affected'][$i]['response'], $responses['affected'][$i]['format']);
+				if ($responses['affected'][$i]['format']=='json') {
+						// yes, non-optimal, but no time for now to change the extbase core...
+					$responses['affected'][$i]['response'] = json_decode($responses['affected'][$i]['response']);
+				}
 			}
 			
 			$this->cleanShutDown();
@@ -227,6 +237,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 					$bootstrap->cObj = $listener->getCObj();
 					$bootstrap->initialize($listener->getConfiguration());
 					
+					/* @var $request Tx_Extbase_MVC_Web_Request */
 					$request = $listener->getRequest();
 					$this->setPreventMarkupUpdateOnAjaxLoad(false);
 					
@@ -240,7 +251,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 					$content = $response->getContent();
 					$this->serviceContent->processIntScripts($content);
 					$this->serviceContent->processAbsRefPrefix($content, $configuration['settings']['absRefPrefix']);
-					$responses['affected'][] = array( 'id' => $listenerId, 'response' => $content, 'preventMarkupUpdate' => $this->getPreventMarkupUpdateOnAjaxLoad() );
+					$responses['affected'][] = array( 'id' => $listenerId, 'format' => $request->getFormat(), 'response' => $content, 'preventMarkupUpdate' => $this->getPreventMarkupUpdateOnAjaxLoad() );
 				} else {
 					// TODO: log error message
 				}
@@ -310,11 +321,13 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 		
 		$request->setControllerExtensionName($r['extension']);
 		$request->setPluginName($r['plugin']);
+		$request->setFormat($r['format'] ? $r['format'] : 'html');
 		$request->setControllerName($r['controller']);
 		$request->setControllerActionName($r['action']);
 		if ($r['arguments'] && !is_array($r['arguments'])) {
 			$r['arguments'] = unserialize($r['arguments']);
 		}
+
 		$request->setArguments(t3lib_div::array_merge_recursive_overrule($request->getArguments(), !is_array($r['arguments']) ? array() : $r['arguments']));
 				
 		return $request;

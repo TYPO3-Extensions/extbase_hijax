@@ -825,7 +825,104 @@
 		}
 		return $(el).val();
 	};	
+
 	
+	$.hijax = function (settings, pendingElement, loaders) {
+		var requests = [];
+		var el = {
+			id: settings.id,
+			extension: settings.extension,
+			plugin: settings.plugin,
+			controller: settings.controller,
+			action: settings.action,
+			format: settings.format,
+			arguments: settings.arguments,
+			settingsHash: settings.settingsHash
+		};
+		
+		requests.push(el);
+		var fields = [];
+		var pluginNameSpace = settings.namespace;
+		
+		function hA(namespace, arr) {
+			if (typeof arr != 'undefined') {
+				$.each(arr, function(i, f) {
+					if (typeof f != 'object') {
+						fields.push({name: namespace+'['+i+']', value: f});
+					} else {
+						// object
+						hA(namespace+'['+i+']', f);
+					}
+				});
+			}
+		}
+		
+		hA('r[0][arguments]', settings.data);
+		
+		$data = $.param({r: requests, e: eventsToListen})+'&'+$.param(fields)+'&eID=extbase_hijax_dispatcher&L='+EXTBASE_HIJAX.sys_language_uid;
+		
+		settings.data = $data;
+		settings.url = EXTBASE_HIJAX.url;
+		settings.type = "POST";
+		//settings.crossDomain = true;
+		settings.data = $data;
+		settings.dataType = "json";
+		settings.pendingElement = pendingElement;
+		settings.loaderElements = loaders;
+		settings.parentSuccessCallback = settings.success;
+		settings.parentErrorCallback = settings.error;
+		settings.success = function(data, textStatus, jqXHR) {
+			if (this.parentSuccessCallback) {
+				this.parentSuccessCallback(data, textStatus, jqXHR);
+			}
+			if (data['redirect'] && data['redirect'].url) {
+				window.location = data['redirect'].url;
+			} else {
+				if (this.pendingElement) {
+					$.each(EXTBASE_HIJAX.beforeLoadElement, function(i, f) {
+						try {
+							eval(f);
+						} catch (err) {
+						}
+					});
+					if (this.loaderElements) {
+						this.pendingElement.hideHijaxLoader(this.loaderElements);
+					}
+					$.each(data['original'], function(i, r) {
+						var element = $('#'+r['id']);
+						if (element) {
+							element.loadHijaxData(r['response'], r['preventMarkupUpdate']);
+						}
+					});
+					$.each(data['affected'], function(i, r) {
+						$.each(listeners[r['id']], function(i, element) {	
+							element = $(element);
+							if (element) {
+								element.loadHijaxData(r['response'], r['preventMarkupUpdate']);
+							}
+						});
+					});
+					$.each(EXTBASE_HIJAX.onLoadElement, function(i, f) {
+						try {
+							eval(f);
+						} catch (err) {
+						}
+					});
+				}
+			}
+		};
+		settings.error = function(jqXHR, textStatus, errorThrown) {
+			if (this.parentErrorCallback) {
+				this.parentErrorCallback(jqXHR, textStatus, errorThrown);
+			}
+			if (this.pendingElement) {
+				this.pendingElement.hideHijaxLoader(this.loaderElements);
+				this.pendingElement.showMessage(EXTBASE_HIJAX.errorMessage);
+			}
+		};
+		
+		return $.ajax(settings);
+	};
 })(jQuery);
 
 jQuery(document).ready(function(){

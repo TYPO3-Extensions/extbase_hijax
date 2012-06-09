@@ -134,7 +134,7 @@ class Tx_ExtbaseHijax_Event_Listener {
 	}
 
 	/**
-	 * @return the $request
+	 * @return Tx_Extbase_MVC_RequestInterface
 	 */
 	public function getRequest() {
 		return $this->request;
