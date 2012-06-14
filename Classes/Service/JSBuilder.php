@@ -144,7 +144,7 @@ class Tx_ExtbaseHijax_Service_JSBuilder implements t3lib_Singleton {
 				'format' => $format ? $format : 'html',
 				'action' => $action,
 				'arguments' => $arguments,
-				'settingsHash' => $this->mvcDispatcher->getCurrentListener()->getId(),
+				'settingsHash' => $this->mvcDispatcher->getCurrentListener() ? $this->mvcDispatcher->getCurrentListener()->getId() : '',
 				'namespace' => $this->extensionService->getPluginNamespace($extensionName, $pluginName),
 			);
 		
