@@ -861,6 +861,10 @@
 		
 		$data = $.param({r: requests, e: eventsToListen})+'&'+$.param(fields)+'&eID=extbase_hijax_dispatcher&L='+EXTBASE_HIJAX.sys_language_uid;
 		
+		if (pendingElement) {
+			pendingElement.showHijaxLoader(loaders);			
+		}
+		
 		settings.data = $data;
 		settings.url = EXTBASE_HIJAX.url;
 		settings.type = "POST";
@@ -885,7 +889,7 @@
 						} catch (err) {
 						}
 					});
-					if (this.loaderElements) {
+					if (this.pendingElement) {
 						this.pendingElement.hideHijaxLoader(this.loaderElements);
 					}
 					$.each(data['original'], function(i, r) {

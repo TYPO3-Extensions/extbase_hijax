@@ -173,7 +173,13 @@ class Tx_ExtbaseHijax_MVC_Dispatcher extends Tx_Extbase_MVC_Dispatcher {
 						
 					$content = $response->getContent();
 				
-					$response->setContent('<!-- ###EVENT_LISTENER_'.self::$id.'### START '.$signature.' -->'.$content.'<!-- ###EVENT_LISTENER_'.self::$id.'### END -->');
+					$content = '<!-- ###EVENT_LISTENER_'.self::$id.'### START '.$signature.' -->'.$content.'<!-- ###EVENT_LISTENER_'.self::$id.'### END -->';
+					
+					if (t3lib_div::_GP('eID') && t3lib_div::_GP('eID')!='extbase_hijax_dispatcher') {
+						$this->hijaxEventDispatcher->replaceXMLCommentsWithDivs($content, 'html');
+					}
+					$response->setContent($content);
+						
 					$this->extensionConfiguration->setNextElementId(++self::$id);
 				}
 				
