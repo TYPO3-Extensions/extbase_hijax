@@ -865,67 +865,103 @@
 			pendingElement.showHijaxLoader(loaders);			
 		}
 		
-		settings.data = $data;
-		settings.url = EXTBASE_HIJAX.url;
-		settings.type = "POST";
-		//settings.crossDomain = true;
-		settings.data = $data;
-		settings.dataType = "json";
-		settings.pendingElement = pendingElement;
-		settings.loaderElements = loaders;
-		settings.parentSuccessCallback = settings.success;
-		settings.parentErrorCallback = settings.error;
-		settings.success = function(data, textStatus, jqXHR) {
-			if (this.parentSuccessCallback) {
-				this.parentSuccessCallback(data, textStatus, jqXHR);
-			}
-			if (data['redirect'] && data['redirect'].url) {
-				window.location = data['redirect'].url;
-			} else {
-				if (this.pendingElement) {
-					$.each(EXTBASE_HIJAX.beforeLoadElement, function(i, f) {
-						try {
-							eval(f);
-						} catch (err) {
-						}
-					});
-					if (this.pendingElement) {
-						this.pendingElement.hideHijaxLoader(this.loaderElements);
+		if (settings.type && settings.type=='DOWNLOAD') {
+			function parseURL(url) {
+				var o = {
+					strictMode: false,
+					key: ["source","protocol","authority","userInfo","user","password","host","port","relative","path","directory","file","query","anchor"],
+					parser: {
+					    strict: /^(?:([^:\/?#]+):)?(?:\/\/((?:(([^:@]*):?([^:@]*))?@)?([^:\/?#]*)(?::(\d*))?))?((((?:[^?#\/]*\/)*)([^?#]*))(?:\?([^#]*))?(?:#(.*))?)/,
+					    loose:  /^(?:(?![^:@]+:[^:@\/]*@)([^:\/?#.]+):)?(?:\/\/\/?)?((?:(([^:@]*):?([^:@]*))?@)?([^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/ // Added one optional slash to post-protocol to catch file:/// (should restrict this)
 					}
-					$.each(data['original'], function(i, r) {
-						var element = $('#'+r['id']);
-						if (element) {
-							element.loadHijaxData(r['response'], r['preventMarkupUpdate']);
+				};
+				    
+			    var m   = o.parser[o.strictMode ? "strict" : "loose"].exec(url), uri = {}, i = 14;
+			    while (i--) {uri[o.key[i]] = m[i] || "";}
+			    
+			    return uri;
+			}
+			
+		    var downloadUrl = '';
+		    
+		    uri = parseURL(EXTBASE_HIJAX.url);
+		    
+		    if (uri.query) {
+		    	downloadUrl = EXTBASE_HIJAX.url+'&'+$data;
+		    } else {
+		    	downloadUrl = EXTBASE_HIJAX.url+'?'+$data;
+		    }
+		    
+		    if (uri.host=="") {
+		    	downloadUrl = window.location.protocol + '//' + window.location.host + (window.location.port ? (':' + window.location.port) : '') + (uri.directory ? '' : '/') + downloadUrl;
+		    }
+		    
+			var iframe = document.createElement("iframe");
+			iframe.src = downloadUrl;
+			iframe.style.display = "none";
+			document.body.appendChild(iframe);
+		} else {
+			settings.url = EXTBASE_HIJAX.url;
+			settings.type = "POST";
+			//settings.crossDomain = true;
+			settings.data = $data;
+			settings.dataType = "json";
+			settings.pendingElement = pendingElement;
+			settings.loaderElements = loaders;
+			settings.parentSuccessCallback = settings.success;
+			settings.parentErrorCallback = settings.error;
+			settings.success = function(data, textStatus, jqXHR) {
+				if (this.parentSuccessCallback) {
+					this.parentSuccessCallback(data, textStatus, jqXHR);
+				}
+				if (data['redirect'] && data['redirect'].url) {
+					window.location = data['redirect'].url;
+				} else {
+					if (this.pendingElement) {
+						$.each(EXTBASE_HIJAX.beforeLoadElement, function(i, f) {
+							try {
+								eval(f);
+							} catch (err) {
+							}
+						});
+						if (this.pendingElement) {
+							this.pendingElement.hideHijaxLoader(this.loaderElements);
 						}
-					});
-					$.each(data['affected'], function(i, r) {
-						$.each(listeners[r['id']], function(i, element) {	
-							element = $(element);
+						$.each(data['original'], function(i, r) {
+							var element = $('#'+r['id']);
 							if (element) {
 								element.loadHijaxData(r['response'], r['preventMarkupUpdate']);
 							}
 						});
-					});
-					$.each(EXTBASE_HIJAX.onLoadElement, function(i, f) {
-						try {
-							eval(f);
-						} catch (err) {
-						}
-					});
+						$.each(data['affected'], function(i, r) {
+							$.each(listeners[r['id']], function(i, element) {	
+								element = $(element);
+								if (element) {
+									element.loadHijaxData(r['response'], r['preventMarkupUpdate']);
+								}
+							});
+						});
+						$.each(EXTBASE_HIJAX.onLoadElement, function(i, f) {
+							try {
+								eval(f);
+							} catch (err) {
+							}
+						});
+					}
 				}
-			}
-		};
-		settings.error = function(jqXHR, textStatus, errorThrown) {
-			if (this.parentErrorCallback) {
-				this.parentErrorCallback(jqXHR, textStatus, errorThrown);
-			}
-			if (this.pendingElement) {
-				this.pendingElement.hideHijaxLoader(this.loaderElements);
-				this.pendingElement.showMessage(EXTBASE_HIJAX.errorMessage);
-			}
-		};
-		
-		return $.ajax(settings);
+			};
+			settings.error = function(jqXHR, textStatus, errorThrown) {
+				if (this.parentErrorCallback) {
+					this.parentErrorCallback(jqXHR, textStatus, errorThrown);
+				}
+				if (this.pendingElement) {
+					this.pendingElement.hideHijaxLoader(this.loaderElements);
+					this.pendingElement.showMessage(EXTBASE_HIJAX.errorMessage);
+				}
+			};
+			
+			return $.ajax(settings);			
+		}
 	};
 })(jQuery);
 
