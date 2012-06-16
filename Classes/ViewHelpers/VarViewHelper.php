@@ -38,19 +38,37 @@ class Tx_ExtbaseHijax_ViewHelpers_VarViewHelper extends Tx_Fluid_ViewHelpers_Ima
 			$expression = $this->renderChildren();
 		}
 		if ($this->arguments['calculate']) {
-			$evalString = "\$number = floatval($expression);";
+			$evalString = "\$value = floatval($expression);";
 			@eval($evalString);
 		} else {
-			$number = $expression;
+			$value = $expression;
 		}
 		
 		if ($this->arguments['as']) {
-			if ($this->templateVariableContainer->exists($this->arguments['as'])) {
-				$this->templateVariableContainer->remove($this->arguments['as']);
+			$variableNameArr = t3lib_div::trimExplode('.', $this->arguments['as'], TRUE, 2);
+			
+			$variableName = $variableNameArr[0];
+			$attributePath = $variableNameArr[1];
+			
+			if ($this->templateVariableContainer->exists($variableName)) {
+				$oldValue = $this->templateVariableContainer->get($variableName);
+				$this->templateVariableContainer->remove($variableName);
 			}
-			$this->templateVariableContainer->add($this->arguments['as'], $number);
+			if ($attributePath) {
+				if ($oldValue && is_array($oldValue)) {
+					$templateValue = $oldValue;
+					$templateValue[$attributePath] = $value;
+				} else {
+					$templateValue = array(
+						$attributePath => $value
+					);
+				}
+			} else {
+				$templateValue = $value;
+			}
+			$this->templateVariableContainer->add($variableName, $templateValue);
 		} else {
-			return $number;
+			return $value;
 		}
 	}
 
