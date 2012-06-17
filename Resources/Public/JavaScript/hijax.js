@@ -845,7 +845,7 @@
 		var pluginNameSpace = settings.namespace;
 		
 		function hA(namespace, arr) {
-			if (typeof arr != 'undefined') {
+			if (typeof arr !== 'undefined' && arr !== null) {
 				$.each(arr, function(i, f) {
 					if (typeof f != 'object') {
 						fields.push({name: namespace+'['+i+']', value: f});
