@@ -118,23 +118,25 @@ class Tx_ExtbaseHijax_Service_JSBuilder implements t3lib_Singleton {
 		
 		$request = $this->mvcDispatcher->getCurrentRequest();
 		
-		if ($action === NULL) {
-			$action = $request->getControllerActionName();
-		}
-		
-		if ($controller === NULL) {
-			$controller = $request->getControllerName();
-		}
-		
-		if ($extensionName === NULL) {
-			$extensionName = $request->getControllerExtensionName();
-		}
-		
-		if ($pluginName === NULL && TYPO3_MODE === 'FE') {
-			$pluginName = $this->extensionService->getPluginNameByAction($extensionName, $controller, $action);
-		}
-		if ($pluginName === NULL) {
-			$pluginName = $request->getPluginName();
+		if ($request) {
+			if ($action === NULL) {
+				$action = $request->getControllerActionName();
+			}
+			
+			if ($controller === NULL) {
+				$controller = $request->getControllerName();
+			}
+			
+			if ($extensionName === NULL) {
+				$extensionName = $request->getControllerExtensionName();
+			}
+			
+			if ($pluginName === NULL && TYPO3_MODE === 'FE') {
+				$pluginName = $this->extensionService->getPluginNameByAction($extensionName, $controller, $action);
+			}
+			if ($pluginName === NULL) {
+				$pluginName = $request->getPluginName();
+			}
 		}
 		
 		$settings = array(
@@ -145,7 +147,7 @@ class Tx_ExtbaseHijax_Service_JSBuilder implements t3lib_Singleton {
 				'action' => $action,
 				'arguments' => $arguments,
 				'settingsHash' => $this->mvcDispatcher->getCurrentListener() ? $this->mvcDispatcher->getCurrentListener()->getId() : '',
-				'namespace' => $this->extensionService->getPluginNamespace($extensionName, $pluginName),
+				'namespace' => ($extensionName && $pluginName) ? $this->extensionService->getPluginNamespace($extensionName, $pluginName) : '',
 			);
 		
 		$functionName = 'extbaseHijax_'.md5(serialize($settings));
