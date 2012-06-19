@@ -83,12 +83,13 @@ class Tx_ExtbaseHijax_ViewHelpers_ScriptViewHelper extends Tx_Fluid_Core_ViewHel
 	 * @param boolean $excludeFromConcatenation
 	 * @param string $section
 	 * @param boolean $preventMarkupUpdateOnAjaxLoad
+	 * @param boolean $moveToExternalFile
 	 * 
      * @return string
 	 */
-	public function render($src="", $type = 'text/javascript', $compress = TRUE, $forceOnTop = FALSE, $allWrap = '', $excludeFromConcatenation = FALSE, $section = 'footer', $preventMarkupUpdateOnAjaxLoad = false) {
+	public function render($src="", $type = 'text/javascript', $compress = TRUE, $forceOnTop = FALSE, $allWrap = '', $excludeFromConcatenation = FALSE, $section = 'footer', $preventMarkupUpdateOnAjaxLoad = false, $moveToExternalFile = false) {
         $content = $this->renderChildren();
-  
+        
         if ($this->ajaxDispatcher->getIsActive()) {
         	if ($preventMarkupUpdateOnAjaxLoad) {
         		$this->ajaxDispatcher->setPreventMarkupUpdateOnAjaxLoad(true);
@@ -101,6 +102,12 @@ class Tx_ExtbaseHijax_ViewHelpers_ScriptViewHelper extends Tx_Fluid_Core_ViewHel
         	}
         } else {
 	        if ($this->isCached()) {
+	        	
+	        	if (!$src && $moveToExternalFile) {
+	        		$src = 'typo3temp/extbase_hijax/'.md5($content).'.js';
+	        		t3lib_div::writeFileToTypo3tempDir(PATH_site.$src, $content);
+	        	}
+	        	
 	        	if (!$src) {
 	        		if ($section=='footer') {
 	        			$this->pageRenderer->addJsFooterInlineCode(md5($content), $content, $compress, $forceOnTop);
