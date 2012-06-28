@@ -138,7 +138,8 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 					$this->setPreventMarkupUpdateOnAjaxLoad(false);
 					
 					$request = $this->buildRequest($r, $request);
-					
+					$request->setDispatched(false);
+										
 					/* @var $response Tx_Extbase_MVC_Web_Response */
 					$response = $this->objectManager->create('Tx_Extbase_MVC_Web_Response');
 				
@@ -239,6 +240,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 					
 					/* @var $request Tx_Extbase_MVC_Web_Request */
 					$request = $listener->getRequest();
+					$request->setDispatched(false);
 					$this->setPreventMarkupUpdateOnAjaxLoad(false);
 					
 					/* @var $response Tx_Extbase_MVC_Web_Response */

@@ -368,7 +368,8 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 				$bootstrap->cObj = $listener->getCObj();
 				$bootstrap->initialize($listener->getConfiguration());
 				$request = $listener->getRequest();
-		
+				$request->setDispatched(false);
+				
 				/* @var $response Tx_Extbase_MVC_Web_Response */
 				$response = $this->objectManager->create('Tx_Extbase_MVC_Web_Response');
 		
