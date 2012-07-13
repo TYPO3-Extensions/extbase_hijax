@@ -114,7 +114,7 @@ class Tx_ExtbaseHijax_Service_Content implements t3lib_Singleton {
 			$dummyContent = $tslib_cObj->USER(array(
 					'extensionName' => 'ExtbaseHijax',
 					'pluginName' => 'Pi1',
-					'userFunc' => 'tx_extbase_core_bootstrap->run',
+					'userFunc' => 'Tx_Extbase_Core_Bootstrap->run',
 					'switchableControllerActions.' => array (
 						'ContentElement.' => array ('0' => $cached ? 'user' : 'userInt')
 					),
