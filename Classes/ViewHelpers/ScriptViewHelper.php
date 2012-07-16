@@ -104,7 +104,7 @@ class Tx_ExtbaseHijax_ViewHelpers_ScriptViewHelper extends Tx_Fluid_Core_ViewHel
 	        if ($this->isCached()) {
 	        	
 	        	if (!$src && $moveToExternalFile) {
-	        		$src = 'typo3temp/extbase_hijax/'.md5($content).'.js';
+	        		$src = 'typo3temp'.DIRECTORY_SEPARATOR.'extbase_hijax'.DIRECTORY_SEPARATOR.md5($content).'.js';
 	        		t3lib_div::writeFileToTypo3tempDir(PATH_site.$src, $content);
 	        		
 	        		if ($GLOBALS['TSFE']) {

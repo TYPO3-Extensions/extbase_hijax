@@ -78,7 +78,11 @@ class Tx_ExtbaseHijax_Lock_Lock {
 	
 		switch ($this->method) {
 			case 'flock':
-				$path = PATH_site . 'typo3temp/extbase_hijax/locks/';
+				$genTempPath = PATH_site . 'typo3temp'.DIRECTORY_SEPARATOR.'extbase_hijax'.DIRECTORY_SEPARATOR;
+				if (!is_dir($genTempPath)) {
+					t3lib_div::mkdir($genTempPath);
+				}
+				$path = PATH_site . 'typo3temp'.DIRECTORY_SEPARATOR.'extbase_hijax'.DIRECTORY_SEPARATOR.'locks'.DIRECTORY_SEPARATOR;
 				if (!is_dir($path)) {
 					t3lib_div::mkdir($path);
 				}
@@ -173,7 +177,7 @@ class Tx_ExtbaseHijax_Lock_Lock {
 					$success = FALSE;
 				}
 				fclose($this->filepointer);
-				if (t3lib_div::isAllowedAbsPath($this->resource) && t3lib_div::isFirstPartOfStr($this->resource, PATH_site . 'typo3temp/extbase_hijax/locks/')) {
+				if (t3lib_div::isAllowedAbsPath($this->resource) && t3lib_div::isFirstPartOfStr($this->resource, PATH_site . 'typo3temp'.DIRECTORY_SEPARATOR.'extbase_hijax'.DIRECTORY_SEPARATOR.'locks'.DIRECTORY_SEPARATOR)) {
 					unlink($this->resource);
 				}
 				break;
