@@ -23,7 +23,15 @@
 
 ; (function($) {
 	var elements = [], eventsToListen = {}, listeners = [], startedTimer = false, timerInterval = 10000, currentTimerTime = 0, uniqueIDCounter = 0, ajaxCallback = false, baseAnimationSpeed = 600;
-	
+
+	_evalStr = function(str){
+		try {
+			return eval(str);
+		} catch (e) {
+			return '';
+		}
+	};
+
 	/*
 	 * Private methods 
 	 */
@@ -281,7 +289,8 @@
 						break;
 					case 'conditional':
 						try {
-							var val = eval(el.attr('data-hijax-condition'));
+							var val = _evalStr.call(el, el.attr('data-hijax-condition'));
+							var animate = _evalStr.call(el, el.attr('data-hijax-animate'));
 							var thenTarget = el.find('> .hijax-content');
 							var elseTarget = el.find('> .hijax-content-else');
 							
@@ -291,7 +300,7 @@
 								var startingHeight = thenTarget.outerHeight();
 								thenTarget.css('display', 'none'); 
 								
-								if (!ajaxCallback) {
+								if (!ajaxCallback && animate) {
 									elseTarget.stop().css('height', startingHeight).animate({
 										height: targetHeight
 									}, baseAnimationSpeed / 2, function() {
@@ -326,7 +335,7 @@
 							var target = $(this).parents('.hijax-element[data-hijax-listener-id='+$(this).attr('data-hijax-settings')+']');
 							var loaders = null;
 							if ($(this).attr('data-hijax-loaders')) {
-								loaders = eval($(this).attr('data-hijax-loaders'));
+								loaders = _evalStr.call($(this), $(this).attr('data-hijax-loaders'));
 							}
 							target.showHijaxLoader(loaders);
 							
@@ -373,7 +382,7 @@
 							
 							var loaders = null;
 							if ($(this).attr('data-hijax-loaders')) {
-								loaders = eval($(this).attr('data-hijax-loaders'));
+								loaders = _evalStr.call($(this), $(this).attr('data-hijax-loaders'));
 							}
 							target.showHijaxLoader(loaders);
 							
@@ -418,7 +427,7 @@
 	$.fn.showMessage = function(msg) {
 		var element = $(this);
 		if (element.attr('data-hijax-result-target')) {
-			element = eval(element.attr('data-hijax-result-target'));
+			element = _evalStr.call(element, element.attr('data-hijax-result-target'));
 		}
 		var content = element.find('> .'+EXTBASE_HIJAX.contentClass);
 
@@ -472,10 +481,10 @@
 			var content = element.find('> .'+EXTBASE_HIJAX.contentClass);
 			
 			if (element.attr('data-hijax-result-target')) {
-				content = eval(element.attr('data-hijax-result-target'));
+				content = _evalStr.call(element, element.attr('data-hijax-result-target'));
 				var wrapResult = false;
 				if (element.attr('data-hijax-result-wrap')) {
-					wrapResult = eval(element.attr('data-hijax-result-wrap'));
+					wrapResult = _evalStr.call(element, element.attr('data-hijax-result-wrap'));
 				}
 				if (wrapResult) {
 					response = '<div class="hijax-element"><div class="'+EXTBASE_HIJAX.contentClass+'">'+response+'</div><div class="'+EXTBASE_HIJAX.loadingClass+'"></div></div>';
@@ -536,14 +545,14 @@
 	$.fn.showHijaxLoader = function(loaders) {
 		var element = $(this);
 		if (element.attr('data-hijax-result-target')) {
-			element = eval(element.attr('data-hijax-result-target'));
+			element = _evalStr.call(element, element.attr('data-hijax-result-target'));
 		}		
 
 		var content = element.find('> .'+EXTBASE_HIJAX.contentClass);
 		
 		if (!loaders) {
 			if (element.attr('data-hijax-loaders')) {
-				loaders = eval(element.attr('data-hijax-loaders'));
+				loaders = _evalStr.call(element, element.attr('data-hijax-loaders'));
 			} else {
 				loaders = element.find('> .'+EXTBASE_HIJAX.loadingClass);
 			}
@@ -572,11 +581,11 @@
 	$.fn.hideHijaxLoader = function(loaders) {
 		var element = $(this);
 		if (element.attr('data-hijax-result-target')) {
-			element = eval(element.attr('data-hijax-result-target'));
+			element = _evalStr.call(element, element.attr('data-hijax-result-target'));
 		}
 		if (!loaders) {
 			if (element.attr('data-hijax-loaders')) {
-				loaders = eval(element.attr('data-hijax-loaders'));
+				loaders = _evalStr.call(element, element.attr('data-hijax-loaders'));
 			} else {
 				loaders = element.find('> .'+EXTBASE_HIJAX.loadingClass);
 			}
@@ -611,16 +620,16 @@
 		}
 	};
 	
-	$.fn.extbaseHijax = function(process) {
+	$.fn.extbaseHijax = function(process, force) {
 		if (!$(this).length) {
 			return this;
 		}
 		
 		var addedElements = _addElements(this);
 		var removedElements = _clearElements();
-		
+
 		if (process) {
-			_process(addedElements);
+			_process(force ? this : addedElements);
 		}
 		
 		return this;

@@ -43,9 +43,10 @@ class Tx_ExtbaseHijax_ViewHelpers_IfViewHelper extends Tx_Fluid_Core_ViewHelper_
 	 * renders <f:then> child if $condition is true, otherwise renders <f:else> child.
 	 *
 	 * @param string $condition View helper condition
+     * @param string $animate
 	 * @return string the rendered string
 	 */
-	public function render($condition) {
+	public function render($condition, $animate = 'true') {
 		$thenChild = $this->renderThenChild();
 		if ($thenChild) {
 			$thenChild = '<div class="hijax-content">'.$thenChild.'</div>';
@@ -55,7 +56,7 @@ class Tx_ExtbaseHijax_ViewHelpers_IfViewHelper extends Tx_Fluid_Core_ViewHelper_
 			$elseChild = '<div class="hijax-content-else">'.$elseChild.'</div>';
 		}
 		
-		return '<div class="hijax-element hijax-js-conditional" data-hijax-element-type="conditional" data-hijax-condition="'.$this->arguments['condition'].'">'.$thenChild.$elseChild.'<div class="hijax-loading"></div></div>';
+		return '<div class="hijax-element hijax-js-conditional" data-hijax-animate="'.$animate.'" data-hijax-element-type="conditional" data-hijax-condition="'.$this->arguments['condition'].'">'.$thenChild.$elseChild.'<div class="hijax-loading"></div></div>';
 	}
 	
 	/**
