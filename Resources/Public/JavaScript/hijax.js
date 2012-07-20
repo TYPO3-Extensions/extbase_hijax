@@ -289,17 +289,21 @@
 						break;
 					case 'conditional':
 						try {
+							var prevValue = el.data('conditional-prevValue');
 							var val = _evalStr.call(el, el.attr('data-hijax-condition'));
 							var animate = _evalStr.call(el, el.attr('data-hijax-animate'));
 							var thenTarget = el.find('> .hijax-content');
 							var elseTarget = el.find('> .hijax-content-else');
 							
 							if (!val) {
-								elseTarget.css('display', 'block').css('visibility', 'visible');
+								elseTarget.removeClass('hijax-display-none').css('display', 'block').css('visibility', 'visible');
 								var targetHeight = elseTarget.outerHeight();
 								var startingHeight = thenTarget.outerHeight();
-								thenTarget.css('display', 'none'); 
-								
+								thenTarget.css('display', 'block').addClass('hijax-display-none');
+
+									// animate only if this is a first eval call or if value has changed
+								animate = animate && (typeof prevValue == 'undefined' || prevValue != val);
+
 								if (!ajaxCallback && animate) {
 									elseTarget.stop().css('height', startingHeight).animate({
 										height: targetHeight
@@ -308,11 +312,11 @@
 										$(this).css('height', 'auto');
 									});
 								}
-								
 							} else {
-								thenTarget.css('display', 'block').css('visibility', 'visible');
-								elseTarget.css('display', 'none'); 
+								thenTarget.removeClass('hijax-display-none').css('display', 'block').css('visibility', 'visible');
+								elseTarget.css('display', 'block').addClass('hijax-display-none');
 							}
+							el.data('conditional-prevValue', val);
 						} catch (err) {
 							el.css('display', 'none'); 
 						}

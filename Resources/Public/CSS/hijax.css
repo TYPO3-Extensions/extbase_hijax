@@ -34,6 +34,16 @@
 }
 
 /**
+ * Emulate display none
+ */
+.hijax-js-on .hijax-display-none {
+	display: block;
+	visibility: hidden;
+	overflow: hidden;
+	height: 1px;
+}
+
+/**
  * js conditional element logic
  */
 
