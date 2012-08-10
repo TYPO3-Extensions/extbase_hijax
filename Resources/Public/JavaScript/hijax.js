@@ -144,90 +144,121 @@
 		_process(processElements);
 	};
 	
-    _parseCSV = function( strData, strDelimiter ){
-    		// Check to see if the delimiter is defined. If not,
-        	// then default to comma.
-        strDelimiter = (strDelimiter || ",");
+	_parseCSV = function( strData, strDelimiter ){
+			// Check to see if the delimiter is defined. If not,
+			// then default to comma.
+		strDelimiter = (strDelimiter || ",");
 
-        // Create a regular expression to parse the CSV values.
-        var objPattern = new RegExp(
-                (
-                        // Delimiters.
-                        "(\\" + strDelimiter + "|\\r?\\n|\\r|^)" +
+		// Create a regular expression to parse the CSV values.
+		var objPattern = new RegExp(
+				(
+						// Delimiters.
+						"(\\" + strDelimiter + "|\\r?\\n|\\r|^)" +
 
-                        // Quoted fields.
-                        "(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|" +
+						// Quoted fields.
+						"(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|" +
 
-                        // Standard fields.
-                        "([^\"\\" + strDelimiter + "\\r\\n]*))"
-                ),
-                "gi"
-                );
+						// Standard fields.
+						"([^\"\\" + strDelimiter + "\\r\\n]*))"
+				),
+				"gi"
+				);
 
 	
-	        // Create an array to hold our data. Give the array
-	        // a default empty first row.
-        var arrData = [[]];
+			// Create an array to hold our data. Give the array
+			// a default empty first row.
+		var arrData = [[]];
 
-	        // Create an array to hold our individual pattern
-	        // matching groups.
-        var arrMatches = null;
+			// Create an array to hold our individual pattern
+			// matching groups.
+		var arrMatches = null;
 
-	        // Keep looping over the regular expression matches
-	        // until we can no longer find a match.
-        while (arrMatches = objPattern.exec( strData )){
+			// Keep looping over the regular expression matches
+			// until we can no longer find a match.
+		while (arrMatches = objPattern.exec( strData )){
 
-                	// Get the delimiter that was found.
-                var strMatchedDelimiter = arrMatches[ 1 ];
+					// Get the delimiter that was found.
+				var strMatchedDelimiter = arrMatches[ 1 ];
 
-	                // Check to see if the given delimiter has a length
-	                // (is not the start of string) and if it matches
-	                // field delimiter. If id does not, then we know
-	                // that this delimiter is a row delimiter.
-                if (
-                        strMatchedDelimiter.length &&
-                        (strMatchedDelimiter != strDelimiter)
-                        ){
-	                        // Since we have reached a new row of data,
-	                        // add an empty row to our data array.
-                        arrData.push( [] );
-                }
+					// Check to see if the given delimiter has a length
+					// (is not the start of string) and if it matches
+					// field delimiter. If id does not, then we know
+					// that this delimiter is a row delimiter.
+				if (
+						strMatchedDelimiter.length &&
+						(strMatchedDelimiter != strDelimiter)
+						){
+							// Since we have reached a new row of data,
+							// add an empty row to our data array.
+						arrData.push( [] );
+				}
 
-	                // Now that we have our delimiter out of the way,
-	                // let's check to see which kind of value we
-	                // captured (quoted or unquoted).
-                if (arrMatches[ 2 ]){
+					// Now that we have our delimiter out of the way,
+					// let's check to see which kind of value we
+					// captured (quoted or unquoted).
+				if (arrMatches[ 2 ]){
 
-	                        // We found a quoted value. When we capture
-	                        // this value, unescape any double quotes.
-                        var strMatchedValue = arrMatches[ 2 ].replace(
-                                new RegExp( "\"\"", "g" ),
-                                "\""
-                                );
-                } else {
-                        	// We found a non-quoted value.
-                        var strMatchedValue = arrMatches[ 3 ];
-                }
+							// We found a quoted value. When we capture
+							// this value, unescape any double quotes.
+						var strMatchedValue = arrMatches[ 2 ].replace(
+								new RegExp( "\"\"", "g" ),
+								"\""
+								);
+				} else {
+							// We found a non-quoted value.
+						var strMatchedValue = arrMatches[ 3 ];
+				}
 
 
-                // Now that we have our value string, let's add
-                // it to the data array.
-                arrData[ arrData.length - 1 ].push( strMatchedValue );
-        }
+				// Now that we have our value string, let's add
+				// it to the data array.
+				arrData[ arrData.length - 1 ].push( strMatchedValue );
+		}
 
-        // Return the parsed data.
-        return( arrData );
-    };
-    
-    _ajaxRequest = function ($data, pendingElement, loaders) {
+		// Return the parsed data.
+		return( arrData );
+	};
+	
+	_ajaxRequest = function (requests) {
+		var pendingElements = [];
+		var processedRequests = [];
+		var fields = [];
+
+		$.each(requests, function(i, r) {
+			pendingElements[i] = {
+				target: r['target'],
+				loaders: r['loaders']
+			};
+
+			if (r['data']) {
+				var pluginNameSpace = r['pluginNameSpace'];
+
+				$.each(r['data'], function(j, field) {
+					field['name'] = field['name'].replace(pluginNameSpace, 'r['+i+'][arguments]');
+					fields.push(field);
+				});
+			}
+
+			processedRequests[i] = {
+				id: r['id'],
+				extension: r['extension'],
+				plugin: r['plugin'],
+				controller: r['controller'],
+				action: r['action'],
+				arguments: r['arguments'],
+				settingsHash: r['settingsHash']
+			};
+		});
+
+		$data = $.param({r: processedRequests, e: eventsToListen})+'&'+$.param(fields)+'&eID=extbase_hijax_dispatcher&L='+EXTBASE_HIJAX.sys_language_uid;
+
 		var ajaxRequest = $.ajax({
 			url: EXTBASE_HIJAX.url,
 			type: "POST",
 			//crossDomain: true,
 			data: $data,
 			dataType: "json",
-			pendingElement: pendingElement,
-			loaderElements: loaders,
+			pendingElements: pendingElements,
 			success: function(data, textStatus, jqXHR) {
 				if (data['redirect'] && data['redirect'].url) {
 					window.location = data['redirect'].url;
@@ -238,13 +269,23 @@
 						} catch (err) {
 						}
 					});
-					this.pendingElement.hideHijaxLoader(this.loaderElements);
+
+					$.each(this.pendingElements, function(i, pendingElement) {
+						try {
+							var target = pendingElement['target'];
+							var loaders = pendingElement['loaders'];
+							$(target).hideHijaxLoader(loaders);
+						} catch (err) {
+						}
+					});
+
 					$.each(data['original'], function(i, r) {
 						var element = $('#'+r['id']);
 						if (element) {
 							element.loadHijaxData(r['response'], r['preventMarkupUpdate']);
 						}
 					});
+
 					$.each(data['affected'], function(i, r) {
 						$.each(listeners[r['id']], function(i, element) {	
 							element = $(element);
@@ -253,6 +294,7 @@
 							}
 						});
 					});
+
 					$.each(EXTBASE_HIJAX.onLoadElement, function(i, f) {
 						try {
 							eval(f);
@@ -262,11 +304,18 @@
 				}
 			},
 			error: function(jqXHR, textStatus, errorThrown) {
-				this.pendingElement.hideHijaxLoader(this.loaderElements);
-				this.pendingElement.showMessage(EXTBASE_HIJAX.errorMessage);
+				$.each(this.pendingElements, function(i, pendingElement) {
+					try {
+						var target = pendingElement['target'];
+						var loaders = pendingElement['loaders'];
+						$(target).hideHijaxLoader(loaders);
+						$(target).showMessage(EXTBASE_HIJAX.errorMessage);
+					} catch (err) {
+					}
+				});
 			}
-		});	    	
-    };
+		});			
+	};
 	
 	_process = function (elements) {
 		if (elements && elements.length > 0) {
@@ -326,35 +375,43 @@
 						el.bind('submit', function(e) {
 							e.preventDefault(); // <-- important
 							var requests = [];
-							var el = {
-									id: $(this).attr('id'),
-									extension: $(this).attr('data-hijax-extension'),
-									plugin: $(this).attr('data-hijax-plugin'),
-									controller: $(this).attr('data-hijax-controller'),
-									action: $(this).attr('data-hijax-action'),
-									arguments: $(this).attr('data-hijax-arguments'),
-									settingsHash: $(this).attr('data-hijax-settings')
-								};
-							
 							var target = $(this).parents('.hijax-element[data-hijax-listener-id='+$(this).attr('data-hijax-settings')+']');
 							var loaders = null;
 							if ($(this).attr('data-hijax-loaders')) {
 								loaders = _evalStr.call($(this), $(this).attr('data-hijax-loaders'));
 							}
 							target.showHijaxLoader(loaders);
-							
-							requests.push(el);
 							var fields = $(this).formToArray();
 							var pluginNameSpace = $(this).attr('data-hijax-namespace');
-							$.each(fields, function(i, f) {
-								fields[i]['name'] = fields[i]['name'].replace(pluginNameSpace, 'r[0][arguments]');
-							});
-							$data = $.param({r: requests, e: eventsToListen})+'&'+$.param(fields)+'&eID=extbase_hijax_dispatcher&L='+EXTBASE_HIJAX.sys_language_uid;
-							
-							_ajaxRequest($data, target, loaders);
+
+							var el = {
+								id: $(this).attr('id'),
+								extension: $(this).attr('data-hijax-extension'),
+								plugin: $(this).attr('data-hijax-plugin'),
+								controller: $(this).attr('data-hijax-controller'),
+								action: $(this).attr('data-hijax-action'),
+								arguments: $(this).attr('data-hijax-arguments'),
+								settingsHash: $(this).attr('data-hijax-settings'),
+								target: target,
+								loaders: loaders,
+								data: fields,
+								pluginNameSpace: pluginNameSpace
+							};
+
+							requests.push(el);
+
+							_ajaxRequest(requests);
 						});
 						break;
 					case 'ajax':
+						var target = $(this).parents('.hijax-element[data-hijax-listener-id='+$(this).attr('data-hijax-settings')+']');
+						var loaders = null;
+						if ($(this).attr('data-hijax-loaders')) {
+							loaders = _evalStr.call($(this), $(this).attr('data-hijax-loaders'));
+						}
+
+						target.showHijaxLoader(loaders);
+
 							// ajax request
 						var el = {
 							id: $(element).attr('id'),
@@ -363,10 +420,11 @@
 							controller: $(element).attr('data-hijax-controller'),
 							action: $(element).attr('data-hijax-action'),
 							arguments: $(element).attr('data-hijax-arguments'),
-							settingsHash: $(element).attr('data-hijax-settings')
+							settingsHash: $(element).attr('data-hijax-settings'),
+							target: target,
+							loaders: loaders
 						};
-						$(element).showHijaxLoader();
-						
+
 						requests.push(el);
 						break;
 					case 'link':
@@ -374,27 +432,27 @@
 							e.preventDefault(); // <-- important
 							var requests = [];
 							var target = $(this).parents('.hijax-element[data-hijax-listener-id='+$(this).attr('data-hijax-settings')+']');
-							var el = {
-									id: target.attr('id'),
-									extension: $(this).attr('data-hijax-extension'),
-									plugin: $(this).attr('data-hijax-plugin'),
-									controller: $(this).attr('data-hijax-controller'),
-									action: $(this).attr('data-hijax-action'),
-									arguments: $(this).attr('data-hijax-arguments'),
-									settingsHash: $(this).attr('data-hijax-settings')
-								};
-							
 							var loaders = null;
 							if ($(this).attr('data-hijax-loaders')) {
 								loaders = _evalStr.call($(this), $(this).attr('data-hijax-loaders'));
 							}
 							target.showHijaxLoader(loaders);
-							
+
+							var el = {
+								id: target.attr('id'),
+								extension: $(this).attr('data-hijax-extension'),
+								plugin: $(this).attr('data-hijax-plugin'),
+								controller: $(this).attr('data-hijax-controller'),
+								action: $(this).attr('data-hijax-action'),
+								arguments: $(this).attr('data-hijax-arguments'),
+								settingsHash: $(this).attr('data-hijax-settings'),
+								target: target,
+								loaders: loaders
+							};
+
 							requests.push(el);
 							
-							$data = $.param({r: requests, e: eventsToListen})+'&eID=extbase_hijax_dispatcher&L='+EXTBASE_HIJAX.sys_language_uid;
-	
-							_ajaxRequest($data, target, loaders);
+							_ajaxRequest(requests);
 						});
 						break;
 					default: 
@@ -403,23 +461,7 @@
 			});
 			
 			if (requests.length>0) {
-				$data = {r: requests}+'&eID=extbase_hijax_dispatcher&L='+EXTBASE_HIJAX.sys_language_uid;
-				
-				var ajaxRequest = $.ajax({
-					url: EXTBASE_HIJAX.url,
-					type: "POST",
-					//crossDomain: true,
-					data: $data,
-					dataType: "json",
-					success: function(data) { 
-						$.each(data, function(i, r) {
-							var element = $('#'+r['id']);
-							if (element) {
-								element.loadHijaxData(r['response'], r['preventMarkupUpdate']);
-							}
-						});
-					}
-				});	
+				_ajaxRequest(requests);
 			}
 		}
 	};
@@ -884,31 +926,31 @@
 					strictMode: false,
 					key: ["source","protocol","authority","userInfo","user","password","host","port","relative","path","directory","file","query","anchor"],
 					parser: {
-					    strict: /^(?:([^:\/?#]+):)?(?:\/\/((?:(([^:@]*):?([^:@]*))?@)?([^:\/?#]*)(?::(\d*))?))?((((?:[^?#\/]*\/)*)([^?#]*))(?:\?([^#]*))?(?:#(.*))?)/,
-					    loose:  /^(?:(?![^:@]+:[^:@\/]*@)([^:\/?#.]+):)?(?:\/\/\/?)?((?:(([^:@]*):?([^:@]*))?@)?([^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/ // Added one optional slash to post-protocol to catch file:/// (should restrict this)
+						strict: /^(?:([^:\/?#]+):)?(?:\/\/((?:(([^:@]*):?([^:@]*))?@)?([^:\/?#]*)(?::(\d*))?))?((((?:[^?#\/]*\/)*)([^?#]*))(?:\?([^#]*))?(?:#(.*))?)/,
+						loose:  /^(?:(?![^:@]+:[^:@\/]*@)([^:\/?#.]+):)?(?:\/\/\/?)?((?:(([^:@]*):?([^:@]*))?@)?([^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/ // Added one optional slash to post-protocol to catch file:/// (should restrict this)
 					}
 				};
-				    
-			    var m   = o.parser[o.strictMode ? "strict" : "loose"].exec(url), uri = {}, i = 14;
-			    while (i--) {uri[o.key[i]] = m[i] || "";}
-			    
-			    return uri;
+					
+				var m   = o.parser[o.strictMode ? "strict" : "loose"].exec(url), uri = {}, i = 14;
+				while (i--) {uri[o.key[i]] = m[i] || "";}
+				
+				return uri;
 			}
 			
-		    var downloadUrl = '';
-		    
-		    uri = parseURL(EXTBASE_HIJAX.url);
-		    
-		    if (uri.query) {
-		    	downloadUrl = EXTBASE_HIJAX.url+'&'+$data;
-		    } else {
-		    	downloadUrl = EXTBASE_HIJAX.url+'?'+$data;
-		    }
-		    
-		    if (uri.host=="") {
-		    	downloadUrl = window.location.protocol + '//' + window.location.host + (window.location.port ? (':' + window.location.port) : '') + (uri.directory ? '' : '/') + downloadUrl;
-		    }
-		    
+			var downloadUrl = '';
+			
+			uri = parseURL(EXTBASE_HIJAX.url);
+			
+			if (uri.query) {
+				downloadUrl = EXTBASE_HIJAX.url+'&'+$data;
+			} else {
+				downloadUrl = EXTBASE_HIJAX.url+'?'+$data;
+			}
+			
+			if (uri.host=="") {
+				downloadUrl = window.location.protocol + '//' + window.location.host + (window.location.port ? (':' + window.location.port) : '') + (uri.directory ? '' : '/') + downloadUrl;
+			}
+			
 			var iframe = document.createElement("iframe");
 			iframe.src = downloadUrl;
 			iframe.style.display = "none";

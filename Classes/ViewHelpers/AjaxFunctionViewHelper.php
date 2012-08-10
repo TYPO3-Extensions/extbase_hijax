@@ -22,7 +22,7 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-class Tx_ExtbaseHijax_ViewHelpers_AjaxFunctionViewHelper extends Tx_Fluid_Core_ViewHelper_AbstractConditionViewHelper {
+class Tx_ExtbaseHijax_ViewHelpers_AjaxFunctionViewHelper extends Tx_Fluid_Core_ViewHelper_AbstractViewHelper {
 	
 	/**
 	 * @var Tx_ExtbaseHijax_Service_JSBuilder
