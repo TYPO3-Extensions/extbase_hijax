@@ -33,24 +33,19 @@ class Tx_ExtbaseHijax_Persistence_Backend extends Tx_Extbase_Persistence_Backend
 	public function injectStorageBackend(Tx_ExtbaseHijax_Persistence_Storage_Typo3DbBackend $storageBackend) {
 		$this->storageBackend = $storageBackend;
 	}
-	
-	/**
-	 * @var array
-	 */
-	protected $pendingIsertObjects = array();
-	
+
 	/**
 	 * @var Tx_Extbase_SignalSlot_Dispatcher
 	 */
 	protected $signalSlotDispatcher;
-	
+
 	/**
 	 * @param Tx_Extbase_SignalSlot_Dispatcher $signalSlotDispatcher
 	 */
 	public function injectSignalSlotDispatcher(Tx_Extbase_SignalSlot_Dispatcher $signalSlotDispatcher) {
 		$this->signalSlotDispatcher = $signalSlotDispatcher;
 	}
-	
+
 	/**
 	 * Inserts an object in the storage backend
 	 *
@@ -58,10 +53,10 @@ class Tx_ExtbaseHijax_Persistence_Backend extends Tx_Extbase_Persistence_Backend
 	 * @return void
 	 */
 	protected function insertObject(Tx_Extbase_DomainObject_DomainObjectInterface $object) {
-		$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'beforeInsertObject', array('object' => $object));
-		
+		$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'beforeInsertObjectHijax', array('object' => $object));
+
 		parent::insertObject($object);
-	
+
 		if ($object->getUid() >= 1) {
 			/*
 			 * Check if update operation will be called for this object
@@ -87,16 +82,16 @@ class Tx_ExtbaseHijax_Persistence_Backend extends Tx_Extbase_Persistence_Backend
 					$row[$columnMap->getColumnName()] = true;
 				}
 			}
-			
+
 			if (count($row)>0) {
 				$objectHash = spl_object_hash($object);
 				$this->pendingIsertObjects[$objectHash] = $object;
 			} else {
-				$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'afterInsertObject', array('object' => $object));
+				$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'afterInsertObjectHijax', array('object' => $object));
 			}
 		}
 	}
-	
+
 	/**
 	 * Updates a given object in the storage
 	 *
@@ -106,25 +101,25 @@ class Tx_ExtbaseHijax_Persistence_Backend extends Tx_Extbase_Persistence_Backend
 	 */
 	protected function updateObject(Tx_Extbase_DomainObject_DomainObjectInterface $object, array $row) {
 		$objectHash = spl_object_hash($object);
-		
+
 		if (!$this->pendingIsertObjects[$objectHash]) {
-			$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'beforeUpdateObject', array('object' => $object));
+			$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'beforeUpdateObjectHijax', array('object' => $object));
 		}
-		
+
 		$result = parent::updateObject($object, $row);
-	
+
 		if ($result === TRUE) {
 			if (!$this->pendingIsertObjects[$objectHash]) {
-				$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'afterUpdateObject', array('object' => $object));
+				$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'afterUpdateObjectHijax', array('object' => $object));
 			} else {
 				unset($this->pendingIsertObjects[$objectHash]);
-				$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'afterInsertObject', array('object' => $object));
+				$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'afterInsertObjectHijax', array('object' => $object));
 			}
 		}
-	
+
 		return $result;
 	}
-	
+
 	/**
 	 * Deletes an object
 	 *
@@ -133,15 +128,13 @@ class Tx_ExtbaseHijax_Persistence_Backend extends Tx_Extbase_Persistence_Backend
 	 * @return void
 	 */
 	protected function removeObject(Tx_Extbase_DomainObject_DomainObjectInterface $object, $markAsDeleted = TRUE) {
-		$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'beforeRemoveObject', array('object' => $object));
-		
+		$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'beforeRemoveObjectHijax', array('object' => $object));
+
 		// TODO: check if object is not already deleted
-	
 		parent::removeObject($object, $markAsDeleted);
-	
+
 		// TODO: check if object is removed indeed
-		
-		$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'afterRemoveObject', array('object' => $object));
+		$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'afterRemoveObjectHijax', array('object' => $object));
 	}
 }
 
