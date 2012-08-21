@@ -177,9 +177,10 @@ class Tx_ExtbaseHijax_Lock_Lock {
 					$success = FALSE;
 				}
 				fclose($this->filepointer);
-				if (t3lib_div::isAllowedAbsPath($this->resource) && t3lib_div::isFirstPartOfStr($this->resource, PATH_site . 'typo3temp'.DIRECTORY_SEPARATOR.'extbase_hijax'.DIRECTORY_SEPARATOR.'locks'.DIRECTORY_SEPARATOR)) {
-					unlink($this->resource);
-				}
+				//if (t3lib_div::isAllowedAbsPath($this->resource) && t3lib_div::isFirstPartOfStr($this->resource, PATH_site . 'typo3temp'.DIRECTORY_SEPARATOR.'extbase_hijax'.DIRECTORY_SEPARATOR.'locks'.DIRECTORY_SEPARATOR)) {
+					// TODO: add a scheduler task to remove old lock files
+					// unlink($this->resource);
+				//}
 				break;
 			case 'semaphore':
 				if (@sem_release($this->resource)) {
