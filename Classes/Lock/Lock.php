@@ -115,7 +115,12 @@ class Tx_ExtbaseHijax_Lock_Lock {
 	 * @return	void
 	 */
 	function __destruct() {
-		$this->release();
+			// we don't want to automatically release on destruct
+			// in the context of a child process
+			// see https://bugs.php.net/bug.php?id=47227 and http://linux.die.net/man/2/flock for more details
+		if (function_exists('posix_getppid') && posix_getppid()==0) {
+			$this->release();
+		}
 	}
 	
 	/**
