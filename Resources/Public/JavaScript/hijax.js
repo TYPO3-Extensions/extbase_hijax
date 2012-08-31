@@ -657,7 +657,7 @@
 	
 	$.fn.outer = function(val){
 		if (val) {
-			content = $(val);
+			var content = $(val);
 			content.insertBefore(this);
 			$(this).remove();
 			return content;
