@@ -397,9 +397,11 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 		while ($this->xmlCommentsFound) {
 			$this->xmlCommentsFound = FALSE;
 			if ($format == 'html') {
-				$content = preg_replace_callback('/<!-- ###EVENT_LISTENER_(?P<elementId>\d*)### START (?P<listenerDefinition>.*) -->(?P<content>.*?)<!-- ###EVENT_LISTENER_(\\1)### END -->/msU', array($this, 'replaceXMLCommentsWithDivsCallback'), $content);
+				$content = preg_replace_callback('/<!-- ###EVENT_LISTENER_(?P<elementId>\d*)### START (?P<listenerDefinition>.*) -->/msU', array($this, 'replaceXMLCommentsWithDivsCallback'), $content);
+				$content = preg_replace('/<!-- ###EVENT_LISTENER_(\d*)### END -->/msU', '</div><div class="hijax-loading"></div></div>', $content);
 			} else {
-				$content = preg_replace_callback('/<!-- ###EVENT_LISTENER_(?P<elementId>\d*)### START (?P<listenerDefinition>.*) -->(?P<content>.*?)<!-- ###EVENT_LISTENER_(\\1)### END -->/msU', array($this, 'removeXMLCommentsCallback'), $content);
+				$content = preg_replace('/<!-- ###EVENT_LISTENER_(\d*)### START (.*) -->/msU', '', $content);
+				$content = preg_replace('/<!-- ###EVENT_LISTENER_(\d*)### END -->/msU', '', $content);
 			}
 		}
 	}
@@ -436,21 +438,6 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 	 * @param array $match
 	 * @return string
 	 */
-	protected function removeXMLCommentsCallback($match) {
-		$this->xmlCommentsFound = TRUE;
-		$matchesListenerDef = array();
-		preg_match('/(?P<listenerId>[a-zA-Z0-9_-]*)\((?P<eventNames>.*)\);/msU', $match['listenerDefinition'], $matchesListenerDef);
-			
-		$elementId = $match['elementId'];
-		$listenerId = $matchesListenerDef['listenerId'];
-	
-		return trim($match['content']);
-	}
-		
-	/**
-	 * @param array $match
-	 * @return string
-	 */
 	protected function replaceXMLCommentsWithDivsCallback($match) {
 		$this->xmlCommentsFound = TRUE;
 		$matchesListenerDef = array();
@@ -459,7 +446,7 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 		$elementId = $match['elementId'];
 		$listenerId = $matchesListenerDef['listenerId'];
 		
-		return '<div class="hijax-element hijax-js-listener" data-hijax-result-target="this" data-hijax-result-wrap="false" data-hijax-element-type="listener" data-hijax-element-id="'.$elementId.'" data-hijax-listener-id="'.$listenerId.'" data-hijax-listener-events="'.htmlspecialchars($matchesListenerDef['eventNames']).'"><div class="hijax-content">'.$match['content'].'</div><div class="hijax-loading"></div></div>';
+		return '<div class="hijax-element hijax-js-listener" data-hijax-result-target="this" data-hijax-result-wrap="false" data-hijax-element-type="listener" data-hijax-element-id="'.$elementId.'" data-hijax-listener-id="'.$listenerId.'" data-hijax-listener-events="'.htmlspecialchars($matchesListenerDef['eventNames']).'"><div class="hijax-content">';
 	}
 	
 	/**
