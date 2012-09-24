@@ -101,12 +101,9 @@ class Tx_ExtbaseHijax_ViewHelpers_ExtendedServerIfViewHelper extends Tx_Fluid_Co
 		if (($singleQuoteCount-$escapedSingleQuoteCount) % 2 != 0) {
 			throw new Exception('Syntax error in IfViewHelper condition, mismatched number of unescaped single quotes', 1309490125);
 		}
-		$objectManager = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager');
-		$typoscript = $this->configurationManager->getConfiguration(Tx_Extbase_Configuration_ConfigurationManager::CONFIGURATION_TYPE_FULL_TYPOSCRIPT);
-		$settings = $typoscript['plugin.']['tx_edgallery.'];
-		$settings = Tx_Extbase_Utility_TypoScript::convertTypoScriptArrayToPlainArray($settings);
-		$allowedFunctions = explode(',', $settings['fluid']['allowedFunctions']);
-		$languageConstructs = explode(',', $settings['fluid']['disallowedConstructs']);
+		$configuration = $this->configurationManager->getConfiguration(Tx_Extbase_Configuration_ConfigurationManager::CONFIGURATION_TYPE_FRAMEWORK);
+		$allowedFunctions = explode(',', $configuration['fluid']['allowedFunctions']);
+		$languageConstructs = explode(',', $configuration['fluid']['disallowedConstructs']);
 		$functions = get_defined_functions();
 		$functions = array_merge($languageConstructs, $functions['internal'], $functions['user']);
 		$functions = array_diff($functions, $allowedFunctions);
