@@ -43,9 +43,10 @@ class Tx_ExtbaseHijax_Persistence_Storage_Typo3DbBackend extends Tx_Extbase_Pers
 			$this->replacePlaceholders($sql, $parameters);
 			
 			$sqlParser = Tx_ExtbaseHijax_Persistence_Parser_SQL::ParseString($sql);
-			
-			$result = $this->databaseHandle->sql_query($sqlParser->getCountQuery());
-			$this->checkSqlErrors($statement);
+
+			$countQuery = $sqlParser->getCountQuery();
+			$result = $this->databaseHandle->sql_query($countQuery);
+			$this->checkSqlErrors($countQuery);
 			$rows = $this->getRowsFromResult($query->getSource(), $result);
 			$count = current(current($rows));
 			$this->databaseHandle->sql_free_result($result);
