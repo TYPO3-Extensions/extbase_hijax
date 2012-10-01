@@ -220,44 +220,46 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 				$this->hijaxEventDispatcher->parseAndRunEventListeners($response['response']);
 			}
 		}
-		foreach ($eventsToListen as $listenerId => $eventNames) {
-			$shouldProcess = FALSE;
-			foreach ($eventNames as $eventName) {
-				if ($this->hijaxEventDispatcher->hasPendingEventWithName($eventName, $listenerId)) {
-					$shouldProcess = TRUE;
-					break;
+		if ($eventsToListen && is_array($eventsToListen)) {
+			foreach ($eventsToListen as $listenerId => $eventNames) {
+				$shouldProcess = FALSE;
+				foreach ($eventNames as $eventName) {
+					if ($this->hijaxEventDispatcher->hasPendingEventWithName($eventName, $listenerId)) {
+						$shouldProcess = TRUE;
+						break;
+					}
+				}
+
+				if ($shouldProcess) {
+						/* @var $listener Tx_ExtbaseHijax_Event_Listener */
+					$listener = $this->listenerFactory->findById($listenerId);
+
+					if ($listener) {
+						$bootstrap = t3lib_div::makeInstance('Tx_Extbase_Core_Bootstrap');
+						$bootstrap->cObj = $listener->getCObj();
+						$bootstrap->initialize($listener->getConfiguration());
+
+						/* @var $request Tx_Extbase_MVC_Web_Request */
+						$request = $listener->getRequest();
+						$request->setDispatched(false);
+						$this->setPreventMarkupUpdateOnAjaxLoad(false);
+
+						/* @var $response Tx_Extbase_MVC_Web_Response */
+						$response = $this->objectManager->create('Tx_Extbase_MVC_Web_Response');
+
+						/* @var $dispatcher Tx_ExtbaseHijax_MVC_Dispatcher */
+						$dispatcher = $this->objectManager->get('Tx_ExtbaseHijax_MVC_Dispatcher');
+						$dispatcher->dispatch($request, $response, $listener);
+
+						$content = $response->getContent();
+						$this->serviceContent->processIntScripts($content);
+						$this->serviceContent->processAbsRefPrefix($content, $configuration['settings']['absRefPrefix']);
+						$responses['affected'][] = array( 'id' => $listenerId, 'format' => $request->getFormat(), 'response' => $content, 'preventMarkupUpdate' => $this->getPreventMarkupUpdateOnAjaxLoad() );
+					} else {
+						// TODO: log error message
+					}
 				}
 			}
-
-			if ($shouldProcess) {
-					/* @var $listener Tx_ExtbaseHijax_Event_Listener */
-				$listener = $this->listenerFactory->findById($listenerId);
-				
-				if ($listener) {
-					$bootstrap = t3lib_div::makeInstance('Tx_Extbase_Core_Bootstrap');
-					$bootstrap->cObj = $listener->getCObj();
-					$bootstrap->initialize($listener->getConfiguration());
-					
-					/* @var $request Tx_Extbase_MVC_Web_Request */
-					$request = $listener->getRequest();
-					$request->setDispatched(false);
-					$this->setPreventMarkupUpdateOnAjaxLoad(false);
-					
-					/* @var $response Tx_Extbase_MVC_Web_Response */
-					$response = $this->objectManager->create('Tx_Extbase_MVC_Web_Response');
-				
-					/* @var $dispatcher Tx_ExtbaseHijax_MVC_Dispatcher */
-					$dispatcher = $this->objectManager->get('Tx_ExtbaseHijax_MVC_Dispatcher');
-					$dispatcher->dispatch($request, $response, $listener);
-					
-					$content = $response->getContent();
-					$this->serviceContent->processIntScripts($content);
-					$this->serviceContent->processAbsRefPrefix($content, $configuration['settings']['absRefPrefix']);
-					$responses['affected'][] = array( 'id' => $listenerId, 'format' => $request->getFormat(), 'response' => $content, 'preventMarkupUpdate' => $this->getPreventMarkupUpdateOnAjaxLoad() );
-				} else {
-					// TODO: log error message
-				}
-			}			
 		}
 	}	
 	
