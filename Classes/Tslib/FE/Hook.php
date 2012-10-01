@@ -136,6 +136,9 @@ class Tx_ExtbaseHijax_Tslib_FE_Hook implements t3lib_Singleton {
 			}
 			$this->hijaxEventDispatcher->promoteNextPhaseEvents();
 			$this->hijaxEventDispatcher->parseAndRunEventListeners($pObj->content);
+			if (!$pObj->config['INTincScript']) {
+				$pObj->config['INTincScript'] = array();
+			}
 			$pObj->INTincScript();
 			
 			if (self::$loopCount++>99) {

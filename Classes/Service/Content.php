@@ -140,6 +140,9 @@ class Tx_ExtbaseHijax_Service_Content implements t3lib_Singleton {
 	 */
 	public function processIntScripts(&$content) {
 		$GLOBALS['TSFE']->content = $content;
+		if (!$GLOBALS['TSFE']->config['INTincScript']) {
+			$GLOBALS['TSFE']->config['INTincScript'] = array();
+		}
 		$GLOBALS['TSFE']->INTincScript();
 		$content = $GLOBALS['TSFE']->content;
 	}
