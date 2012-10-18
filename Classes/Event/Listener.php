@@ -127,6 +127,10 @@ class Tx_ExtbaseHijax_Event_Listener {
 				} else {
 					$this->id = 'hInt-'.$settingsHash.'-'.$encodedSettings;
 				}
+			} elseif ($this->configuration['settings']['fallbackTypoScriptConfiguration']) {
+				$encodedSettings = str_replace('.', '---', $this->configuration['settings']['fallbackTypoScriptConfiguration']);
+				$settingsHash = t3lib_div::hmac($encodedSettings);
+				$this->id = 'f-'.$settingsHash.'-'.$encodedSettings;
 			} else {
 				$this->id = md5($serialized);
 			}

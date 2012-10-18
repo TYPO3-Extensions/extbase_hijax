@@ -64,6 +64,13 @@ class Tx_ExtbaseHijax_Service_Serialization_ListenerFactory extends Tx_ExtbaseHi
 						$eventsToListen = t3lib_div::_GP('e');
 						$object = $this->serviceContent->generateListenerCacheForHijaxPi1($loadContentFromTypoScript, $eventsToListen[$listenerId], $table=='h');
 					}
+				} if ($table=='f') {
+					$settingsHash = $uid;
+					$encodedSettings = $rawListenerId;
+					if (t3lib_div::hmac($encodedSettings)==$settingsHash) {
+						$fallbackTypoScriptConfiguration = str_replace('---', '.', $encodedSettings);
+						$object = $this->serviceContent->generateListenerCacheForTypoScriptFallback($fallbackTypoScriptConfiguration);
+					}
 				}
 			}
 		

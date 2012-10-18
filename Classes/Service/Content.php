@@ -38,7 +38,7 @@ class Tx_ExtbaseHijax_Service_Content implements t3lib_Singleton {
 	 * @var Tx_ExtbaseHijax_Event_Listener
 	 */
 	protected $currentListener;
-	
+
 	/**
 	 * @return the $executeExtbasePlugins
 	 */
@@ -131,8 +131,33 @@ class Tx_ExtbaseHijax_Service_Content implements t3lib_Singleton {
 		$this->currentListener = null;
 	
 		return $listener;
-	}	
-	
+	}
+
+	/**
+	 *
+	 * @param string $loadContentFromTypoScript
+	 * @param string $eventsToListen
+	 * @param boolean $cached
+	 *
+	 * @return Tx_ExtbaseHijax_Event_Listener
+	 */
+	public function generateListenerCacheForTypoScriptFallback($fallbackTypoScriptConfiguration) {
+
+		if ($fallbackTypoScriptConfiguration) {
+
+			// make sure that the actual controller action IS NOT executed
+			$this->setExecuteExtbasePlugins(FALSE);
+			$dummyContent = $this->renderTypoScriptPath($fallbackTypoScriptConfiguration);
+			$this->processIntScripts($dummyContent);
+			// make sure that any following controller action IS executed
+			$this->setExecuteExtbasePlugins(TRUE);
+			$listener = $this->currentListener;
+		}
+		$this->currentListener = null;
+
+		return $listener;
+	}
+
 	/**
 	 * Processes INT scripts
 	 *
@@ -187,5 +212,24 @@ class Tx_ExtbaseHijax_Service_Content implements t3lib_Singleton {
 			// it has scheme so we assume it's full URL
 			return $match[0];
 		}
-	}	
+	}
+
+	/**
+	 * @param string $typoscriptObjectPath
+	 * @throws Exception
+	 */
+	protected function renderTypoScriptPath($typoscriptObjectPath) {
+		/* @var $tslib_cObj tslib_cObj */
+		$tslib_cObj = t3lib_div::makeInstance('tslib_cObj');
+		$pathSegments = t3lib_div::trimExplode('.', $typoscriptObjectPath);
+		$lastSegment = array_pop($pathSegments);
+		$setup = $GLOBALS['TSFE']->tmpl->setup;
+		foreach ($pathSegments as $segment) {
+			if (!array_key_exists($segment . '.', $setup)) {
+				throw new Exception('TypoScript object path "' . htmlspecialchars($typoscriptObjectPath) . '" does not exist' , 1253191023);
+			}
+			$setup = $setup[$segment . '.'];
+		}
+		return $tslib_cObj->cObjGetSingle($setup[$lastSegment], $setup[$lastSegment . '.']);
+	}
 }
