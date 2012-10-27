@@ -232,4 +232,23 @@ class Tx_ExtbaseHijax_Service_Content implements t3lib_Singleton {
 		}
 		return $tslib_cObj->cObjGetSingle($setup[$lastSegment], $setup[$lastSegment . '.']);
 	}
+
+	/**
+	 * @param string $typoscriptObjectPath
+	 * @throws Exception
+	 */
+	public function isAllowedTypoScriptPath($typoscriptObjectPath) {
+		/* @var $tslib_cObj tslib_cObj */
+		$tslib_cObj = t3lib_div::makeInstance('tslib_cObj');
+		$pathSegments = t3lib_div::trimExplode('.', $typoscriptObjectPath);
+		$lastSegment = array_pop($pathSegments);
+		$setup = $GLOBALS['TSFE']->tmpl->setup;
+		foreach ($pathSegments as $segment) {
+			if (!array_key_exists($segment . '.', $setup)) {
+				throw new Exception('TypoScript object path "' . htmlspecialchars($typoscriptObjectPath) . '" does not exist' , 1253191023);
+			}
+			$setup = $setup[$segment . '.'];
+		}
+		return $setup[$lastSegment . '.']['enableHijax'];
+	}
 }

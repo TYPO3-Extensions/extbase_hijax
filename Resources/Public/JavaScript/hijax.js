@@ -246,7 +246,8 @@
 				controller: r['controller'],
 				action: r['action'],
 				arguments: r['arguments'],
-				settingsHash: r['settingsHash']
+				settingsHash: r['settingsHash'],
+				tsSource: r['tsSource']
 			};
 		});
 
@@ -395,6 +396,7 @@
 								target: target,
 								loaders: loaders,
 								data: fields,
+								tsSource: '',
 								pluginNameSpace: pluginNameSpace
 							};
 
@@ -404,7 +406,10 @@
 						});
 						break;
 					case 'ajax':
-						var target = $(this).parents('.hijax-element[data-hijax-listener-id='+$(this).attr('data-hijax-settings')+']');
+						var target = $(this);
+						if (!$(this).attr('data-hijax-ajax-tssource')) {
+							target = $(this).parents('.hijax-element[data-hijax-listener-id='+$(this).attr('data-hijax-settings')+']');
+						}
 						var loaders = null;
 						if ($(this).attr('data-hijax-loaders')) {
 							loaders = _evalStr.call($(this), $(this).attr('data-hijax-loaders'));
@@ -414,13 +419,14 @@
 
 							// ajax request
 						var el = {
-							id: $(element).attr('id'),
-							extension: $(element).attr('data-hijax-extension'),
-							plugin: $(element).attr('data-hijax-plugin'),
-							controller: $(element).attr('data-hijax-controller'),
-							action: $(element).attr('data-hijax-action'),
-							arguments: $(element).attr('data-hijax-arguments'),
-							settingsHash: $(element).attr('data-hijax-settings'),
+							id: $(element).attr('id') ? $(element).attr('id') : '',
+							extension: $(element).attr('data-hijax-extension') ? $(element).attr('data-hijax-extension') : '',
+							plugin: $(element).attr('data-hijax-plugin') ? $(element).attr('data-hijax-plugin') : '',
+							controller: $(element).attr('data-hijax-controller') ? $(element).attr('data-hijax-controller') : '',
+							action: $(element).attr('data-hijax-action') ? $(element).attr('data-hijax-action') : '',
+							arguments: $(element).attr('data-hijax-arguments') ? $(element).attr('data-hijax-arguments') : '',
+							settingsHash: $(element).attr('data-hijax-settings') ? $(element).attr('data-hijax-settings') : '',
+							tsSource: $(element).attr('data-hijax-ajax-tssource') ? $(element).attr('data-hijax-ajax-tssource') : '',
 							target: target,
 							loaders: loaders
 						};
@@ -447,6 +453,7 @@
 								arguments: $(this).attr('data-hijax-arguments'),
 								settingsHash: $(this).attr('data-hijax-settings'),
 								target: target,
+								tsSource: '',
 								loaders: loaders
 							};
 

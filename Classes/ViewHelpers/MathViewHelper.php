@@ -22,14 +22,19 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-class Tx_ExtbaseHijax_ViewHelpers_MathViewHelper extends Tx_Fluid_ViewHelpers_ImageViewHelper {
+class Tx_ExtbaseHijax_ViewHelpers_MathViewHelper extends Tx_Fluid_Core_ViewHelper_AbstractViewHelper {
 
-
+	/**
+	 * @return void
+	 */
 	public function initializeArguments() {
 		$this->registerArgument('expression', 'string', 'Expression to evaluate - can also be set as tag content');
 		$this->registerArgument('as', 'string', 'Variable name to insert result into, suppresses output');
 	}
 
+	/**
+	 * @return void
+	 */
 	public function render() {
 		if ($this->arguments['expression']) {
 			$expression = $this->arguments['expression'];

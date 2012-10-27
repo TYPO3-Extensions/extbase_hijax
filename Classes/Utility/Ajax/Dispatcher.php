@@ -111,8 +111,22 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 			foreach ($requests as $r) {
 				$skipProcessing = FALSE;
 				$configuration = array();
-				
-				if ($r['settingsHash']) {
+
+				if ($r['tsSource']) {
+					if ($this->serviceContent->isAllowedTypoScriptPath($r['tsSource'])) {
+						/* @var $listener Tx_ExtbaseHijax_Event_Listener */
+						$encodedSettings = str_replace('.', '---', $r['tsSource']);
+						$settingsHash = t3lib_div::hmac($encodedSettings);
+						$listener = $this->listenerFactory->findById('h-'.$settingsHash.'-'.$encodedSettings);
+						$configuration = $listener->getConfiguration();
+						$r['extension'] = $configuration['extensionName'];
+						$r['plugin'] = $configuration['pluginName'];
+						$r['controller'] = $configuration['controller'];
+						$r['action'] = $configuration['action'];
+					} else {
+						throw new Exception('Path not allowed.', 503);
+					}
+				} elseif ($r['settingsHash']) {
 					/* @var $listener Tx_ExtbaseHijax_Event_Listener */
 					$listener = $this->listenerFactory->findById($r['settingsHash']);
 				}
