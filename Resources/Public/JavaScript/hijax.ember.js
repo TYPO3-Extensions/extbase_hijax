@@ -21,9 +21,71 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-ExtbaseHijax = {};
+ExtbaseHijax = {}
+ExtbaseHijax.Application = Ember.Application.extend({
+	$rootElement: null,
+	$globalLoader: null,
+	$globalTarget: null,
+	initialize: function(router) {
+		$rootElement = jQuery(this.rootElement);
+		$rootElement.wrap('<div class="hijax-element"/>').wrap('<div class="hijax-content"/>');
+		$rootElement.parent().parent().append('<div class="hijax-loading"/>')
+		this.$rootElement = $rootElement.parent().parent();
+		this.$globalTarget = this.$rootElement.find('> .hijax-content');
+		this.$globalLoader = this.$rootElement.find('> .hijax-loading');
+		this._super(router);
+	},
+	ajaxCall: function(fn, settings) {
+		fn.apply(this, [settings, this.$globalTarget, this.$globalLoader]);
+	}
+});
+
+
+ExtbaseHijax.View = Ember.View.extend({
+	didInsertElement: function () {
+		this._super();
+		Ember.run.schedule('render', this, function() {
+			this.$().find('.hijax-element').extbaseHijax(true);
+			jQuery('body').trigger('layout-init', this.$());
+		});
+	}
+});
+
+
+ExtbaseHijax.DOMReference = ExtbaseHijax.View.extend({
+	selector: '',
+	reference: null,
+	defaultTemplate: Ember.Handlebars.compile('<div class="dom-reference"></div>'),
+	init: function() {
+		this.set('context', Ember.Object.create({selector: ''}));
+		this._super();
+	},
+	didInsertElement: function () {
+		this._super();
+		this.get('context').set('selector', this.selector);
+		Ember.run.schedule('render', this, function() {
+			this.reference = jQuery(_evalStr.call(this.$(), this.get('selector')));
+			if (this.reference) {
+				this.reference.detach().prependTo(this.$().find('> .dom-reference'));
+			}
+		});
+	},
+	willDestroyElement: function() {
+		var $recycler = jQuery('#dom-reference-recycler');
+		if ($recycler.length==0) {
+			$('body').append('<div id="dom-reference-recycler" style="position: absolute; visibility: hidden; overflow: hidden; height: 1px; width: 1px;"></div>')
+			$recycler = jQuery('#dom-reference-recycler');
+		}
+		if (this.reference) {
+			this.reference.detach().prependTo($recycler);
+		}
+		this._super();
+	}
+});
+
+
 ExtbaseHijax.CObjectViewIdCounter = 0;
-ExtbaseHijax.CObjectView = Ember.View.extend({
+ExtbaseHijax.CObjectView = ExtbaseHijax.View.extend({
 	typoScriptObjectPath: '',
 	loaders: '',
 	defaultTemplate: Ember.Handlebars.compile('<div class="hijax-element" id="ember-cobject-' + (ExtbaseHijax.CObjectViewIdCounter++) + '" {{bindAttr data-hijax-loaders="loaders"}} {{bindAttr data-hijax-ajax-tssource="typoScriptObjectPath"}} data-hijax-result-wrap="false" data-hijax-result-target="jQuery(this)" data-hijax-element-type="ajax"><div class="hijax-content"><p>&nbsp;</p></div><div class="hijax-loading"></div></div>'),
@@ -32,10 +94,10 @@ ExtbaseHijax.CObjectView = Ember.View.extend({
 			typoScriptObjectPath: '',
 			loaders: ''
 		}));
-	this._super();
+		this._super();
 	},
 	didInsertElement: function () {
-		// console.log('CObjectView ' + this.typoScriptObjectPath + ' didInsertElement');
+		this._super();
 		this.get('context').set('typoScriptObjectPath', this.typoScriptObjectPath);
 		this.get('context').set('loaders', this.loaders);
 		Ember.run.schedule('render', this, function() {
@@ -43,10 +105,8 @@ ExtbaseHijax.CObjectView = Ember.View.extend({
 		});
 	},
 	willDestroyElement: function () {
-		// console.log('CObjectView ' + this.typoScriptObjectPath + ' willDestroyElement');
 	},
 	afterRender: function(buffer) {
-		// console.log('CObjectView ' + this.typoScriptObjectPath + ' afterRender');
 		this._super(buffer);
 	}
 });

@@ -991,14 +991,14 @@
 						}
 						$.each(data['original'], function(i, r) {
 							var element = $('#'+r['id']);
-							if (element) {
+							if (element.length > 1) {
 								element.loadHijaxData(r['response'], r['preventMarkupUpdate']);
 							}
 						});
 						$.each(data['affected'], function(i, r) {
 							$.each(listeners[r['id']], function(i, element) {	
 								element = $(element);
-								if (element) {
+								if (element.length > 1) {
 									element.loadHijaxData(r['response'], r['preventMarkupUpdate']);
 								}
 							});
