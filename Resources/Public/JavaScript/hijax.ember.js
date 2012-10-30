@@ -26,11 +26,16 @@ ExtbaseHijax.Application = Ember.Application.extend({
 	$rootElement: null,
 	$globalLoader: null,
 	$globalTarget: null,
+    state: Ember.Object.create({}),
 	initialize: function(router) {
 		$rootElement = jQuery(this.rootElement);
-		$rootElement.wrap('<div class="hijax-element"/>').wrap('<div class="hijax-content"/>');
-		$rootElement.parent().parent().append('<div class="hijax-loading"/>')
-		this.$rootElement = $rootElement.parent().parent();
+		if ($rootElement.hasClass('hijax-element')) {
+			this.$rootElement = $rootElement;
+		} else {
+			$rootElement.wrap('<div class="hijax-element"/>').wrap('<div class="hijax-content"/>');
+			$rootElement.parent().parent().append('<div class="hijax-loading"/>')
+			this.$rootElement = $rootElement.parent().parent();
+		}
 		this.$globalTarget = this.$rootElement.find('> .hijax-content');
 		this.$globalLoader = this.$rootElement.find('> .hijax-loading');
 		this._super(router);
