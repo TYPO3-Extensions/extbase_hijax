@@ -317,13 +317,72 @@
 			}
 		});			
 	};
-	
+
+	_processAnimation = function (animation) {
+		var $animation = $(animation);
+
+		$animation.find('> .hijax-content > .hijax-element').each(function(i, scene) {
+			switch ($(scene).data('hijax-element-type')) {
+				case 'scene':
+					var $scene = $(scene);
+					$scene.data('animation', $animation);
+
+					var scenes = [$scene];
+					if (!$animation.data('scenes')) {
+						$animation.data('currentScene', $scene);
+						$animation.data('scenes', scenes);
+					} else {
+						scenes = $animation.data('scenes');
+						scenes.push($scene);
+						$animation.data('scenes', scenes);
+						$scene.css('display', 'none');
+					}
+
+					var sceneId = scenes.length;
+					if ($scene.data('hijax-scene-id')) {
+						sceneId = _evalStr.call($scene, $scene.data('hijax-scene-id'));
+					}
+					$animation.data('scene-'+sceneId, $scene);
+
+					break;
+				default:
+					$(scene).css('display', 'none');
+					break;
+			}
+		});
+
+		if ($animation.data('currentScene')) {
+			var $currentScene = $animation.data('currentScene');
+			if ($currentScene.data('hijax-scene-duration')) {
+				var currentSceneDuration = _evalStr.call($currentScene, $currentScene.data('hijax-scene-duration'));
+				console.log(currentSceneDuration);
+
+				if (currentSceneDuration) {
+					setTimeout(
+						function() {
+							var nextSceneId = _evalStr.call($currentScene, $currentScene.data('hijax-scene-next-scene-id'));
+							var $animation = $currentScene.data('animation');
+							var $nextScene = $animation.data('scene-'+nextSceneId);
+
+								// TODO: implement nice fancy animation here
+							$currentScene.css('display', 'none');
+							$nextScene.css('display', 'block');
+						}, currentSceneDuration
+					);
+				}
+			}
+		}
+	};
+
 	_process = function (elements) {
 		if (elements && elements.length > 0) {
 			var requests = [];
 			$.each(elements, function(i, element) {
 				var el = $(element);
 				switch (el.attr('data-hijax-element-type')) {
+					case 'animation':
+							_processAnimation(el);
+						break;
 					case 'listener':
 						var listenerId = el.attr('data-hijax-listener-id');
 						if (el.attr('data-hijax-listener-events') && el.attr('data-hijax-listener-events').length > 0) {
