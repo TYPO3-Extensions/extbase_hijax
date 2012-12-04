@@ -301,19 +301,22 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 	 * @return void
 	 */
 	protected function initializeTsfe() {
-		$GLOBALS['TSFE'] = t3lib_div::makeInstance('tslib_fe', $GLOBALS['TYPO3_CONF_VARS'], t3lib_div::_GP('id'), t3lib_div::_GP('type'), true);
-		$GLOBALS['TSFE']->initFEuser();
-		$GLOBALS['TSFE']->initUserGroups();
-		$GLOBALS['TSFE']->checkAlternativeIdMethods();
-		$GLOBALS['TSFE']->determineId();
-		$GLOBALS['TSFE']->getCompressedTCarray();
-		$GLOBALS['TSFE']->sys_page = t3lib_div::makeInstance('t3lib_pageSelect');
-		$GLOBALS['TSFE']->initTemplate();
-		$GLOBALS['TSFE']->getConfigArray();
-		$GLOBALS['TSFE']->newCObj();
-		$GLOBALS['TSFE']->sys_language_uid = intval(t3lib_div::_GP('L'));
-		$GLOBALS['TSFE']->settingLanguage();
-		$GLOBALS['TSFE']->settingLocale();
+		/* @var $tsfe tslib_fe */
+		$tsfe = t3lib_div::makeInstance('tslib_fe', $GLOBALS['TYPO3_CONF_VARS'], t3lib_div::_GP('id'), t3lib_div::_GP('type'), true);
+		$tsfe->initFEuser();
+		$tsfe->initUserGroups();
+		$tsfe->checkAlternativeIdMethods();
+		$tsfe->determineId();
+		$tsfe->getCompressedTCarray();
+		$tsfe->sys_page = t3lib_div::makeInstance('t3lib_pageSelect');
+		$tsfe->initTemplate();
+		$tsfe->getConfigArray();
+		$tsfe->settingLanguage();
+		$tsfe->settingLocale();
+		$tsfe->calculateLinkVars();
+		$tsfe->newCObj();
+
+		$GLOBALS['TSFE'] = &$tsfe;
 	}
 	
 	/**
