@@ -361,15 +361,17 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 	 * @param $arr
 	 */
 	protected function stringify(&$arr) {
-		foreach ($arr as $k => $v) {
-			if (!is_array($v)) {
-				$arr[$k] = (string) $v;
-			} else {
-				$this->stringify($arr[$k]);
+		if (is_array($arr)) {
+			foreach ($arr as $k => $v) {
+                if (!is_array($v) && !is_object($v) && !is_null($v)) {
+	                $arr[$k] = (string) $v;
+                } else {
+	                $this->stringify($arr[$k]);
+                }
 			}
 		}
 	}
-	
+
 	/**
 	 * @return the $isActive
 	 */
