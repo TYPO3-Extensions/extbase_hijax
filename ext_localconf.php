@@ -51,12 +51,25 @@ $GLOBALS ['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['pro
 $GLOBALS ['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['processCmdmapClass'][] =
 	'EXT:extbase_hijax/Classes/TCEmain/Hooks.php:Tx_ExtbaseHijax_TCEmain_Hooks';
 
-$extbaseObjectContainer = t3lib_div::makeInstance('Tx_Extbase_Object_Container_Container'); // Singleton
-$extbaseObjectContainer->registerImplementation('Tx_Extbase_MVC_Dispatcher', 'Tx_ExtbaseHijax_MVC_Dispatcher');
-$extbaseObjectContainer->registerImplementation('Tx_Extbase_Persistence_Storage_BackendInterface', 'Tx_ExtbaseHijax_Persistence_Storage_Typo3DbBackend');
-$extbaseObjectContainer->registerImplementation('Tx_Extbase_Persistence_BackendInterface', 'Tx_ExtbaseHijax_Persistence_Backend');
-$extbaseObjectContainer->registerImplementation('Tx_Extbase_Persistence_QueryInterface', 'Tx_ExtbaseHijax_Persistence_Query');
-
-unset($extbaseObjectContainer);
+if (version_compare(TYPO3_version,'6.0.0','<')) {
+	$extbaseObjectContainer = t3lib_div::makeInstance('Tx_Extbase_Object_Container_Container'); // Singleton
+	$extbaseObjectContainer->registerImplementation('Tx_Extbase_MVC_Dispatcher', 'Tx_ExtbaseHijax_MVC_Dispatcher');
+	$extbaseObjectContainer->registerImplementation('Tx_Extbase_Persistence_Storage_BackendInterface', 'Tx_ExtbaseHijax_Persistence_Storage_Typo3DbBackend');
+	$extbaseObjectContainer->registerImplementation('Tx_Extbase_Persistence_BackendInterface', 'Tx_ExtbaseHijax_Persistence_Backend');
+	$extbaseObjectContainer->registerImplementation('Tx_Extbase_Persistence_QueryInterface', 'Tx_ExtbaseHijax_Persistence_Query');
+	unset($extbaseObjectContainer);
+} else {
+	/** @var $extbaseObjectContainer \TYPO3\CMS\Extbase\Object\Container\Container */
+	$extbaseObjectContainer = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Object\\Container\\Container');
+	$extbaseObjectContainer->registerImplementation('Tx_Extbase_MVC_Dispatcher', 'Tx_ExtbaseHijax_MVC_Dispatcher');
+	$extbaseObjectContainer->registerImplementation('TYPO3\\CMS\\Extbase\\Mvc\\Dispatcher', 'Tx_ExtbaseHijax_MVC_Dispatcher');
+	$extbaseObjectContainer->registerImplementation('Tx_Extbase_Persistence_Storage_BackendInterface', 'Tx_ExtbaseHijax_Persistence_Storage_Typo3DbBackend');
+	$extbaseObjectContainer->registerImplementation('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Storage\\BackendInterface', 'Tx_ExtbaseHijax_Persistence_Storage_Typo3DbBackend');
+	$extbaseObjectContainer->registerImplementation('Tx_Extbase_Persistence_BackendInterface', 'Tx_ExtbaseHijax_Persistence_Backend');
+	$extbaseObjectContainer->registerImplementation('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\BackendInterface', 'Tx_ExtbaseHijax_Persistence_Backend');
+	$extbaseObjectContainer->registerImplementation('Tx_Extbase_Persistence_QueryInterface', 'Tx_ExtbaseHijax_Persistence_Query');
+	$extbaseObjectContainer->registerImplementation('TYPO3\\CMS\\Extbase\\Persistence\\QueryInterface', 'Tx_ExtbaseHijax_Persistence_Query');
+	unset($extbaseObjectContainer);
+}
 
 ?>
