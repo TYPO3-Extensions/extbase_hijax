@@ -87,7 +87,7 @@
 	width: 100%; 
 	left: 0px; 
 	top: 0px; 
-	z-index: 10; 
+	z-index: 10000;
 	filter: alpha(opacity=50);
 	-moz-opacity:0.5; 
 	opacity:0.5;
