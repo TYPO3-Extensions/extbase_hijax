@@ -88,22 +88,29 @@ class Tx_ExtbaseHijax_ViewHelpers_Widget_Controller_PaginateController extends T
 			if (count($paginatedItems)==$itemsPerPage) {
 				break;
 			}
+			$limit = $itemsPerPage-count($paginatedItems);
+			$offset = 0;
+			if ($this->currentPage > 1) {
+				$offset = (integer)(($itemsPerPage * ($this->currentPage - 1)) + count($paginatedItems) - $previousObjectSetsCount);
+			}
+
 			if ($objects instanceof Tx_Extbase_Persistence_QueryResultInterface) {
 				$query = $objects->getQuery();
-				$query->setLimit($itemsPerPage-count($paginatedItems));
+				$query->setLimit($limit);
+				$query->setOffset($offset);
 
-				if ($this->currentPage > 1) {
-					if (count($paginatedItems)==0) {
-						$query->setOffset((integer)(($itemsPerPage * ($this->currentPage - 1)) - $previousObjectSetsCount));
-					}
-				}
-				
 				$modifiedObjects = $query->execute();
 				foreach ($modifiedObjects as $obj) {
 					$paginatedItems[] = $obj;
 				}
 			} else {
-				// TODO: implement logic for plain arrays
+				$i = 0;
+				foreach ($objects as $object) {
+					if ($i >= $offset && $i < ($offset + $limit)) {
+						$paginatedItems[] = $object;
+					}
+					$i++;
+				}
 			}
 			$previousObjectSetsCount += count($objects);
  		}
