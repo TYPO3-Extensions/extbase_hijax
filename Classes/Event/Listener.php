@@ -93,8 +93,10 @@ class Tx_ExtbaseHijax_Event_Listener {
 		$this->injectAutoIDService($this->objectManager->get('Tx_ExtbaseHijax_Service_AutoIDService'));
 		
 		$this->request = $request;
-		$this->request->setMethod('GET');
-		
+		if (method_exists($this->request, 'setMethod')) {
+			$this->request->setMethod('GET');
+		}
+
 		if ($configuration) {
 			$this->configuration = $configuration;
 		} else {
@@ -119,7 +121,7 @@ class Tx_ExtbaseHijax_Event_Listener {
 			$this->id = str_replace(':', '-', $this->cObj->currentRecord).'-'.md5($serialized);
 		} else {
 				// test if this is ExtbaseHijax Pi1
-			if ($this->request->getControllerExtensionName()=='ExtbaseHijax' && $this->request->getPluginName()=='Pi1') {
+			if (method_exists($this->request, 'getControllerExtensionName') && method_exists($this->request, 'getPluginName') && $this->request->getControllerExtensionName()=='ExtbaseHijax' && $this->request->getPluginName()=='Pi1') {
 				$encodedSettings = str_replace('.', '---', $this->configuration['settings']['loadContentFromTypoScript']);
 				$settingsHash = t3lib_div::hmac($encodedSettings);
 				if ($this->configuration['switchableControllerActions']['ContentElement'][0]=='user') {
