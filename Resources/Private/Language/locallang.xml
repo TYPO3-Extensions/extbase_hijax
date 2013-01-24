@@ -15,5 +15,10 @@
 			<label index="pager.back">Zurück</label>
 			<label index="pager.next">Weiter</label>
 		</languageKey>
+		<languageKey index="sr" type="array">
+			<label index="server-error">Došlo je do greške.</label>
+			<label index="pager.back">Nazad</label>
+			<label index="pager.next">Dalje</label>
+		</languageKey>
 	</data>
 </T3locallang>
