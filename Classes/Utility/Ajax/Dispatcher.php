@@ -303,6 +303,8 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 	protected function initializeTsfe() {
 		/* @var $tsfe tslib_fe */
 		$tsfe = t3lib_div::makeInstance('tslib_fe', $GLOBALS['TYPO3_CONF_VARS'], t3lib_div::_GP('id'), t3lib_div::_GP('type'), true);
+		$GLOBALS['TSFE'] = &$tsfe;
+
 		$tsfe->initFEuser();
 		$tsfe->initUserGroups();
 		$tsfe->checkAlternativeIdMethods();
@@ -315,8 +317,6 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 		$tsfe->settingLocale();
 		$tsfe->calculateLinkVars();
 		$tsfe->newCObj();
-
-		$GLOBALS['TSFE'] = &$tsfe;
 	}
 	
 	/**
