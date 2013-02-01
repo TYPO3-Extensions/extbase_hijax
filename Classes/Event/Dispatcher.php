@@ -333,8 +333,23 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 	 * @return void
 	 */
 	public function parseAndRunEventListeners(&$content) {
-		$tempContent = preg_replace_callback('/<!-- ###EVENT_LISTENER_(?P<elementId>\d*)### START (?P<listenerDefinition>.*) -->(?P<content>.*?)<!-- ###EVENT_LISTENER_(\\1)### END -->/msU', array($this, 'parseAndRunEventListenersCallback'), $content);
-		$content = $tempContent;			
+		// @todo: migrate this to plain string functions, do not use regular expressions
+		$iSet= 0;  // Count how many times we increase the limit
+		while( $iSet< 10 ) {  // If the default limit is 100'000 characters the highest new limit will be 250'000 characters
+			$tempContent = preg_replace_callback('/<!-- ###EVENT_LISTENER_(?P<elementId>\d*)### START (?P<listenerDefinition>.*) -->(?P<content>.*?)<!-- ###EVENT_LISTENER_(\\1)### END -->/msU', array($this, 'parseAndRunEventListenersCallback'), $content);
+
+			if( preg_last_error()== PREG_BACKTRACK_LIMIT_ERROR ) {  // Only check on backtrack limit failure
+				ini_set( 'pcre.backtrack_limit', (int)ini_get( 'pcre.backtrack_limit' )+ 15000 );  // Get current limit and increase
+				$iSet++;  // Do not overkill the server
+			} else {  // No fail
+				if ($tempContent !== NULL) {
+					$content = $tempContent;
+				} else {
+					error_log('PCRE backtrack limit reached! Event listener elements have not been processed!');
+				}
+				break;  // Exit loop
+			}
+		}
 	}
 	
 	/**
