@@ -94,7 +94,7 @@ class Tx_ExtbaseHijax_ViewHelpers_Widget_Controller_PaginateController extends T
 				$offset = (integer)(($itemsPerPage * ($this->currentPage - 1)) + count($paginatedItems) - $previousObjectSetsCount);
 			}
 
-			if ($objects instanceof Tx_Extbase_Persistence_QueryResultInterface) {
+			if ($objects instanceof Tx_Extbase_Persistence_QueryResultInterface || $objects instanceof \TYPO3\CMS\Extbase\Persistence\QueryResultInterface) {
 				$query = $objects->getQuery();
 				$query->setLimit($limit);
 				$query->setOffset($offset);
