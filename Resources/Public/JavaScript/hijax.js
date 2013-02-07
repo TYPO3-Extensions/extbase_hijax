@@ -247,6 +247,7 @@
 				action: r['action'],
 				arguments: r['arguments'],
 				settingsHash: r['settingsHash'],
+				chash: r['chash'],
 				tsSource: r['tsSource']
 			};
 		});
@@ -511,6 +512,7 @@
 								action: $(this).attr('data-hijax-action'),
 								arguments: $(this).attr('data-hijax-arguments'),
 								settingsHash: $(this).attr('data-hijax-settings'),
+								chash: $(this).attr('data-hijax-chash'),
 								target: target,
 								tsSource: '',
 								loaders: loaders
@@ -958,7 +960,8 @@
 			action: settings.action,
 			format: settings.format,
 			arguments: settings.arguments,
-			settingsHash: settings.settingsHash
+			settingsHash: settings.settingsHash,
+			chash: settings.chash
 		};
 		
 		requests.push(el);

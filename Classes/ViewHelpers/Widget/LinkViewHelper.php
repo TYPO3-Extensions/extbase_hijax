@@ -82,11 +82,12 @@ class Tx_ExtbaseHijax_ViewHelpers_Widget_LinkViewHelper extends Tx_Fluid_ViewHel
 	 * @param string $section The anchor to be added to the URI
 	 * @param string $format The requested format, e.g. ".html"
 	 * @param boolean $ajax TRUE if the URI should be to an AJAX widget, FALSE otherwise.
+	 * @param boolean $cachedAjaxIfPossible TRUE if the URI should be cached (with respect to non-cacheable actions)
 	 * @return string The rendered link
 	 * @api
 	 */
-	public function render($action = NULL, $arguments = array(), $contextArguments = array(), $section = '', $format = '', $ajax = TRUE) {
-		$uri = $this->getWidgetUri($action, $arguments, $contextArguments, $ajax);
+	public function render($action = NULL, $arguments = array(), $contextArguments = array(), $section = '', $format = '', $ajax = TRUE, $cachedAjaxIfPossible = TRUE) {
+		$uri = $this->getWidgetUri($action, $arguments, $contextArguments, $ajax, $cachedAjaxIfPossible);
 		$this->tag->addAttribute('href', $uri);
 		$this->tag->setContent($this->renderChildren());
 
@@ -98,15 +99,16 @@ class Tx_ExtbaseHijax_ViewHelpers_Widget_LinkViewHelper extends Tx_Fluid_ViewHel
 	 *
 	 * @return void
 	 */
-	protected function getWidgetUri($action = NULL, array $arguments = array(), array $contextArguments = array(), $ajax = TRUE) {
+	protected function getWidgetUri($action = NULL, array $arguments = array(), array $contextArguments = array(), $ajax = TRUE, $cachedAjaxIfPossible = TRUE) {
 		$this->hijaxEventDispatcher->setIsHijaxElement(true);		
 		
 		$request = $this->controllerContext->getRequest();
 			/* @var $widgetContext Tx_ExtbaseHijax_Core_Widget_WidgetContext */
 		$widgetContext = $request->getWidgetContext();
-		
+		$tagAttributes = array();
+
 		if ($ajax) {
-			$this->tag->addAttribute('data-hijax-element-type', 'link');
+			$tagAttributes['data-hijax-element-type'] = 'link';
 			$this->tag->addAttribute('class', trim($this->arguments['class'].' hijax-element'));
 		}
 	
@@ -114,17 +116,17 @@ class Tx_ExtbaseHijax_ViewHelpers_Widget_LinkViewHelper extends Tx_Fluid_ViewHel
 			$action = $widgetContext->getParentControllerContext()->getRequest()->getControllerActionName();
 		}
 		if ($ajax) {
-			$this->tag->addAttribute('data-hijax-action', $action);
+			$tagAttributes['data-hijax-action'] = $action;
 		}
 	
 		$controller = $widgetContext->getParentControllerContext()->getRequest()->getControllerName();
 		if ($ajax) {
-			$this->tag->addAttribute('data-hijax-controller', $controller);
+			$tagAttributes['data-hijax-controller'] = $controller;
 		}
 	
 		$extensionName = $widgetContext->getParentControllerContext()->getRequest()->getControllerExtensionName();
 		if ($ajax) {
-			$this->tag->addAttribute('data-hijax-extension', $extensionName);
+			$tagAttributes['data-hijax-extension'] = $extensionName;
 		}
 		
 		if (TYPO3_MODE === 'FE') {
@@ -137,26 +139,44 @@ class Tx_ExtbaseHijax_ViewHelpers_Widget_LinkViewHelper extends Tx_Fluid_ViewHel
 			$pluginName = $widgetContext->getParentPluginName();
 		}
 		if ($ajax) {
-			$this->tag->addAttribute('data-hijax-plugin', $pluginName);
+			$tagAttributes['data-hijax-plugin'] = $pluginName;
 		}
-		
+
 		$requestArguments = $widgetContext->getParentControllerContext()->getRequest()->getArguments();
 		$requestArguments = array_merge($requestArguments, $this->hijaxEventDispatcher->getContextArguments());
 		$requestArguments = array_merge($requestArguments, $contextArguments);
 		$requestArguments[$widgetContext->getWidgetIdentifier()] = ($arguments && is_array($arguments)) ? $arguments : array();
 		if ($ajax) {
-			$this->tag->addAttribute('data-hijax-arguments', serialize($requestArguments));
+			$tagAttributes['data-hijax-arguments'] = serialize($requestArguments);
 		}
 			
 			/* @var $listener Tx_ExtbaseHijax_Event_Listener */
 		$listener = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager')->get('Tx_ExtbaseHijax_MVC_Dispatcher')->getCurrentListener();
 		if ($ajax) {
-			$this->tag->addAttribute('data-hijax-settings', $listener->getId());
+			$tagAttributes['data-hijax-settings'] = $listener->getId();
 		}
 		
 		$pluginNamespace = $this->extensionService->getPluginNamespace($extensionName, $pluginName);
 		if ($ajax) {
-			$this->tag->addAttribute('data-hijax-namespace', $pluginNamespace);
+			$tagAttributes['data-hijax-namespace'] = $pluginNamespace;
+		}
+
+		if ($cachedAjaxIfPossible) {
+			/* @var $cacheHash t3lib_cacheHash */
+			$cacheHash = t3lib_div::makeInstance('t3lib_cacheHash');
+			$tagAttributes['data-hijax-chash'] = $cacheHash->calculateCacheHash(array(
+				'encryptionKey' => $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'],
+				'action' => $tagAttributes['data-hijax-action'],
+				'controller' => $tagAttributes['data-hijax-controller'],
+				'extension' => $tagAttributes['data-hijax-extension'],
+				'plugin' => $tagAttributes['data-hijax-plugin'],
+				'arguments' => $tagAttributes['data-hijax-arguments'],
+				'settingsHash' => $tagAttributes['data-hijax-settings']
+			));
+		}
+
+		foreach ($tagAttributes as $tagAttribute => $attributeValue) {
+			$this->tag->addAttribute($tagAttribute, $attributeValue);
 		}
 
 		$uriBuilder = $this->controllerContext->getUriBuilder();

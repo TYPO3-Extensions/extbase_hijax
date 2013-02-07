@@ -6,6 +6,7 @@
 		settings {
 			cacheInvalidationLevel = consistent
 			absRefPrefix < config.absRefPrefix
+			extbaseHijaxDefaultCacheExpiryPeriod = 3600
 		}
 	}
 

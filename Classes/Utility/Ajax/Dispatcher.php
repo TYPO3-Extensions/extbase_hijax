@@ -72,7 +72,12 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 	 * @var boolean
 	 */
 	protected $preventMarkupUpdateOnAjaxLoad;
-	
+
+	/**
+	 * @var Tx_EdCache_Domain_Repository_CacheRepository
+	 */
+	protected $cacheRepository;
+
 	/**
 	 * Constructor
 	 */
@@ -83,6 +88,9 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 		$this->listenerFactory = $this->objectManager->get('Tx_ExtbaseHijax_Service_Serialization_ListenerFactory');
 		$this->cacheInstance = $GLOBALS['typo3CacheManager']->getCache('extbase_hijax_storage');
 		$this->preventMarkupUpdateOnAjaxLoad = false;
+		if (t3lib_extMgm::isLoaded('ed_cache')) {
+			$this->cacheRepository = t3lib_div::makeInstance('Tx_EdCache_Domain_Repository_CacheRepository');
+		}
 	}
 	
 	/**
@@ -112,6 +120,21 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 				$skipProcessing = FALSE;
 				$configuration = array();
 
+				$allowCaching = FALSE;
+				if ($r['chash']) {
+					/* @var $cacheHash t3lib_cacheHash */
+					$cacheHash = t3lib_div::makeInstance('t3lib_cacheHash');
+					$allowCaching = $r['chash'] == $cacheHash->calculateCacheHash(array(
+						'encryptionKey' => $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'],
+						'action' => $r['action'],
+						'controller' => $r['controller'],
+						'extension' => $r['extension'],
+						'plugin' => $r['plugin'],
+						'arguments' => $r['arguments'],
+						'settingsHash' => $r['settingsHash']
+					));
+				}
+
 				if ($r['tsSource']) {
 					if ($this->serviceContent->isAllowedTypoScriptPath($r['tsSource'])) {
 						/* @var $listener Tx_ExtbaseHijax_Event_Listener */
@@ -139,6 +162,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 					$request = $listener->getRequest();	
 					$bootstrap->cObj = $listener->getCObj();
 				} elseif (Tx_ExtbaseHijax_Utility_Extension::isAllowedHijaxAction($r['extension'], $r['controller'], $r['action'])) {
+					$allowCaching = FALSE; // we do not want to cache this request
 					$configuration['extensionName'] = $r['extension'];
 					$configuration['pluginName']    = $r['plugin'];
 					$configuration['controller']    = $r['controller'];
@@ -148,23 +172,25 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 				}
 				
 				if (!$skipProcessing) {
-					$bootstrap->initialize($configuration);
-					$this->setPreventMarkupUpdateOnAjaxLoad(false);
-					
-					$request = $this->buildRequest($r, $request);
-					$request->setDispatched(false);
-										
-					/* @var $response Tx_Extbase_MVC_Web_Response */
-					$response = $this->objectManager->create('Tx_Extbase_MVC_Web_Response');
-				
-					/* @var $dispatcher Tx_ExtbaseHijax_MVC_Dispatcher */
-					$dispatcher = $this->objectManager->get('Tx_ExtbaseHijax_MVC_Dispatcher');
-					$dispatcher->dispatch($request, $response, $listener);
-										
-					$content = $response->getContent();
-					$this->serviceContent->processIntScripts($content);
-					$this->serviceContent->processAbsRefPrefix($content, $configuration['settings']['absRefPrefix']);
-					$responses['original'][] = array( 'id' => $r['id'], 'format' => $request->getFormat(), 'response' => $content, 'preventMarkupUpdate' => $this->getPreventMarkupUpdateOnAjaxLoad() );
+					if ($allowCaching && $this->cacheRepository) {
+						$cacheConf = array(
+							'contentFunc' => array($this, 'handleFrontendRequest'),
+							'contentFuncParams' => array(
+								$bootstrap,
+								$configuration,
+								$r,
+								$request,
+								$listener,
+								TRUE
+							)
+						);
+						if ($configuration['settings']['extbaseHijaxDefaultCacheExpiryPeriod']) {
+							$cacheConf['expire_on_datetime'] = $GLOBALS['EXEC_TIME'] + $configuration['settings']['extbaseHijaxDefaultCacheExpiryPeriod'];
+						}
+						$responses['original'][] = $this->cacheRepository->getByKey('hijax_'.$r['chash'], $cacheConf, $bootstrap->cObj);
+					} else {
+						$responses['original'][] = $this->handleFrontendRequest($bootstrap, $configuration, $r, $request, $listener, FALSE);
+					}
 				}
 			}
 			
@@ -222,6 +248,44 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 		}
 		
 		$this->setIsActive(false);
+	}
+
+	/**
+	 * @param $bootstrap
+	 * @param $configuration
+	 * @param $r
+	 * @param $request
+	 * @param $listener
+	 * @return array
+	 */
+	public function handleFrontendRequest($bootstrap, $configuration, $r, $request, $listener, $isCacheCallback = FALSE) {
+		$bootstrap->initialize($configuration);
+		$this->setPreventMarkupUpdateOnAjaxLoad(false);
+		/* @var $request Tx_Extbase_MVC_Web_Request */
+		$request = $this->buildRequest($r, $request);
+		$request->setDispatched(false);
+
+		/* @var $response Tx_Extbase_MVC_Web_Response */
+		$response = $this->objectManager->create('Tx_Extbase_MVC_Web_Response');
+
+		/* @var $dispatcher Tx_ExtbaseHijax_MVC_Dispatcher */
+		$dispatcher = $this->objectManager->get('Tx_ExtbaseHijax_MVC_Dispatcher');
+		$dispatcher->dispatch($request, $response, $listener);
+
+		$content = $response->getContent();
+		$this->serviceContent->processIntScripts($content);
+		$this->serviceContent->processAbsRefPrefix($content, $configuration['settings']['absRefPrefix']);
+		$result = array( 'id' => $r['id'], 'format' => $request->getFormat(), 'response' => $content, 'preventMarkupUpdate' => $this->getPreventMarkupUpdateOnAjaxLoad() );
+
+		if ($isCacheCallback && !$request->isCached() && $this->cacheRepository) {
+			error_log('Throwing Tx_EdCache_Exception_PreventActionCaching, did you missconfigure cacheable actions in Extbase?');
+			/* @var $preventActionCaching Tx_EdCache_Exception_PreventActionCaching */
+			$preventActionCaching = t3lib_div::makeInstance('Tx_EdCache_Exception_PreventActionCaching');
+			$preventActionCaching->setResult($result);
+			throw $preventActionCaching;
+		}
+
+		return $result;
 	}
 	
 	/**

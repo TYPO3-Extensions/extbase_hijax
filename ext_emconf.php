@@ -38,6 +38,7 @@ $EM_CONF[$_EXTKEY] = array(
 		'conflicts' => array(
 		),
 		'suggests' => array(
+			'ed_cache' => '0.2.5'
 		),
 	),
 	'suggests' => array(
