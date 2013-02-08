@@ -79,6 +79,11 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 	protected $cacheRepository;
 
 	/**
+	 * @var boolean
+	 */
+	protected $initializedTSFE = FALSE;
+
+	/**
 	 * Constructor
 	 */
 	public function __construct() {
@@ -107,8 +112,6 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 		
 		try {
 			$this->initializeDatabase();
-			$this->initializeTca();
-			$this->initializeTsfe();
 			$this->hijaxEventDispatcher->promoteNextPhaseEvents();
 			
 			$responses = array(
@@ -246,7 +249,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 			header('Content-type: application/x-json');
 			echo json_encode($responses);
 		}
-		
+
 		$this->setIsActive(false);
 	}
 
@@ -259,6 +262,12 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 	 * @return array
 	 */
 	public function handleFrontendRequest($bootstrap, $configuration, $r, $request, $listener, $isCacheCallback = FALSE) {
+		if (!$this->initializedTSFE) {
+			$this->initializedTSFE = TRUE;
+			$this->initializeTca();
+			$this->initializeTsfe();
+		}
+
 		$bootstrap->initialize($configuration);
 		$this->setPreventMarkupUpdateOnAjaxLoad(false);
 		/* @var $request Tx_Extbase_MVC_Web_Request */
