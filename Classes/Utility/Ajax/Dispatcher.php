@@ -139,6 +139,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 				}
 
 				if ($r['tsSource']) {
+					$this->initialize();
 					if ($this->serviceContent->isAllowedTypoScriptPath($r['tsSource'])) {
 						/* @var $listener Tx_ExtbaseHijax_Event_Listener */
 						$encodedSettings = str_replace('.', '---', $r['tsSource']);
@@ -262,11 +263,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 	 * @return array
 	 */
 	public function handleFrontendRequest($bootstrap, $configuration, $r, $request, $listener, $isCacheCallback = FALSE) {
-		if (!$this->initializedTSFE) {
-			$this->initializedTSFE = TRUE;
-			$this->initializeTca();
-			$this->initializeTsfe();
-		}
+		$this->initialize();
 
 		$bootstrap->initialize($configuration);
 		$this->setPreventMarkupUpdateOnAjaxLoad(false);
@@ -348,8 +345,19 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 				}
 			}
 		}
-	}	
-	
+	}
+
+	/**
+	 * initialize TSFE and TCA
+	 */
+	protected function initialize() {
+		if (!$this->initializedTSFE) {
+			$this->initializedTSFE = TRUE;
+			$this->initializeTca();
+			$this->initializeTsfe();
+		}
+	}
+
 	/**
 	 * Initializes TYPO3 db.
 	 * 
