@@ -47,7 +47,11 @@ class Tx_ExtbaseHijax_Persistence_Storage_Typo3DbBackend extends Tx_Extbase_Pers
 			$countQuery = $sqlParser->getCountQuery();
 			$result = $this->databaseHandle->sql_query($countQuery);
 			$this->checkSqlErrors($countQuery);
-			$rows = $this->getRowsFromResult($query->getSource(), $result);
+			if (version_compare(TYPO3_version,'6.1.0','<')) {
+				$rows = $this->getRowsFromResult($query->getSource(), $result);
+			} else {
+				$rows = $this->getRowsFromResult($result);
+			}
 			$count = current(current($rows));
 			$this->databaseHandle->sql_free_result($result);
 		} else {
