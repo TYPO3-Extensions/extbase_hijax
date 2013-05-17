@@ -136,6 +136,23 @@ class Tx_ExtbaseHijax_Persistence_Backend extends Tx_Extbase_Persistence_Backend
 		// TODO: check if object is removed indeed
 		$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'afterRemoveObjectHijax', array('object' => $object));
 	}
+
+	/**
+	 * Deletes an object
+	 *
+	 * @param \TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface $object The object to be removed from the storage
+	 * @param boolean $markAsDeleted Wether to just flag the row deleted (default) or really delete it
+	 * @return void
+	 */
+	protected function removeEntity(\TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface $object, $markAsDeleted = TRUE) {
+		$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'beforeRemoveObjectHijax', array('object' => $object));
+
+		// TODO: check if object is not already deleted
+		parent::removeEntity($object, $markAsDeleted);
+
+		// TODO: check if object is removed indeed
+		$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'afterRemoveObjectHijax', array('object' => $object));
+	}
 }
 
 ?>
