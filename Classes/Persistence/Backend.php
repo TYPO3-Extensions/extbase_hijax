@@ -25,7 +25,22 @@
 ***************************************************************/
 
 class Tx_ExtbaseHijax_Persistence_Backend extends Tx_Extbase_Persistence_Backend {
-	
+
+	/**
+	 * @var Tx_Extbase_Persistence_ObjectStorage
+	 */
+	protected $_addedObjects = NULL;
+
+	/**
+	 * @var Tx_Extbase_Persistence_ObjectStorage
+	 */
+	protected $_removedObjects = NULL;
+
+	/**
+	 * @var Tx_Extbase_Persistence_ObjectStorage
+	 */
+	protected $_changedObjects = NULL;
+
 	/**
 	 * @param Tx_ExtbaseHijax_Persistence_Storage_Typo3DbBackend $storageBackend
 	 * @return void
@@ -88,6 +103,7 @@ class Tx_ExtbaseHijax_Persistence_Backend extends Tx_Extbase_Persistence_Backend
 				$this->pendingIsertObjects[$objectHash] = $object;
 			} else {
 				$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'afterInsertObjectHijax', array('object' => $object));
+				$this->_addedObjects->attach($object);
 			}
 		}
 	}
@@ -111,9 +127,11 @@ class Tx_ExtbaseHijax_Persistence_Backend extends Tx_Extbase_Persistence_Backend
 		if ($result === TRUE) {
 			if (!$this->pendingIsertObjects[$objectHash]) {
 				$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'afterUpdateObjectHijax', array('object' => $object));
+				$this->_changedObjects->attach($object);
 			} else {
 				unset($this->pendingIsertObjects[$objectHash]);
 				$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'afterInsertObjectHijax', array('object' => $object));
+				$this->_addedObjects->attach($object);
 			}
 		}
 
@@ -135,6 +153,7 @@ class Tx_ExtbaseHijax_Persistence_Backend extends Tx_Extbase_Persistence_Backend
 
 		// TODO: check if object is removed indeed
 		$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'afterRemoveObjectHijax', array('object' => $object));
+		$this->_removedObjects->attach($object);
 	}
 
 	/**
@@ -152,6 +171,33 @@ class Tx_ExtbaseHijax_Persistence_Backend extends Tx_Extbase_Persistence_Backend
 
 		// TODO: check if object is removed indeed
 		$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'afterRemoveObjectHijax', array('object' => $object));
+		$this->_removedObjects->attach($object);
+	}
+
+	/**
+	 * Commits the current persistence session.
+	 *
+	 * @return void
+	 */
+	public function commit() {
+		$this->_addedObjects = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('Tx_Extbase_Persistence_ObjectStorage');
+		$this->_removedObjects = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('Tx_Extbase_Persistence_ObjectStorage');
+		$this->_changedObjects = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('Tx_Extbase_Persistence_ObjectStorage');
+
+		parent::commit();
+
+		foreach ($this->_addedObjects as $object) {
+			$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'afterInsertCommitObjectHijax', array('object' => $object));
+		}
+		foreach ($this->_removedObjects as $object) {
+			$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'afterRemoveCommitObjectHijax', array('object' => $object));
+		}
+		foreach ($this->_changedObjects as $object) {
+			$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'afterUpdateCommitObjectHijax', array('object' => $object));
+		}
+		$this->_addedObjects = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('Tx_Extbase_Persistence_ObjectStorage');
+		$this->_removedObjects = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('Tx_Extbase_Persistence_ObjectStorage');
+		$this->_changedObjects = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('Tx_Extbase_Persistence_ObjectStorage');
 	}
 }
 
