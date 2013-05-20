@@ -252,7 +252,7 @@
 			};
 		});
 
-		$data = $.param({r: processedRequests, e: eventsToListen})+'&'+$.param(fields)+'&eID=extbase_hijax_dispatcher&L='+EXTBASE_HIJAX.sys_language_uid;
+		$data = $.hijaxParam({r: processedRequests, e: eventsToListen})+'&'+$.hijaxParam(fields)+'&eID=extbase_hijax_dispatcher&L='+EXTBASE_HIJAX.sys_language_uid;
 
 		var ajaxRequest = $.ajax({
 			url: EXTBASE_HIJAX.url,
@@ -260,7 +260,7 @@
 			//crossDomain: true,
 			data: $data,
 			dataType: "json",
-			pendingElements: pendingElements,
+			//pendingElements: pendingElements,
 			success: function(data, textStatus, jqXHR) {
 				if (data['redirect'] && data['redirect'].url) {
 					window.location = data['redirect'].url;
@@ -272,7 +272,7 @@
 						}
 					});
 
-					$.each(this.pendingElements, function(i, pendingElement) {
+					$.each(pendingElements, function(i, pendingElement) {
 						try {
 							var target = pendingElement['target'];
 							var loaders = pendingElement['loaders'];
@@ -306,7 +306,7 @@
 				}
 			},
 			error: function(jqXHR, textStatus, errorThrown) {
-				$.each(this.pendingElements, function(i, pendingElement) {
+				$.each(pendingElements, function(i, pendingElement) {
 					try {
 						var target = pendingElement['target'];
 						var loaders = pendingElement['loaders'];
@@ -829,7 +829,7 @@
 	 */
 	$.fn.formSerialize = function(semantic) {
 		//hand off to jQuery.param for proper encoding
-		return $.param(this.formToArray(semantic));
+		return $.hijaxParam(this.formToArray(semantic));
 	};
 
 	/**
@@ -854,7 +854,7 @@
 			}
 		});
 		//hand off to jQuery.param for proper encoding
-		return $.param(a);
+		return $.hijaxParam(a);
 	};
 
 	/**
@@ -949,6 +949,68 @@
 		return $(el).val();
 	};	
 
+	$.hijaxParam = function ( a, traditional ) {
+		var prefix,
+			s = [],
+			rbracket = /\[\]$/,
+			r20 = /%20/g,
+			add = function( key, value ) {
+				// If value is a function, invoke it and return its value
+				value = $.isFunction( value ) ? value() : ( value == null ? "" : value );
+				s[ s.length ] = encodeURIComponent( key ) + "=" + encodeURIComponent( value );
+			},
+			buildParams = function( prefix, obj, traditional, add ) {
+				var name;
+
+				if ( $.isArray( obj ) ) {
+					// Serialize array item.
+					$.each( obj, function( i, v ) {
+						if ( traditional || rbracket.test( prefix ) ) {
+							// Treat each array item as a scalar.
+							add( prefix, v );
+
+						} else {
+							// Item is non-scalar (array or object), encode its numeric index.
+							buildParams( prefix + "[" + ( typeof v === "object" ? i : "" ) + "]", v, traditional, add );
+						}
+					});
+
+				} else if ( !traditional && $.type( obj ) === "object" ) {
+					// Serialize object item.
+					for ( name in obj ) {
+						buildParams( prefix + "[" + name + "]", obj[ name ], traditional, add );
+					}
+
+				} else {
+					// Serialize scalar item.
+					add( prefix, obj );
+				}
+			};
+
+		// Set traditional to true for $ <= 1.3.2 behavior.
+		if ( traditional === undefined ) {
+			traditional = $.ajaxSettings && $.ajaxSettings.traditional;
+		}
+
+		// If an array was passed in, assume that it is an array of form elements.
+		if ( $.isArray( a ) || ( a.$ && !$.isPlainObject( a ) ) ) {
+			// Serialize the form elements
+			$.each( a, function() {
+				add( this.name, this.value );
+			});
+
+		} else {
+			// If traditional, encode the "old" way (the way 1.3.2 or older
+			// did it), otherwise encode params recursively.
+			for ( prefix in a ) {
+				buildParams( prefix, a[ prefix ], traditional, add );
+			}
+		}
+
+		// Return the resulting serialization
+		return s.join( "&" ).replace( r20, "+" );
+	}
+
 	
 	$.hijax = function (settings, pendingElement, loaders) {
 		var requests = [];
@@ -983,7 +1045,7 @@
 		
 		hA('r[0][arguments]', settings.data);
 		
-		$data = $.param({r: requests, e: eventsToListen})+'&'+$.param(fields)+'&eID=extbase_hijax_dispatcher&L='+EXTBASE_HIJAX.sys_language_uid;
+		$data = $.hijaxParam({r: requests, e: eventsToListen})+'&'+$.hijaxParam(fields)+'&eID=extbase_hijax_dispatcher&L='+EXTBASE_HIJAX.sys_language_uid;
 		
 		if (pendingElement) {
 			pendingElement.showHijaxLoader(loaders);			
