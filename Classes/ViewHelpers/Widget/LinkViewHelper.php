@@ -141,11 +141,26 @@ class Tx_ExtbaseHijax_ViewHelpers_Widget_LinkViewHelper extends Tx_Fluid_ViewHel
 		if ($ajax) {
 			$tagAttributes['data-hijax-plugin'] = $pluginName;
 		}
+		$pluginNamespace = $this->extensionService->getPluginNamespace($extensionName, $pluginName);
+		if ($ajax) {
+			$tagAttributes['data-hijax-namespace'] = $pluginNamespace;
+		}
 
 		$requestArguments = $widgetContext->getParentControllerContext()->getRequest()->getArguments();
 		$requestArguments = array_merge($requestArguments, $this->hijaxEventDispatcher->getContextArguments());
 		$requestArguments = array_merge($requestArguments, $contextArguments);
 		$requestArguments[$widgetContext->getWidgetIdentifier()] = ($arguments && is_array($arguments)) ? $arguments : array();
+
+		if (version_compare(TYPO3_version,'6.1.0','>=')) {
+			$variableContainer = $widgetContext->getViewHelperChildNodeRenderingContext()->getViewHelperVariableContainer();
+			if ($variableContainer->exists('TYPO3\CMS\Fluid\ViewHelpers\FormViewHelper', 'formFieldNames')) {
+				$formFieldNames = $variableContainer->get('TYPO3\CMS\Fluid\ViewHelpers\FormViewHelper', 'formFieldNames');
+				$mvcPropertyMappingConfigurationService = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Mvc\\Controller\\MvcPropertyMappingConfigurationService'); /* @var $mvcPropertyMappingConfigurationService \TYPO3\CMS\Extbase\Mvc\Controller\MvcPropertyMappingConfigurationService */
+				$requestHash = $mvcPropertyMappingConfigurationService->generateTrustedPropertiesToken($formFieldNames, $pluginNamespace);
+				$requestArguments['__trustedProperties'] = $requestHash;
+			}
+		}
+
 		if ($ajax) {
 			$tagAttributes['data-hijax-arguments'] = serialize($requestArguments);
 		}
@@ -156,11 +171,6 @@ class Tx_ExtbaseHijax_ViewHelpers_Widget_LinkViewHelper extends Tx_Fluid_ViewHel
 			$tagAttributes['data-hijax-settings'] = $listener->getId();
 		}
 		
-		$pluginNamespace = $this->extensionService->getPluginNamespace($extensionName, $pluginName);
-		if ($ajax) {
-			$tagAttributes['data-hijax-namespace'] = $pluginNamespace;
-		}
-
 		if ($cachedAjaxIfPossible) {
 			/* @var $cacheHash t3lib_cacheHash */
 			$cacheHash = t3lib_div::makeInstance('t3lib_cacheHash');
@@ -186,7 +196,7 @@ class Tx_ExtbaseHijax_ViewHelpers_Widget_LinkViewHelper extends Tx_Fluid_ViewHel
 		if ($this->hasArgument('format') && $this->arguments['format'] !== '') {
 			$requestArguments['format'] = $this->arguments['format'];
 		}
-			
+
 		return $uriBuilder
 			->reset()
 			//->setUseCacheHash($this->contentObject->getUserObjectType() === tslib_cObj::OBJECTTYPE_USER)
