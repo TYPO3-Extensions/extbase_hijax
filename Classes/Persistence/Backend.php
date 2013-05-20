@@ -180,9 +180,9 @@ class Tx_ExtbaseHijax_Persistence_Backend extends Tx_Extbase_Persistence_Backend
 	 * @return void
 	 */
 	public function commit() {
-		$this->_addedObjects = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('Tx_Extbase_Persistence_ObjectStorage');
-		$this->_removedObjects = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('Tx_Extbase_Persistence_ObjectStorage');
-		$this->_changedObjects = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('Tx_Extbase_Persistence_ObjectStorage');
+		$this->_addedObjects = t3lib_div::makeInstance('Tx_Extbase_Persistence_ObjectStorage');
+		$this->_removedObjects = t3lib_div::makeInstance('Tx_Extbase_Persistence_ObjectStorage');
+		$this->_changedObjects = t3lib_div::makeInstance('Tx_Extbase_Persistence_ObjectStorage');
 
 		parent::commit();
 
@@ -195,9 +195,9 @@ class Tx_ExtbaseHijax_Persistence_Backend extends Tx_Extbase_Persistence_Backend
 		foreach ($this->_changedObjects as $object) {
 			$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'afterUpdateCommitObjectHijax', array('object' => $object));
 		}
-		$this->_addedObjects = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('Tx_Extbase_Persistence_ObjectStorage');
-		$this->_removedObjects = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('Tx_Extbase_Persistence_ObjectStorage');
-		$this->_changedObjects = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('Tx_Extbase_Persistence_ObjectStorage');
+		$this->_addedObjects = t3lib_div::makeInstance('Tx_Extbase_Persistence_ObjectStorage');
+		$this->_removedObjects = t3lib_div::makeInstance('Tx_Extbase_Persistence_ObjectStorage');
+		$this->_changedObjects = t3lib_div::makeInstance('Tx_Extbase_Persistence_ObjectStorage');
 	}
 }
 
