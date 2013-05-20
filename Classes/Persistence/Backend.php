@@ -119,18 +119,18 @@ class Tx_ExtbaseHijax_Persistence_Backend extends Tx_Extbase_Persistence_Backend
 		$objectHash = spl_object_hash($object);
 
 		if (!$this->pendingIsertObjects[$objectHash]) {
-			$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'beforeUpdateObjectHijax', array('object' => $object));
+			$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'beforeUpdateObjectHijax', array('object' => $object, 'row' => &$row));
 		}
 
 		$result = parent::updateObject($object, $row);
 
 		if ($result === TRUE) {
 			if (!$this->pendingIsertObjects[$objectHash]) {
-				$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'afterUpdateObjectHijax', array('object' => $object));
+				$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'afterUpdateObjectHijax', array('object' => $object, 'row' => &$row));
 				$this->_changedObjects->attach($object);
 			} else {
 				unset($this->pendingIsertObjects[$objectHash]);
-				$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'afterInsertObjectHijax', array('object' => $object));
+				$this->signalSlotDispatcher->dispatch('Tx_Extbase_Persistence_Backend', 'afterInsertObjectHijax', array('object' => $object, 'row' => &$row));
 				$this->_addedObjects->attach($object);
 			}
 		}
