@@ -54,7 +54,7 @@ class Tx_ExtbaseHijax_Configuration_Extension implements Tx_ExtbaseHijax_Configu
 	 * @param string $key
 	 * @return string
 	 */
-	protected function get($key) {
+	public function get($key) {
 		return $this->configuration[$key];
 	}
 	

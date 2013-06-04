@@ -84,6 +84,11 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 	protected $initializedTSFE = FALSE;
 
 	/**
+	 * @var boolean
+	 */
+	protected $errorWhileConverting = FALSE;
+
+	/**
 	 * Constructor
 	 */
 	public function __construct() {
@@ -242,8 +247,16 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 			error_log($e->getMessage());
 			$responses = array('success'=>false, 'code'=>$e->getCode());
 		}
-		
-		if ($callback) {
+
+		if ($responses['original'][0]['format']!='html') {
+			foreach ($responses['original'][0]['headers'] as $header) {
+				header(trim($header));
+			}
+			header ( 'Cache-control: private' );
+			header ( 'Connection: Keep-Alive' );
+			header ( 'Content-Length: ' . strlen ( $responses['original'][0]['response'] ) );
+			echo $responses['original'][0]['response'];
+		} elseif ($callback) {
 			header('Content-type: text/javascript');
 			echo $callback.'('.json_encode($responses).')';
 		} else {
@@ -281,9 +294,21 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 		$content = $response->getContent();
 		$this->serviceContent->processIntScripts($content);
 		$this->serviceContent->processAbsRefPrefix($content, $configuration['settings']['absRefPrefix']);
-		$result = array( 'id' => $r['id'], 'format' => $request->getFormat(), 'response' => $content, 'preventMarkupUpdate' => $this->getPreventMarkupUpdateOnAjaxLoad() );
+		$response->setContent($content);
 
-		if ($isCacheCallback && !$request->isCached() && $this->cacheRepository) {
+		// convert HTML to specified format
+		$htmlConverter = $this->objectManager->get('Tx_ExtbaseHijax_HTMLConverter_ConverterFactory'); /* @var $htmlConverter Tx_ExtbaseHijax_HTMLConverter_ConverterFactory */
+		$converter = $htmlConverter->getConverter($request->getFormat());
+
+		try {
+			$response = $converter->convert($response);
+		} catch (Tx_ExtbaseHijax_HTMLConverter_FailedConversionException $e) {
+			$this->errorWhileConverting = TRUE;
+		}
+
+		$result = array( 'id' => $r['id'], 'format' => $request->getFormat(), 'response' => $response->getContent(), 'preventMarkupUpdate' => $this->getPreventMarkupUpdateOnAjaxLoad(), 'headers' => $response->getHeaders());
+
+		if (!$this->errorWhileConverting && $isCacheCallback && !$request->isCached() && $this->cacheRepository) {
 			error_log('Throwing Tx_EdCache_Exception_PreventActionCaching, did you missconfigure cacheable actions in Extbase?');
 			/* @var $preventActionCaching Tx_EdCache_Exception_PreventActionCaching */
 			$preventActionCaching = t3lib_div::makeInstance('Tx_EdCache_Exception_PreventActionCaching');

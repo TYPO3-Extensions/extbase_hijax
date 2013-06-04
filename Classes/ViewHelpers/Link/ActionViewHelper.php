@@ -75,10 +75,11 @@ class Tx_ExtbaseHijax_ViewHelpers_Link_ActionViewHelper extends Tx_Fluid_ViewHel
 	 * @param string $pluginName
 	 * @param string $format
 	 * @param int $pageUid
-	 * 
+	 * @param boolean $cachedAjaxIfPossible TRUE if the URI should be cached (with respect to non-cacheable actions)
+	 *
 	 * @return string
 	 */
-	public function render($action = NULL, array $arguments = array(), $controller = NULL, $extensionName = NULL, $pluginName = NULL, $format = '', $pageUid = 0) {
+	public function render($action = NULL, array $arguments = array(), $controller = NULL, $extensionName = NULL, $pluginName = NULL, $format = '', $pageUid = 0, $cachedAjaxIfPossible = TRUE) {
 		$request = $this->mvcDispatcher->getCurrentRequest();
 
 		/* @var $listener Tx_ExtbaseHijax_Event_Listener */
@@ -103,6 +104,20 @@ class Tx_ExtbaseHijax_ViewHelpers_Link_ActionViewHelper extends Tx_Fluid_ViewHel
 			if ($pluginName === NULL) {
 				$pluginName = $request->getPluginName();
 			}
+
+			if ($cachedAjaxIfPossible) {
+				/* @var $cacheHash t3lib_cacheHash */
+				$cacheHash = t3lib_div::makeInstance('t3lib_cacheHash');
+				$chash = $cacheHash->calculateCacheHash(array(
+					'encryptionKey' => $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'],
+					'action' => $action,
+					'controller' => $controller,
+					'extension' => $extensionName,
+					'plugin' => $pluginName,
+					'arguments' => $this->array_map_recursive('strval', $arguments),
+					'settingsHash' => $listener->getId()
+				));
+			}
 		}
 
 		$additionalArguments = array();
@@ -113,6 +128,10 @@ class Tx_ExtbaseHijax_ViewHelpers_Link_ActionViewHelper extends Tx_Fluid_ViewHel
 
 		if ($additionalArguments) {
 			$additionalParams .= '&'.implode('&', $additionalArguments);
+		}
+
+		if ($chash) {
+			$additionalParams .= '&r[0][chash]='.$chash;
 		}
 
 		/* @var $cObj tslib_cObj */
@@ -146,6 +165,21 @@ class Tx_ExtbaseHijax_ViewHelpers_Link_ActionViewHelper extends Tx_Fluid_ViewHel
 				}
 			}
 		}
+	}
+
+	/**
+	 * @param $fn
+	 * @param $arr
+	 * @return array
+	 */
+	protected function array_map_recursive($fn, $arr) {
+		$rarr = array();
+		foreach ($arr as $k => $v) {
+			$rarr[$k] = is_array($v)
+					? $this->array_map_recursive($fn, $v)
+					: $fn($v); // or call_user_func($fn, $v)
+		}
+		return $rarr;
 	}
 }
 
