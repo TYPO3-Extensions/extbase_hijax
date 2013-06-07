@@ -248,7 +248,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 			$responses = array('success'=>false, 'code'=>$e->getCode());
 		}
 
-		if ($responses['original'][0]['format']!='html') {
+		if ($responses['original'][0]['format']!='html' && $responses['original'][0]['format']!='json' && !$callback && (is_string($responses['original'][0]['response']) || is_integer($responses['original'][0]['response']))) {
 			foreach ($responses['original'][0]['headers'] as $header) {
 				header(trim($header));
 			}
