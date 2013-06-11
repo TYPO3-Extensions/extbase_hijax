@@ -67,6 +67,11 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 	 * @var Tx_ExtbaseHijax_Service_Content
 	 */
 	protected $serviceContent;
+
+	/**
+	 * @var Tx_Extbase_Service_ExtensionService
+	 */
+	protected $extensionService;
 	
 	/**
 	 * @var boolean
@@ -96,6 +101,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 		$this->hijaxEventDispatcher = $this->objectManager->get('Tx_ExtbaseHijax_Event_Dispatcher');
 		$this->serviceContent = $this->objectManager->get('Tx_ExtbaseHijax_Service_Content');
 		$this->listenerFactory = $this->objectManager->get('Tx_ExtbaseHijax_Service_Serialization_ListenerFactory');
+		$this->extensionService = $this->objectManager->get('Tx_Extbase_Service_ExtensionService');
 		$this->cacheInstance = $GLOBALS['typo3CacheManager']->getCache('extbase_hijax_storage');
 		$this->preventMarkupUpdateOnAjaxLoad = false;
 		if (t3lib_extMgm::isLoaded('ed_cache')) {
@@ -248,7 +254,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 			$responses = array('success'=>false, 'code'=>$e->getCode());
 		}
 
-		if ($responses['original'][0]['format']!='html' && $responses['original'][0]['format']!='json' && !$callback && (is_string($responses['original'][0]['response']) || is_integer($responses['original'][0]['response']))) {
+		if ($responses['original'][0]['format']!='html') {
 			foreach ($responses['original'][0]['headers'] as $header) {
 				header(trim($header));
 			}
@@ -284,12 +290,17 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 		$request = $this->buildRequest($r, $request);
 		$request->setDispatched(false);
 
+		$namespace = $this->extensionService->getPluginNamespace($request->getControllerExtensionName(), $request->getPluginName());
+		$_POST[$namespace] = $request->getArguments();
+
 		/* @var $response Tx_Extbase_MVC_Web_Response */
 		$response = $this->objectManager->create('Tx_Extbase_MVC_Web_Response');
 
 		/* @var $dispatcher Tx_ExtbaseHijax_MVC_Dispatcher */
 		$dispatcher = $this->objectManager->get('Tx_ExtbaseHijax_MVC_Dispatcher');
 		$dispatcher->dispatch($request, $response, $listener);
+
+		$_POST[$namespace] = array();
 
 		$content = $response->getContent();
 		$this->serviceContent->processIntScripts($content);
