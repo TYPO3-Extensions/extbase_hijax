@@ -65,7 +65,7 @@
 					try {
 						var body = document.getElementsByTagName("body")[0];
 						body.className = body.className + ' hijax-js-on';
-						body.className = body.className.replace(' ' + EXTBASE_HIJAX.bodyClass, '');
+						body.className = body.className.replace(new RegExp('\\\\b' + EXTBASE_HIJAX.bodyClass + '\\\\b', 'g'), '');
 					} catch(err) {}
 				//]]></script>
 			)

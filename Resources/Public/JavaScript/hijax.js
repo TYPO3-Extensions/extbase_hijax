@@ -417,7 +417,7 @@
 								if (!ajaxCallback && animate) {
 									elseTarget.stop().css('height', startingHeight).animate({
 										height: targetHeight
-									}, baseAnimationSpeed / 2, function() {
+									}, baseAnimationSpeed / 2, 'linear', function() {
 											// Animation complete.
 										$(this).css('height', 'auto');
 									});
@@ -437,7 +437,7 @@
 							e.preventDefault(); // <-- important
 							var requests = [];
 							var target = $(this).parents('.hijax-element[data-hijax-listener-id='+$(this).attr('data-hijax-settings')+']');
-							var loaders = null;
+							var loaders = EXTBASE_HIJAX.defaultLoaderTarget ? EXTBASE_HIJAX.defaultLoaderTarget : null;
 							if ($(this).attr('data-hijax-loaders')) {
 								loaders = _evalStr.call($(this), $(this).attr('data-hijax-loaders'));
 							}
@@ -470,7 +470,7 @@
 						if (!$(this).attr('data-hijax-ajax-tssource')) {
 							target = $(this).parents('.hijax-element[data-hijax-listener-id='+$(this).attr('data-hijax-settings')+']');
 						}
-						var loaders = null;
+						var loaders = EXTBASE_HIJAX.defaultLoaderTarget ? EXTBASE_HIJAX.defaultLoaderTarget : null;
 						if ($(this).attr('data-hijax-loaders')) {
 							loaders = _evalStr.call($(this), $(this).attr('data-hijax-loaders'));
 						}
@@ -498,7 +498,7 @@
 							e.preventDefault(); // <-- important
 							var requests = [];
 							var target = $(this).parents('.hijax-element[data-hijax-listener-id='+$(this).attr('data-hijax-settings')+']');
-							var loaders = null;
+							var loaders = EXTBASE_HIJAX.defaultLoaderTarget ? EXTBASE_HIJAX.defaultLoaderTarget : null;
 							if ($(this).attr('data-hijax-loaders')) {
 								loaders = _evalStr.call($(this), $(this).attr('data-hijax-loaders'));
 							}
@@ -552,7 +552,7 @@
 		element.addClass('hijax-element-forced-visible-overflow');
 		element.stop().animate({
 			height: content.outerHeight()
-		}, baseAnimationSpeed / 2, function() {
+		}, baseAnimationSpeed / 2, 'linear', function() {
 				// Animation complete.
 		});
 		
@@ -570,7 +570,7 @@
 					element.css('height', startingHeight);
 					element.stop().animate({
 						height: content.outerHeight()
-					}, baseAnimationSpeed / 4, function() {
+					}, baseAnimationSpeed / 4, 'linear', function() {
 							// Animation complete.
 						element.removeClass('hijax-element-forced-visible-overflow');
 					});
@@ -639,7 +639,7 @@
 				if (startingHeight != endingHeight && startingHeight > 0 && endingHeight > 0) {
 					element.stop().animate({
 						height: endingHeight
-					}, baseAnimationSpeed, function() {
+					}, baseAnimationSpeed, 'linear', function() {
 							// Animation complete.
 						$(this).css('height', 'auto');
 						$(this).find('> .'+EXTBASE_HIJAX.contentClass).css('overflow', contentStartingOverflow);
@@ -654,7 +654,7 @@
 		ajaxCallback = false;
 		
 		return this;
-	};	
+	};
 	
 	$.fn.showHijaxLoader = function(loaders) {
 		var element = $(this);
@@ -682,7 +682,7 @@
 				loader.show();
 				loader.stop().animate({
 					opacity: loader.data('targetOpacity')
-				}, baseAnimationSpeed, function() {
+				}, baseAnimationSpeed, 'linear', function() {
 						// Animation complete.
 				});
 			} catch (err) {
@@ -711,13 +711,13 @@
 				if (!loader.data('targetOpacity')) {
 					loader.data('targetOpacity', loader.css('opacity'));
 				}
-				
+
 				loader.stop().animate({
 					opacity: 0
-				}, baseAnimationSpeed / 2, function() {
+				}, baseAnimationSpeed / 2, 'linear', function() {
 						// Animation complete.
 					loader.hide();
-				});				
+				});
 			} catch (err) {
 			}
 		});
