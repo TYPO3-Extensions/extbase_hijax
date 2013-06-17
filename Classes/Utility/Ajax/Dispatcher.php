@@ -120,7 +120,8 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 		$callback = t3lib_div::_GP('callback');
 		$requests = t3lib_div::_GP('r');
 		$eventsToListen = t3lib_div::_GP('e');
-		
+		$preventDirectOutput = false;
+
 		try {
 			$this->initializeDatabase();
 			$this->hijaxEventDispatcher->promoteNextPhaseEvents();
@@ -246,6 +247,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 					'code' => $redirectException->getHttpStatus()	
 				)
 			);
+			$preventDirectOutput = true;
 		} catch (Exception $e) {
 			header('HTTP/1.1 503 Service Unavailable');
 			header('Status: 503 Service Unavailable');
@@ -254,7 +256,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 			$responses = array('success'=>false, 'code'=>$e->getCode());
 		}
 
-		if ($responses['original'][0]['format']!='html') {
+		if (!$preventDirectOutput && $responses['original'][0]['format']!='html') {
 			foreach ($responses['original'][0]['headers'] as $header) {
 				header(trim($header));
 			}
