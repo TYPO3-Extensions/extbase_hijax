@@ -356,7 +356,6 @@
 			var $currentScene = $animation.data('currentScene');
 			if ($currentScene.data('hijax-scene-duration')) {
 				var currentSceneDuration = _evalStr.call($currentScene, $currentScene.data('hijax-scene-duration'));
-				console.log(currentSceneDuration);
 
 				if (currentSceneDuration) {
 					setTimeout(
@@ -660,10 +659,8 @@
 		var element = $(this);
 		if (element.attr('data-hijax-result-target')) {
 			element = _evalStr.call(element, element.attr('data-hijax-result-target'));
-		}		
+		}
 
-		var content = element.find('> .'+EXTBASE_HIJAX.contentClass);
-		
 		if (!loaders) {
 			if (element.attr('data-hijax-loaders')) {
 				loaders = _evalStr.call(element, element.attr('data-hijax-loaders'));
@@ -680,11 +677,16 @@
 					loader.css('opacity', 0);
 				}
 				loader.show();
-				loader.stop().animate({
-					opacity: loader.data('targetOpacity')
-				}, baseAnimationSpeed, 'linear', function() {
-						// Animation complete.
-				});
+				loader.stop().animate(
+					{
+						opacity: loader.data('targetOpacity')
+					}
+					, baseAnimationSpeed
+//					, 'linear'
+//					, function() {
+//						// Animation complete.
+//					}
+				);
 			} catch (err) {
 			}
 		});		
