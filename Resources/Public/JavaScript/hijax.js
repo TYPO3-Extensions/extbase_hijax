@@ -420,6 +420,9 @@
 											// Animation complete.
 										$(this).css('height', 'auto');
 									});
+//									if (parseInt(elseTarget.css('height'), 10) == targetHeight) {
+//										$(this).css('height', 'auto');
+//									}
 								}
 							} else {
 								thenTarget.removeClass('hijax-display-none').css('display', 'block').css('visibility', 'visible');
@@ -656,12 +659,12 @@
 	};
 	
 	$.fn.showHijaxLoader = function(loaders) {
-		var element = $(this);
-		if (element.attr('data-hijax-result-target')) {
-			element = _evalStr.call(element, element.attr('data-hijax-result-target'));
-		}
-
 		if (!loaders) {
+			var element = $(this);
+			if (element.attr('data-hijax-result-target')) {
+				element = _evalStr.call(element, element.attr('data-hijax-result-target'));
+			}
+
 			if (element.attr('data-hijax-loaders')) {
 				loaders = _evalStr.call(element, element.attr('data-hijax-loaders'));
 			} else {
@@ -677,16 +680,20 @@
 					loader.css('opacity', 0);
 				}
 				loader.show();
+				var afterShow = function() {
+					// Animation complete.
+				};
 				loader.stop().animate(
 					{
 						opacity: loader.data('targetOpacity')
 					}
 					, baseAnimationSpeed
-//					, 'linear'
-//					, function() {
-//						// Animation complete.
-//					}
+					, 'linear'
+					, afterShow
 				);
+				if (loader.css('opacity')==loader.data('targetOpacity')) {
+					afterShow();
+				}
 			} catch (err) {
 			}
 		});		
@@ -695,11 +702,12 @@
 	};		
 	
 	$.fn.hideHijaxLoader = function(loaders) {
-		var element = $(this);
-		if (element.attr('data-hijax-result-target')) {
-			element = _evalStr.call(element, element.attr('data-hijax-result-target'));
-		}
 		if (!loaders) {
+			var element = $(this);
+			if (element.attr('data-hijax-result-target')) {
+				element = _evalStr.call(element, element.attr('data-hijax-result-target'));
+			}
+
 			if (element.attr('data-hijax-loaders')) {
 				loaders = _evalStr.call(element, element.attr('data-hijax-loaders'));
 			} else {
@@ -710,16 +718,26 @@
 		$.each(loaders, function(i, loader) {
 			try {
 				loader = $(loader);
+
 				if (!loader.data('targetOpacity')) {
 					loader.data('targetOpacity', loader.css('opacity'));
 				}
 
-				loader.stop().animate({
-					opacity: 0
-				}, baseAnimationSpeed / 2, 'linear', function() {
-						// Animation complete.
+				var afterHide = function() {
+					// Animation complete.
 					loader.hide();
-				});
+				};
+				loader.stop().animate(
+					{
+						opacity: 0
+					}
+					, baseAnimationSpeed / 2
+					, 'linear'
+					, afterHide
+				);
+				if (parseFloat(loader.css('opacity'), 10)==0.00) {
+					afterHide();
+				}
 			} catch (err) {
 			}
 		});
