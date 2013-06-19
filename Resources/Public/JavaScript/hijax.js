@@ -575,6 +575,7 @@
 					}, baseAnimationSpeed / 4, 'linear', function() {
 							// Animation complete.
 						element.removeClass('hijax-element-forced-visible-overflow');
+						$(window).trigger('resize');
 					});
 				});
 			}, 5000
