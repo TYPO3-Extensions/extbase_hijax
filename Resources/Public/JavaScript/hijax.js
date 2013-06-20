@@ -379,6 +379,11 @@
 			var requests = [];
 			$.each(elements, function(i, element) {
 				var el = $(element);
+				if (el.data('hijax-processed')) {
+					return true; //continue
+				} else {
+					el.data('hijax-processed', true);
+				}
 				switch (el.attr('data-hijax-element-type')) {
 					case 'animation':
 							_processAnimation(el);
