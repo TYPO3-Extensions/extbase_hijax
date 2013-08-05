@@ -125,28 +125,30 @@ class Tx_ExtbaseHijax_Tslib_FE_Hook implements t3lib_Singleton {
 				$this->extensionConfiguration->setAddedBodyClass(true);
 			}
 		}
-		
-		while ($this->hijaxEventDispatcher->hasPendingNextPhaseEvents()) {
-				// trick to force double rendering of some content elements
-			$GLOBALS['TSFE']->recordRegister = array();
-				// trick to force loading of full TS template
-			if (!$pObj->tmpl->loaded) {
-				$pObj->forceTemplateParsing = TRUE;
-				$pObj->getConfigArray();
-			}
-			$this->hijaxEventDispatcher->promoteNextPhaseEvents();
-			$this->hijaxEventDispatcher->parseAndRunEventListeners($pObj->content);
-			if (!$pObj->config['INTincScript']) {
-				$pObj->config['INTincScript'] = array();
-			}
-			$pObj->INTincScript();
-			
-			if (self::$loopCount++>99) {
-					// preventing dead loops
-				break;
+
+		if ($hookType=='output') {
+			while ($this->hijaxEventDispatcher->hasPendingNextPhaseEvents()) {
+					// trick to force double rendering of some content elements
+				$GLOBALS['TSFE']->recordRegister = array();
+					// trick to force loading of full TS template
+				if (!$pObj->tmpl->loaded) {
+					$pObj->forceTemplateParsing = TRUE;
+					$pObj->getConfigArray();
+				}
+				$this->hijaxEventDispatcher->promoteNextPhaseEvents();
+				$this->hijaxEventDispatcher->parseAndRunEventListeners($pObj->content);
+				if (!$pObj->config['INTincScript']) {
+					$pObj->config['INTincScript'] = array();
+				}
+				$pObj->INTincScript();
+
+				if (self::$loopCount++>99) {
+						// preventing dead loops
+					break;
+				}
 			}
 		}
-		
+
 		if ($hookType=='output' || $pObj->isStaticCacheble()) {
 			$this->hijaxEventDispatcher->replaceXMLCommentsWithDivs($pObj->content);
 		}
