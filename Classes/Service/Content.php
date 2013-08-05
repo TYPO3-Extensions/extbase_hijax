@@ -198,7 +198,7 @@ class Tx_ExtbaseHijax_Service_Content implements t3lib_Singleton {
 			$content = str_replace('"' . $GLOBALS['TYPO3_CONF_VARS']['BE']['fileadminDir'], '"' . $this->absRefPrefix . $GLOBALS['TYPO3_CONF_VARS']['BE']['fileadminDir'], $content);
 			$content = str_replace('"' . $GLOBALS['TYPO3_CONF_VARS']['BE']['RTE_imageStorageDir'], '"' . $this->absRefPrefix . $GLOBALS['TYPO3_CONF_VARS']['BE']['RTE_imageStorageDir'], $content);
 			// Process additional directories
-			$directories = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $GLOBALS['TYPO3_CONF_VARS']['FE']['additionalAbsRefPrefixDirectories'], TRUE);
+			$directories = t3lib_div::trimExplode(',', $GLOBALS['TYPO3_CONF_VARS']['FE']['additionalAbsRefPrefixDirectories'], TRUE);
 			foreach ($directories as $directory) {
 				$content = str_replace('"' . $directory, '"' . $this->absRefPrefix . $directory, $content);
 			}
