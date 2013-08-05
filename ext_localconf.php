@@ -20,6 +20,7 @@ Tx_Extbase_Utility_Extension::configurePlugin(
 );
 
 $TYPO3_CONF_VARS['FE']['eID_include']['extbase_hijax_dispatcher'] = t3lib_extMgm::extPath($_EXTKEY).'Resources/Private/Eid/dispatcher.php';
+$TYPO3_CONF_VARS['FE']['eID_include']['extbase_hijax_thumb'] = t3lib_extMgm::extPath($_EXTKEY).'Resources/Private/Eid/thumb.php';
 
 if (!$TYPO3_CONF_VARS['SYS']['extbase_hijax']['lockingMode']) {
 	$TYPO3_CONF_VARS['SYS']['extbase_hijax']['lockingMode'] = 'flock';
@@ -35,13 +36,22 @@ if (!isset($GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations'][
 	$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['extbase_hijax_tracking']['backend'] = 't3lib_cache_backend_FileBackend';
 }
 
-	// Settings/serialized storage
+// Settings/serialized storage
 if (!is_array($GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['extbase_hijax_storage'])) {
 	$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['extbase_hijax_storage'] = array();
 }
 
 if (!isset($GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['extbase_hijax_storage']['backend'])) {
 	$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['extbase_hijax_storage']['backend'] = 't3lib_cache_backend_FileBackend';
+}
+
+// Settings/serialized storage
+if (!is_array($GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['extbase_hijax_img_storage'])) {
+	$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['extbase_hijax_img_storage'] = array();
+}
+
+if (!isset($GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['extbase_hijax_img_storage']['backend'])) {
+	$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['extbase_hijax_img_storage']['backend'] = 't3lib_cache_backend_FileBackend';
 }
 
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['clearCachePostProc'][] =
