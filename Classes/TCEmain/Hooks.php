@@ -52,6 +52,8 @@ class Tx_ExtbaseHijax_TCEmain_Hooks implements t3lib_Singleton {
 		switch ($params['cacheCmd']) {
 			case 'all':
 				$this->trackingManager->flushTrackingInfo();
+				$thumbnailGenerator = t3lib_div::makeInstance('Tx_ExtbaseHijax_Utility_Ajax_ThumbnailGenerator'); /* @var $thumbnailGenerator Tx_ExtbaseHijax_Utility_Ajax_ThumbnailGenerator */
+				$thumbnailGenerator->flushCache();
 				break;
 			default:
 				break;

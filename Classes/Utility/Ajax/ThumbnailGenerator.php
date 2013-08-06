@@ -134,6 +134,13 @@ class Tx_ExtbaseHijax_Utility_Ajax_ThumbnailGenerator extends Tx_ExtbaseHijax_Ut
 	}
 
 	/**
+	 * @return void
+	 */
+	public function flushCache() {
+		$this->cache->flush();
+	}
+
+	/**
 	 * @param $src
 	 * @param null $width
 	 * @param null $height
