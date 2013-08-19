@@ -121,7 +121,6 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 		$requests = t3lib_div::_GP('r');
 		$eventsToListen = t3lib_div::_GP('e');
 		$preventDirectOutput = false;
-
 		try {
 			$this->initializeDatabase();
 			$this->hijaxEventDispatcher->promoteNextPhaseEvents();
@@ -132,6 +131,12 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 			);
 			
 			foreach ($requests as $r) {
+
+				if ($r['secureLocalStorage']) {
+					echo file_get_contents(t3lib_extMgm::extPath('extbase_hijax', 'Resources/Private/Templates/SecureLocalStorage/IFrame.html'));
+					exit;
+				}
+
 				$skipProcessing = FALSE;
 				$configuration = array();
 
