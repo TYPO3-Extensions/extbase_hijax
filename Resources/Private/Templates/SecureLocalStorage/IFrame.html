@@ -11,9 +11,8 @@
 </head>
 <body>
 <script>
-    var EXTBASE_HIJAX = {initElement: [], forceHTTPSLocalStorage: true, unloadElement: [], onLoadElement: [], beforeLoadElement: [], bodyClass: 'hijax-js-off', loadingClass: 'hijax-loading', fallbackClass: 'hijax-js-fallback', contentClass: 'hijax-content', errorMessage: "Oops... An error occurred.", url: "/index.php", sys_language_uid: '0'}; try { var body = document.getElementsByTagName("body")[0]; body.className = body.className + ' hijax-js-on'; body.className = body.className.replace(new RegExp('\\b' + EXTBASE_HIJAX.bodyClass + '\\b', 'g'), ''); } catch(err) {}
+    var EXTBASE_HIJAX = {forceHTTPSLocalStorage: true};
 </script>
-
 <script type="text/javascript">//<![CDATA[
 if (typeof jQuery === 'undefined') {
     jQuery = $; // Zepto-jQuery compatibility
@@ -29,10 +28,8 @@ var messageListener = function(event) {
 
         if ('setItem' in data) {
             $.hStorage.set(data.setItem, data.value);
-            //localStorage.setItem(data.setItem, data.value);
         } else if ('getItem' in data) {
             var gotItem = $.hStorage.get(data.getItem);
-            //var gotItem = localStorage.getItem(data.getItem);
             var obj = '#localStorage#' + data.identifier + (gotItem === null ? 'null#' : '#' + JSON.stringify(gotItem));
             if (typeof event.source.postMessage === "function" || typeof event.source.postMessage === "object") {
                 event.source.postMessage(obj, event.origin);

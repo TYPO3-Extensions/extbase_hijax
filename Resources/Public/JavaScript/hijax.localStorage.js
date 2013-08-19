@@ -674,11 +674,7 @@
 
 			_storage[key] = value;
 
-//			if (typeof value == "object") {
-				_storage.__hstorage_meta.CRC32[key] = "2." + murmurhash2_32_gc(JSON.stringify(value), 0x9747b28c);
-//			} else {
-//				_storage.__hstorage_meta.CRC32[key] = "2." + murmurhash2_32_gc(value, 0x9747b28c);
-//			}
+			_storage.__hstorage_meta.CRC32[key] = "2." + murmurhash2_32_gc(JSON.stringify(value), 0x9747b28c);
 
 			this.setTTL(key, options.TTL || 0); // also handles saving and _publishChange
 
@@ -691,6 +687,7 @@
 		 *
 		 * @param {String} key - Key to look up.
 		 * @param {mixed} def - Default value to return, if key didn't exist.
+		 * @param callback - Callback
 		 * @return {Mixed} the key value, default value or null
 		 */
 		get: function(key, def, callback){
@@ -931,6 +928,121 @@
 		 */
 		reInit: function(){
 			_reloadData();
+		},
+
+		testSetup: function() {
+			_init();
+		},
+
+		initHTTPSLocalStorage: function() {
+			if ((typeof EXTBASE_HIJAX != 'undefined') && 'forceHTTPSLocalStorage' in EXTBASE_HIJAX && EXTBASE_HIJAX.forceHTTPSLocalStorage && window.location.href.split('://')[0]=="http") {
+				var callbacks = {};
+				var pendingOperations = [];
+				var callId = 0;
+				var hStorageFrameLoaded = false;
+				var body = document.getElementsByTagName("body")[0];
+				var iframe = document.createElement('iframe');
+				var messageListener = function(event) {
+					if (event.source === iframe || event.source === iframe.contentWindow) {
+						var data = /^#localStorage#(\d+)(null)?#([\S\s]*)/.exec(event.data);
+						if (data) {
+							if (callbacks[data[1]]) {
+								// null and "null" are distinguished by our pattern
+								callbacks[data[1]](data[2] === 'null' ? null : JSON.parse(data[3]));
+							}
+							delete callbacks[data[1]];
+						}
+					}
+				};
+				if (!window.addEventListener) {
+					window.attachEvent("onmessage", messageListener);
+				}
+				else {
+					window.addEventListener("message", messageListener, false);
+				}
+
+				var addPendingOperation = function(method, args) {
+					pendingOperations.push({method: method, args: Array.prototype.slice.call(args)});
+				}
+
+				var executePendingOperations = function() {
+					var op;
+
+					while (op = pendingOperations.shift()) {
+						$.hStorage[op.method].apply(null, op.args);
+					}
+				}
+
+				$.hStorage.set = function(key, value) {
+					if (!hStorageFrameLoaded) {
+						addPendingOperation('set', arguments);
+					} else {
+						var obj = {
+							setItem: key,
+							value: value
+						};
+						if (typeof iframe.postMessage === "function" || typeof iframe.postMessage === "object") {
+							iframe.postMessage(JSON.stringify(obj), 'https://' + window.location.hostname);
+						} else {
+							iframe.contentWindow.postMessage(JSON.stringify(obj), 'https://' + window.location.hostname);
+						}
+					}
+				}
+
+				$.hStorage.get = function(key, def, callback) {
+					if (!hStorageFrameLoaded) {
+						addPendingOperation('get', arguments);
+					} else {
+						var identifier = callId++;
+						var obj = {
+							identifier: identifier,
+							def: def,
+							getItem: key
+						};
+						callbacks[identifier] = callback;
+						if (typeof iframe.postMessage === "function" || typeof iframe.postMessage === "object") {
+							iframe.postMessage(JSON.stringify(obj), 'https://' + window.location.hostname);
+						} else {
+							iframe.contentWindow.postMessage(JSON.stringify(obj), 'https://' + window.location.hostname);
+						}
+					}
+				}
+
+				$.hStorage.deleteKey = function(key) {
+					if (!hStorageFrameLoaded) {
+						addPendingOperation('deleteKey', arguments);
+					} else {
+						var obj = {
+							removeItem: key
+						};
+						if (typeof iframe.postMessage === "function" || typeof iframe.postMessage === "object") {
+							iframe.postMessage(JSON.stringify(obj), 'https://' + window.location.hostname);
+						} else {
+							iframe.contentWindow.postMessage(JSON.stringify(obj), 'https://' + window.location.hostname);
+						}
+					}
+				}
+
+				iframe.src = 'https://' + window.location.hostname + '/index.php?eID=extbase_hijax_dispatcher&r[0][secureLocalStorage]=1';
+				// iframe.id = 'hStorageFrame';
+				iframe.style.display = 'none';
+
+				if (navigator.userAgent.indexOf("MSIE") > -1 && !window.opera) {
+					iframe.onreadystatechange = function(){
+						if (iframe.readyState == "complete"){
+							hStorageFrameLoaded = true;
+							executePendingOperations();
+						}
+					};
+				} else {
+					iframe.onload = function(){
+						hStorageFrameLoaded = true;
+						executePendingOperations();
+					};
+				}
+
+				body.appendChild(iframe);
+			}
 		}
 	};
 
@@ -938,112 +1050,4 @@
 	_init();
 })(jQuery);
 
-$(document).ready(function(){
-	if ((typeof EXTBASE_HIJAX != 'undefined') && 'forceHTTPSLocalStorage' in EXTBASE_HIJAX && EXTBASE_HIJAX.forceHTTPSLocalStorage && window.location.href.split('://')[0]=="http") {
-		var callbacks = {};
-		var pendingOperations = [];
-		var hStorageFrameLoaded = false;
-		var messageListener = function(event) {
-			if (event.source === frames['hStorageFrame'] || event.source === frames['hStorageFrame'].contentWindow) {
-				var data = /^#localStorage#(\d+)(null)?#([\S\s]*)/.exec(event.data);
-				if (data) {
-					if (callbacks[data[1]]) {
-						// null and "null" are distinguished by our pattern
-						callbacks[data[1]](data[2] === 'null' ? null : JSON.parse(data[3]));
-					}
-					delete callbacks[data[1]];
-				}
-			}
-		};
-		if (!window.addEventListener) {
-			window.attachEvent("onmessage", messageListener);
-		}
-		else {
-			window.addEventListener("message", messageListener, false);
-		}
-
-		var addPendingOperation = function(method, args) {
-			pendingOperations.push({method: method, args: Array.prototype.slice.call(args)});
-		}
-
-		var executePendingOperations = function() {
-			var op;
-
-			while (op = pendingOperations.shift()) {
-				$.hStorage[op.method].apply(null, op.args);
-			}
-		}
-
-		$.hStorage.set = function(key, value) {
-			if (!hStorageFrameLoaded) {
-				addPendingOperation('set', arguments);
-			} else {
-				var obj = {
-					setItem: key,
-					value: value
-				};
-				if (typeof frames['hStorageFrame'].postMessage === "function" || typeof frames['hStorageFrame'].postMessage === "object") {
-					frames['hStorageFrame'].postMessage(JSON.stringify(obj), 'https://' + window.location.hostname);
-				} else {
-					frames['hStorageFrame'].contentWindow.postMessage(JSON.stringify(obj), 'https://' + window.location.hostname);
-				}
-			}
-		}
-
-		$.hStorage.get = function(key, def, callback) {
-			if (!hStorageFrameLoaded) {
-				addPendingOperation('get', arguments);
-			} else {
-				var identifier = new Date().getTime();
-				var obj = {
-					identifier: identifier,
-					def: def,
-					getItem: key
-				};
-				callbacks[identifier] = callback;
-				if (typeof frames['hStorageFrame'].postMessage === "function" || typeof frames['hStorageFrame'].postMessage === "object") {
-					frames['hStorageFrame'].postMessage(JSON.stringify(obj), 'https://' + window.location.hostname);
-				} else {
-					frames['hStorageFrame'].contentWindow.postMessage(JSON.stringify(obj), 'https://' + window.location.hostname);
-				}
-			}
-		}
-
-		$.hStorage.deleteKey = function(key) {
-			if (!hStorageFrameLoaded) {
-				addPendingOperation('deleteKey', arguments);
-			} else {
-				var obj = {
-					removeItem: key
-				};
-				if (typeof frames['hStorageFrame'].postMessage === "function" || typeof frames['hStorageFrame'].postMessage === "object") {
-					frames['hStorageFrame'].postMessage(JSON.stringify(obj), 'https://' + window.location.hostname);
-				} else {
-					frames['hStorageFrame'].contentWindow.postMessage(JSON.stringify(obj), 'https://' + window.location.hostname);
-				}
-			}
-		}
-
-		var body = document.getElementsByTagName("body")[0];
-		var iframe = document.createElement('iframe');
-		iframe.src = 'https://' + window.location.hostname + '/index.php?eID=extbase_hijax_dispatcher&r[0][secureLocalStorage]=1';
-		iframe.id = 'hStorageFrame';
-		iframe.style.display = 'none';
-
-		if (navigator.userAgent.indexOf("MSIE") > -1 && !window.opera) {
-			iframe.onreadystatechange = function(){
-				if (iframe.readyState == "complete"){
-					hStorageFrameLoaded = true;
-					executePendingOperations();
-				}
-			};
-		} else {
-			iframe.onload = function(){
-				hStorageFrameLoaded = true;
-				executePendingOperations();
-			};
-		}
-
-		body.appendChild(iframe);
-	}
-});
+$.hStorage.initHTTPSLocalStorage.call(window);

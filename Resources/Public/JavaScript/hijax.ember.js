@@ -115,3 +115,9 @@ ExtbaseHijax.CObjectView = ExtbaseHijax.View.extend({
 		this._super(buffer);
 	}
 });
+
+ExtbaseHijax.Checkbox = Ember.Checkbox.extend({
+	_checkedChanged: function(event) {
+		this.$().trigger('change', event);
+	}.observes('checked')
+});

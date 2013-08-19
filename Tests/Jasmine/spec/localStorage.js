@@ -8,8 +8,43 @@ function using(name, values, func){
 	}
 }
 
+if (!Function.prototype.bind) {
+	Function.prototype.bind = function (oThis) {
+		if (typeof this !== "function") {
+			// closest thing possible to the ECMAScript 5 internal IsCallable function
+			throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable");
+		}
+
+		var aArgs = Array.prototype.slice.call(arguments, 1),
+			fToBind = this,
+			fNOP = function () {},
+			fBound = function () {
+				return fToBind.apply(this instanceof fNOP && oThis
+					? this
+					: oThis,
+					aArgs.concat(Array.prototype.slice.call(arguments)));
+			};
+
+		fNOP.prototype = this.prototype;
+		fBound.prototype = new fNOP();
+
+		return fBound;
+	};
+}
+
 describe("LocalStorage", function() {
-	using("valid values", ['123', {x: 1, y: '2'}, 456, true], function(value){
+
+	beforeEach(function() {
+		$('#hStorageFrame').remove();
+		$.hStorage.testSetup.call(window);
+		$.hStorage.initHTTPSLocalStorage.call(window);
+	});
+
+	afterEach(function() {
+		$('#hStorageFrame').remove();
+	});
+
+	using("valid values", ['123', {x: 1, y: '2'}, 456, true, [1,2,3]], function(value){
 		var key = 'sample';
 		var valueRead = null;
 
@@ -38,6 +73,51 @@ describe("LocalStorage", function() {
 				}
 				expect(valueReadTest).toBe(valueTest);
 			});
+		});
+	});
+
+	it("test parallel setter / getter", function() {
+		var values = ['123', {x: 1, y: '2'}, 456, true, [1,2,3]];
+		var key = 'sample';
+		var valuesRead = [];
+
+		runs(function () {
+			for (var i = 0, count = values.length; i < count; i++) {
+				var value = values[i];
+				$.hStorage.set(key + i, value);
+				$.hStorage.get(key + i, null, function (val) {
+					valuesRead[this] = val;
+				}.bind(i));
+			}
+		});
+
+		waitsFor(function() {
+			var allValuesRead = true;
+			for (var i = 0, count = values.length; i < count; i++) {
+				allValuesRead = allValuesRead && valuesRead[i] != null;
+				if (!allValuesRead) {
+					break;
+				}
+			}
+			return allValuesRead;
+
+		}, "The value read from local storage should not be null", 3000);
+
+		runs(function () {
+			for (var i = 0, count = values.length; i < count; i++) {
+				var value = values[i];
+				if (typeof valuesRead[i] !== 'string') {
+					valueReadTest = JSON.stringify(valuesRead[i]);
+				} else {
+					valueReadTest = valuesRead[i];
+				}
+				if (typeof value !== 'string') {
+					valueTest = JSON.stringify(value);
+				} else {
+					valueTest = value;
+				}
+				expect(valueReadTest).toBe(valueTest);
+			}
 		});
 	});
 });
