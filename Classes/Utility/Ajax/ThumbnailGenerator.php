@@ -167,7 +167,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_ThumbnailGenerator extends Tx_ExtbaseHijax_Ut
 		}
 		$imageInfo[3] = t3lib_div::png_to_gif_by_imagemagick($imageInfo[3]);
 		$GLOBALS['TSFE']->imagesOnPage[] = $imageInfo[3];
-		$imageSource = $GLOBALS['TSFE']->absRefPrefix . t3lib_div::rawUrlEncodeFP($imageInfo[3]);
+		$imageSource = $GLOBALS['TSFE']->absRefPrefix . $imageInfo[3];
 
 		if (!@file_exists(PATH_site.$imageSource) || !@is_file(PATH_site.$imageSource)) {
 			error_log('The following image is (most likely) corrupted: "' . $src . '".');
