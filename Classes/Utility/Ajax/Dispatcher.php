@@ -119,7 +119,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 		$this->setIsActive(true);
 		$callback = t3lib_div::_GP('callback');
 		$requests = t3lib_div::_GP('r');
-		$eventsToListen = t3lib_div::_GP('e');
+		$eventsToListen = t3lib_div::_GP('evts') ? t3lib_div::_GP('evts') : t3lib_div::_GP('e');
 		$preventDirectOutput = false;
 		try {
 			$this->initializeDatabase();

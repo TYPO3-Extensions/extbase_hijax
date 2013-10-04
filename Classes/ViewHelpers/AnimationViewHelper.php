@@ -71,7 +71,7 @@ class Tx_ExtbaseHijax_ViewHelpers_AnimationViewHelper extends Tx_Fluid_Core_View
 		} else {
 			/* @var $listener Tx_ExtbaseHijax_Event_Listener */
 			$listener = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager')->get('Tx_ExtbaseHijax_MVC_Dispatcher')->getCurrentListener();				
-			$this->tag->addAttribute('data-hijax-result-target', "jQuery(this).parents('.hijax-element[data-hijax-listener-id=".$listener->getId()."]')");
+			$this->tag->addAttribute('data-hijax-result-target', "jQuery(this).parents('.hijax-element[data-hijax-listener-id=\"".$listener->getId()."\"]')");
 			$this->tag->addAttribute('data-hijax-result-wrap', 'false');
 		}
 		if ($loaders) {

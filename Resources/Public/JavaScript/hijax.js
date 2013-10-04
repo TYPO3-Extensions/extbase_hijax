@@ -252,7 +252,7 @@
 			};
 		});
 
-		$data = $.hijaxParam({r: processedRequests, e: eventsToListen})+'&'+$.hijaxParam(fields)+'&eID=extbase_hijax_dispatcher&L='+EXTBASE_HIJAX.sys_language_uid;
+		$data = $.hijaxParam({r: processedRequests, evts: eventsToListen})+'&'+$.hijaxParam(fields)+'&eID=extbase_hijax_dispatcher&L='+EXTBASE_HIJAX.sys_language_uid;
 
 		var ajaxRequest = $.ajax({
 			url: EXTBASE_HIJAX.url,
@@ -443,7 +443,7 @@
 						el.bind('submit', function(e) {
 							e.preventDefault(); // <-- important
 							var requests = [];
-							var target = $(this).parents('.hijax-element[data-hijax-listener-id='+$(this).attr('data-hijax-settings')+']');
+							var target = $(this).parents('.hijax-element[data-hijax-listener-id="'+$(this).attr('data-hijax-settings')+'"]');
 							var loaders = EXTBASE_HIJAX.defaultLoaderTarget ? EXTBASE_HIJAX.defaultLoaderTarget : null;
 							if ($(this).attr('data-hijax-loaders')) {
 								loaders = _evalStr.call($(this), $(this).attr('data-hijax-loaders'));
@@ -475,7 +475,7 @@
 					case 'ajax':
 						var target = $(this);
 						if (!$(this).attr('data-hijax-ajax-tssource')) {
-							target = $(this).parents('.hijax-element[data-hijax-listener-id='+$(this).attr('data-hijax-settings')+']');
+							target = $(this).parents('.hijax-element[data-hijax-listener-id="'+$(this).attr('data-hijax-settings')+'"]');
 						}
 						var loaders = EXTBASE_HIJAX.defaultLoaderTarget ? EXTBASE_HIJAX.defaultLoaderTarget : null;
 						if ($(this).attr('data-hijax-loaders')) {
@@ -504,7 +504,7 @@
 						el.bind('click', function(e) {
 							e.preventDefault(); // <-- important
 							var requests = [];
-							var target = $(this).parents('.hijax-element[data-hijax-listener-id='+$(this).attr('data-hijax-settings')+']');
+							var target = $(this).parents('.hijax-element[data-hijax-listener-id="'+$(this).attr('data-hijax-settings')+'"]');
 							var loaders = EXTBASE_HIJAX.defaultLoaderTarget ? EXTBASE_HIJAX.defaultLoaderTarget : null;
 							if ($(this).attr('data-hijax-loaders')) {
 								loaders = _evalStr.call($(this), $(this).attr('data-hijax-loaders'));
@@ -1071,7 +1071,7 @@
 		
 		hA('r[0][arguments]', settings.data);
 		
-		$data = $.hijaxParam({r: requests, e: eventsToListen})+'&'+$.hijaxParam(fields)+'&eID=extbase_hijax_dispatcher&L='+EXTBASE_HIJAX.sys_language_uid;
+		$data = $.hijaxParam({r: requests, evts: eventsToListen})+'&'+$.hijaxParam(fields)+'&eID=extbase_hijax_dispatcher&L='+EXTBASE_HIJAX.sys_language_uid;
 		
 		if (pendingElement) {
 			pendingElement.showHijaxLoader(loaders);			
