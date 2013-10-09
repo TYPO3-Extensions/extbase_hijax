@@ -59,7 +59,7 @@ class Tx_ExtbaseHijax_Event_CObj {
 		} 
 		
 		if ($reset) {
-			$this->data = array();
+			$this->data = ($this->cObj && $this->cObj->data) ? $this->cObj->data : array();
 			$this->table = '';
 			$this->cObj = t3lib_div::makeInstance('tslib_cObj');
 			$this->cObj->start($this->data, $this->table);
