@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\Controller;
+
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+ *  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
  *  
  *  All rights reserved
  *
@@ -26,35 +28,35 @@
 /**
  * @author Nikola Stojiljkovic <nikola.stojiljkovic@essentialdots.com>
  */
-class Tx_ExtbaseHijax_Controller_ContentElementController extends Tx_Extbase_MVC_Controller_ActionController {
+class ContentElementController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionController {
 
 	/**
-	 * @var Tx_ExtbaseHijax_Event_Dispatcher
+	 * @var \EssentialDots\ExtbaseHijax\Event\Dispatcher
 	 */
 	protected $hijaxEventDispatcher;
 	
 	/**
-	 * @var Tx_Extbase_Service_TypoScriptService
+	 * @var \TYPO3\CMS\Extbase\Service\TypoScriptService
 	 */
 	protected $typoScriptService;
 	
 	/**
 	 * Injects the event dispatcher
 	 *
-	 * @param Tx_ExtbaseHijax_Event_Dispatcher $eventDispatcher
+	 * @param \EssentialDots\ExtbaseHijax\Event\Dispatcher $eventDispatcher
 	 * @return void
 	 */
-	public function injectEventDispatcher(Tx_ExtbaseHijax_Event_Dispatcher $eventDispatcher) {
+	public function injectEventDispatcher(\EssentialDots\ExtbaseHijax\Event\Dispatcher $eventDispatcher) {
 		$this->hijaxEventDispatcher = $eventDispatcher;
 	}	
 	
 	/**
 	 * Injects the TS service
 	 *
-	 * @param Tx_Extbase_Service_TypoScriptService $typoScriptService
+	 * @param \TYPO3\CMS\Extbase\Service\TypoScriptService $typoScriptService
 	 * @return void
 	 */
-	public function injectTypoScriptService(Tx_Extbase_Service_TypoScriptService $typoScriptService) {
+	public function injectTypoScriptService(\TYPO3\CMS\Extbase\Service\TypoScriptService $typoScriptService) {
 		$this->typoScriptService = $typoScriptService;
 	}	
 	
@@ -69,7 +71,7 @@ class Tx_ExtbaseHijax_Controller_ContentElementController extends Tx_Extbase_MVC
 	 */
 	protected function initializeAction() {
 		if ($this->settings['listenOnEvents']) {
-			$eventNames = t3lib_div::trimExplode(',', $this->settings['listenOnEvents']);
+			$eventNames = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $this->settings['listenOnEvents']);
 			foreach ($eventNames as $eventName) {
 				$this->hijaxEventDispatcher->connect($eventName);
 			}

@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\Utility;
+
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+ *  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -22,26 +24,26 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-class Tx_ExtbaseHijax_Utility_HTTP implements t3lib_Singleton {
+class HTTP implements \TYPO3\CMS\Core\SingletonInterface {
 	/**
 	 * @var int
 	 */
 	protected static $loopCount = 0;
 	
 	/**
-	 * @var Tx_Extbase_Object_ObjectManagerInterface
+	 * @var \TYPO3\CMS\Extbase\Object\ObjectManagerInterface
 	 */
 	protected $objectManager;
 		
 	/**
 	 * ajaxDispatcher
 	 *
-	 * @var Tx_ExtbaseHijax_Utility_Ajax_Dispatcher
+	 * @var \EssentialDots\ExtbaseHijax\Utility\Ajax\Dispatcher
 	 */
 	protected $ajaxDispatcher;
 	
 	/**
-	 * @var Tx_ExtbaseHijax_Event_Dispatcher
+	 * @var \EssentialDots\ExtbaseHijax\Event\Dispatcher
 	 */
 	protected $hijaxEventDispatcher;
 	
@@ -58,9 +60,9 @@ class Tx_ExtbaseHijax_Utility_HTTP implements t3lib_Singleton {
 	 * @return void
 	 */
 	protected function initializeObjectManager() {
-		$this->objectManager = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager');
-		$this->ajaxDispatcher = $this->objectManager->get('Tx_ExtbaseHijax_Utility_Ajax_Dispatcher');
-		$this->hijaxEventDispatcher = $this->objectManager->get('Tx_ExtbaseHijax_Event_Dispatcher');
+		$this->objectManager = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Object\\ObjectManager');
+		$this->ajaxDispatcher = $this->objectManager->get('EssentialDots\\ExtbaseHijax\\Utility\\Ajax\\Dispatcher');
+		$this->hijaxEventDispatcher = $this->objectManager->get('EssentialDots\\ExtbaseHijax\\Event\\Dispatcher');
 	}
 
 	/**
@@ -69,12 +71,12 @@ class Tx_ExtbaseHijax_Utility_HTTP implements t3lib_Singleton {
 	 * Location redirect header. By default the HTTP status code sent is
 	 * a 'HTTP/1.1 303 See Other'.
 	 *
-	 * @param	string	The target URL to redirect to
-	 * @param	string	An optional HTTP status header. Default is 'HTTP/1.1 303 See Other'
+	 * @param $url          The target URL to redirect to
+	 * @param $httpStatus   An optional HTTP status header. Default is 'HTTP/1.1 303 See Other'
 	 */
-	public static function redirect($url, $httpStatus = t3lib_utility_Http::HTTP_STATUS_303) {
-			/* @var $httpServiceInstance Tx_ExtbaseHijax_Utility_HTTP */
-		$httpServiceInstance = t3lib_div::makeInstance('Tx_ExtbaseHijax_Utility_HTTP');
+	public static function redirect($url, $httpStatus = \TYPO3\CMS\Core\Utility\HttpUtility::HTTP_STATUS_303) {
+			/* @var $httpServiceInstance \EssentialDots\ExtbaseHijax\Utility\HTTP */
+		$httpServiceInstance = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('EssentialDots\\ExtbaseHijax\\Utility\\HTTP');
 		$httpServiceInstance->redirectInstance($url, $httpStatus);
 	}
 
@@ -84,19 +86,20 @@ class Tx_ExtbaseHijax_Utility_HTTP implements t3lib_Singleton {
 	 * Location redirect header. By default the HTTP status code sent is
 	 * a 'HTTP/1.1 303 See Other'.
 	 *
-	 * @param	string	The target URL to redirect to
-	 * @param	string	An optional HTTP status header. Default is 'HTTP/1.1 303 See Other'
-	 */	
-	protected function redirectInstance($url, $httpStatus = t3lib_utility_Http::HTTP_STATUS_303) {
+	 * @param	string $url	        The target URL to redirect to
+	 * @param	string $httpStatus  An optional HTTP status header. Default is 'HTTP/1.1 303 See Other'
+	 * @throws \EssentialDots\ExtbaseHijax\MVC\Exception\RedirectAction
+	 */
+	protected function redirectInstance($url, $httpStatus = \TYPO3\CMS\Core\Utility\HttpUtility::HTTP_STATUS_303) {
 		if ($this->ajaxDispatcher->getIsActive()) {
-				/* @var $redirectException Tx_ExtbaseHijax_MVC_Exception_RedirectAction */
-			$redirectException = t3lib_div::makeInstance('Tx_ExtbaseHijax_MVC_Exception_RedirectAction');
-			$redirectException->setUrl(t3lib_div::locationHeaderUrl($url));
+				/* @var $redirectException \EssentialDots\ExtbaseHijax\MVC\Exception\RedirectAction */
+			$redirectException = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('EssentialDots\\ExtbaseHijax\\MVC\\Exception\\RedirectAction');
+			$redirectException->setUrl(\TYPO3\CMS\Core\Utility\GeneralUtility::locationHeaderUrl($url));
 			$redirectException->setHttpStatus($httpStatus);
 			throw $redirectException;
 		} else {
 			header($httpStatus);
-			header('Location: ' . t3lib_div::locationHeaderUrl($url));
+			header('Location: ' . \TYPO3\CMS\Core\Utility\GeneralUtility::locationHeaderUrl($url));
 			
 			exit;
 		}

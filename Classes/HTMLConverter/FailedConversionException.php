@@ -1,4 +1,6 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\HTMLConverter;
+
 /***************************************************************
  *  Copyright notice
  *
@@ -22,7 +24,7 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-class Tx_ExtbaseHijax_HTMLConverter_FailedConversionException extends Exception {
+class FailedConversionException extends \Exception {
 	/**
 	 * @var int
 	 */

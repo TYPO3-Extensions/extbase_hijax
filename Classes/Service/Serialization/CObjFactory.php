@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\Service\Serialization;
+
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+ *  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -22,7 +24,7 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-class Tx_ExtbaseHijax_Service_Serialization_CObjFactory extends Tx_ExtbaseHijax_Service_Serialization_AbstractFactory {
+class CObjFactory extends \EssentialDots\ExtbaseHijax\Service\Serialization\AbstractFactory {
 	
 	/**
 	 * @var array

@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\ViewHelpers;
+
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+ *  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -22,29 +24,29 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-class Tx_ExtbaseHijax_ViewHelpers_TrackRecordViewHelper extends Tx_Fluid_Core_ViewHelper_AbstractViewHelper {
+class TrackRecordViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelper {
 
 	/**
-	 * @var Tx_ExtbaseHijax_Tracking_Manager
+	 * @var \EssentialDots\ExtbaseHijax\Tracking\Manager
 	 */
 	protected $trackingManager;
 	
 	/**
 	 * Injects the tracking manager
 	 *
-	 * @param Tx_ExtbaseHijax_Tracking_Manager $trackingManager
+	 * @param \EssentialDots\ExtbaseHijax\Tracking\Manager $trackingManager
 	 * @return void
 	 */
-	public function injectTrackingManager(Tx_ExtbaseHijax_Tracking_Manager $trackingManager) {
+	public function injectTrackingManager(\EssentialDots\ExtbaseHijax\Tracking\Manager $trackingManager) {
 		$this->trackingManager = $trackingManager;
 	}
 		
 	/**
-	 * @param Tx_Extbase_DomainObject_AbstractDomainObject $object Object to use
+	 * @param \TYPO3\CMS\Extbase\DomainObject\AbstractDomainObject $object Object to use
 	 * @param boolean $clearCacheOnAllHashesForCurrentPage Clear cache on all hashes for current page
 	 * @return string the rendered string
 	 */
-	public function render(Tx_Extbase_DomainObject_AbstractDomainObject $object = NULL, $clearCacheOnAllHashesForCurrentPage = false) {
+	public function render(\TYPO3\CMS\Extbase\DomainObject\AbstractDomainObject $object = NULL, $clearCacheOnAllHashesForCurrentPage = false) {
 		if ($clearCacheOnAllHashesForCurrentPage) {
 			$this->trackingManager->trackObjectOnPage($object, 'id');
 		} else {

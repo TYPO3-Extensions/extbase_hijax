@@ -1,4 +1,6 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\ViewHelpers\Link;
+
 /***************************************************************
  *  Copyright notice
  *
@@ -22,48 +24,48 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-class Tx_ExtbaseHijax_ViewHelpers_Link_ActionViewHelper extends Tx_Fluid_ViewHelpers_Link_ActionViewHelper {
+class ActionViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\Link\ActionViewHelper {
 
 	/**
-	 * @var Tx_ExtbaseHijax_MVC_Dispatcher
+	 * @var \EssentialDots\ExtbaseHijax\MVC\Dispatcher
 	 */
 	protected $mvcDispatcher;
 	
 	/**
-	 * @var Tx_Extbase_Service_ExtensionService
+	 * @var \TYPO3\CMS\Extbase\Service\ExtensionService
 	 */
 	protected $extensionService;
 
 	/**
-	 * @var Tx_ExtbaseHijax_Event_Dispatcher
+	 * @var \EssentialDots\ExtbaseHijax\Event\Dispatcher
 	 */
 	protected $hijaxEventDispatcher;
 
 	/**
 	 * Injects the event dispatcher
 	 *
-	 * @param Tx_ExtbaseHijax_Event_Dispatcher $eventDispatcher
+	 * @param \EssentialDots\ExtbaseHijax\Event\Dispatcher $eventDispatcher
 	 * @return void
 	 */
-	public function injectEventDispatcher(Tx_ExtbaseHijax_Event_Dispatcher $eventDispatcher) {
+	public function injectEventDispatcher(\EssentialDots\ExtbaseHijax\Event\Dispatcher $eventDispatcher) {
 		$this->hijaxEventDispatcher = $eventDispatcher;
 	}
 
 	/**
 	 * Injects the MVC dispatcher
 	 *
-	 * @param Tx_ExtbaseHijax_MVC_Dispatcher $mvcDispatcher
+	 * @param \EssentialDots\ExtbaseHijax\MVC\Dispatcher $mvcDispatcher
 	 * @return void
 	 */
-	public function injectMVCDispatcher(Tx_ExtbaseHijax_MVC_Dispatcher $mvcDispatcher) {
+	public function injectMVCDispatcher(\EssentialDots\ExtbaseHijax\MVC\Dispatcher $mvcDispatcher) {
 		$this->mvcDispatcher = $mvcDispatcher;
 	}
 	
 	/**
-	 * @param Tx_Extbase_Service_ExtensionService $extensionService
+	 * @param \TYPO3\CMS\Extbase\Service\ExtensionService $extensionService
 	 * @return void
 	 */
-	public function injectExtensionService(Tx_Extbase_Service_ExtensionService $extensionService) {
+	public function injectExtensionService(\TYPO3\CMS\Extbase\Service\ExtensionService $extensionService) {
 		$this->extensionService = $extensionService;
 	}
 			
@@ -82,7 +84,7 @@ class Tx_ExtbaseHijax_ViewHelpers_Link_ActionViewHelper extends Tx_Fluid_ViewHel
 	public function render($action = NULL, array $arguments = array(), $controller = NULL, $extensionName = NULL, $pluginName = NULL, $format = '', $pageUid = 0, $cachedAjaxIfPossible = TRUE) {
 		$request = $this->mvcDispatcher->getCurrentRequest();
 
-		/* @var $listener Tx_ExtbaseHijax_Event_Listener */
+		/* @var $listener \EssentialDots\ExtbaseHijax\Event\Listener */
 		$listener = $this->mvcDispatcher->getCurrentListener();
 
 		if ($request) {
@@ -106,8 +108,8 @@ class Tx_ExtbaseHijax_ViewHelpers_Link_ActionViewHelper extends Tx_Fluid_ViewHel
 			}
 
 			if ($cachedAjaxIfPossible) {
-				/* @var $cacheHash t3lib_cacheHash */
-				$cacheHash = t3lib_div::makeInstance('t3lib_cacheHash');
+				/* @var $cacheHash \TYPO3\CMS\Frontend\Page\CacheHashCalculator */
+				$cacheHash = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\Page\\CacheHashCalculator');
 				$chash = $cacheHash->calculateCacheHash(array(
 					'encryptionKey' => $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'],
 					'action' => $action,
@@ -134,8 +136,8 @@ class Tx_ExtbaseHijax_ViewHelpers_Link_ActionViewHelper extends Tx_Fluid_ViewHel
 			$additionalParams .= '&r[0][chash]='.$chash;
 		}
 
-		/* @var $cObj tslib_cObj */
-		$cObj = t3lib_div::makeInstance('tslib_cObj');
+		/* @var $cObj \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer */
+		$cObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\ContentObject\\ContentObjectRenderer');
 
 		$uri = $cObj->typoLink('', array(
 			'returnLast' => 'url',

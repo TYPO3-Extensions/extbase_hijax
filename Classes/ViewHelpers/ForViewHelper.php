@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\ViewHelpers;
+
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+ *  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -22,12 +24,12 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-class Tx_ExtbaseHijax_ViewHelpers_ForViewHelper extends Tx_Fluid_ViewHelpers_ForViewHelper {
+class ForViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\ForViewHelper {
 
 	/**
 	 * Iterates through elements of $each and renders child nodes
 	 *
-	 * @param array $each The array or Tx_Extbase_Persistence_ObjectStorage to iterated over
+	 * @param array $each The array or \TYPO3\CMS\Extbase\Persistence\ObjectStorage to iterated over
 	 * @param string $as The name of the iteration variable
 	 * @param string $key The name of the variable to store the current array key
 	 * @param boolean $reverse If enabled, the iterator will start with the last element and proceed reversely
@@ -43,17 +45,18 @@ class Tx_ExtbaseHijax_ViewHelpers_ForViewHelper extends Tx_Fluid_ViewHelpers_For
 
 	/**
 	 * @param array $arguments
-	 * @param Closure $renderChildrenClosure
-	 * @param Tx_Fluid_Core_Rendering_RenderingContextInterface $renderingContext
+	 * @param callable $renderChildrenClosure
+	 * @param \TYPO3\CMS\Fluid\Core\Rendering\RenderingContextInterface $renderingContext
 	 * @return string
+	 * @throws \TYPO3\CMS\Fluid\Core\ViewHelper\Exception
 	 */
-	static public function renderStatic(array $arguments, Closure $renderChildrenClosure, Tx_Fluid_Core_Rendering_RenderingContextInterface $renderingContext) {
+	static public function renderStatic(array $arguments, \Closure $renderChildrenClosure, \TYPO3\CMS\Fluid\Core\Rendering\RenderingContextInterface $renderingContext) {
 		$templateVariableContainer = $renderingContext->getTemplateVariableContainer();
 		if ($arguments['each'] === NULL) {
 			return '';
 		}
-		if (is_object($arguments['each']) && !$arguments['each'] instanceof Traversable) {
-			throw new Tx_Fluid_Core_ViewHelper_Exception('ForViewHelper only supports arrays and objects implementing Traversable interface' , 1248728393);
+		if (is_object($arguments['each']) && !$arguments['each'] instanceof \Traversable) {
+			throw new \TYPO3\CMS\Fluid\Core\ViewHelper\Exception('ForViewHelper only supports arrays and objects implementing Traversable interface' , 1248728393);
 		}
 
 		if ($arguments['reverse'] === TRUE) {

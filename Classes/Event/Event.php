@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\Event;
+
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+*  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -22,7 +24,7 @@
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
 
-class Tx_ExtbaseHijax_Event_Event implements ArrayAccess {
+class Event implements \ArrayAccess {
 	
 	protected
 		$value = null,
@@ -31,12 +33,10 @@ class Tx_ExtbaseHijax_Event_Event implements ArrayAccess {
 		$parameters = null;
 
 	/**
-	 * Constructs a new Tx_ExtbaseHijax_Event_Event.
+	 * Constructs a new \EssentialDots\ExtbaseHijax\Event\Event
 	 *
-	 * @param string								$name			The event name
-	 * @param Tx_Extbase_MVC_RequestInterface		$request		The request
-	 * @param array 								$configuration 	Framework configuraiton
-	 * @param array	 								$parameters	 	An array of parameters
+	 * @param $name
+	 * @param array $parameters
 	 */
 	public function __construct($name, $parameters = array()) {
 		$this->name = $name;
@@ -114,10 +114,11 @@ class Tx_ExtbaseHijax_Event_Event implements ArrayAccess {
 	 * @param	string	$name	The parameter name
 	 *
 	 * @return mixed	The parameter value
+	 * @throws \InvalidArgumentException
 	 */
 	public function offsetGet($name) {
 		if (!array_key_exists($name, $this->parameters)) {
-			throw new InvalidArgumentException(sprintf('The event "%s" has no "%s" parameter.', $this->name, $name));
+			throw new \InvalidArgumentException(sprintf('The event "%s" has no "%s" parameter.', $this->name, $name));
 		}
 
 		return $this->parameters[$name];

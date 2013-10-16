@@ -1,4 +1,6 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\HTMLConverter;
+
 /***************************************************************
  *  Copyright notice
  *
@@ -22,25 +24,25 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-abstract class Tx_ExtbaseHijax_HTMLConverter_AbstractConverter implements t3lib_Singleton {
+abstract class AbstractConverter implements \TYPO3\CMS\Core\SingletonInterface {
 	/**
-	 * @var Tx_ExtbaseHijax_Configuration_ExtensionInterface
+	 * @var \EssentialDots\ExtbaseHijax\Configuration\ExtensionInterface
 	 */
 	protected $extensionConfiguration;
 
 	/**
 	 * Injects the extension configuration
 	 *
-	 * @param Tx_ExtbaseHijax_Configuration_ExtensionInterface $extensionConfiguration
+	 * @param \EssentialDots\ExtbaseHijax\Configuration\ExtensionInterface $extensionConfiguration
 	 * @return void
 	 */
-	public function injectEventDispatcher(Tx_ExtbaseHijax_Configuration_ExtensionInterface $extensionConfiguration) {
+	public function injectEventDispatcher(\EssentialDots\ExtbaseHijax\Configuration\ExtensionInterface $extensionConfiguration) {
 		$this->extensionConfiguration = $extensionConfiguration;
 	}
 
 	/**
-	 * @param Tx_Extbase_MVC_Web_Response $response
-	 * @return Tx_Extbase_MVC_Web_Response
+	 * @param \TYPO3\CMS\Extbase\Mvc\Web\Response $response
+	 * @return \TYPO3\CMS\Extbase\Mvc\Web\Response
 	 */
 	abstract public function convert($response);
 }

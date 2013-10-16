@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\Service;
+
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+ *  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -22,72 +24,72 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-class Tx_ExtbaseHijax_Service_JSBuilder implements t3lib_Singleton {
+class JSBuilder implements \TYPO3\CMS\Core\SingletonInterface {
 	/**
-	 * @var Tx_ExtbaseHijax_MVC_Dispatcher
+	 * @var \EssentialDots\ExtbaseHijax\MVC\Dispatcher
 	 */
 	protected $mvcDispatcher;
 	
 	/**
-	 * @var Tx_Extbase_Configuration_ConfigurationManagerInterface
+	 * @var \TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface
 	 */
 	protected $configurationManager;
 	
 	/**
-	 * @var Tx_ExtbaseHijax_Event_Dispatcher
+	 * @var \EssentialDots\ExtbaseHijax\Event\Dispatcher
 	 */
 	protected $hijaxEventDispatcher;
 	
 	/**
-	 * @var Tx_Extbase_Service_ExtensionService
+	 * @var \TYPO3\CMS\Extbase\Service\ExtensionService
 	 */
 	protected $extensionService;
 	
 	/**
-	 * @var t3lib_PageRenderer
+	 * @var \TYPO3\CMS\Core\Page\PageRenderer
 	 */
 	protected $pageRenderer;
 	
 	/**
-	 * @param t3lib_PageRenderer $pageRenderer
+	 * @param \TYPO3\CMS\Core\Page\PageRenderer $pageRenderer
 	 */
-	public function injectPageRenderer(t3lib_PageRenderer $pageRenderer) {
+	public function injectPageRenderer(\TYPO3\CMS\Core\Page\PageRenderer $pageRenderer) {
 		$this->pageRenderer = $pageRenderer;
 	}
 	
 	/**
-	 * @param Tx_Extbase_Configuration_ConfigurationManagerInterface $configurationManager
+	 * @param \TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface $configurationManager
 	 * @return void
 	 */
-	public function injectConfigurationManager(Tx_Extbase_Configuration_ConfigurationManagerInterface $configurationManager) {
+	public function injectConfigurationManager(\TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface $configurationManager) {
 		$this->configurationManager = $configurationManager;
 	}
 	
 	/**
 	 * Injects the event dispatcher
 	 *
-	 * @param Tx_ExtbaseHijax_Event_Dispatcher $eventDispatcher
+	 * @param \EssentialDots\ExtbaseHijax\Event\Dispatcher $eventDispatcher
 	 * @return void
 	 */
-	public function injectEventDispatcher(Tx_ExtbaseHijax_Event_Dispatcher $eventDispatcher) {
+	public function injectEventDispatcher(\EssentialDots\ExtbaseHijax\Event\Dispatcher $eventDispatcher) {
 		$this->hijaxEventDispatcher = $eventDispatcher;
 	}
 	
 	/**
-	 * @param Tx_Extbase_Service_ExtensionService $extensionService
+	 * @param \TYPO3\CMS\Extbase\Service\ExtensionService $extensionService
 	 * @return void
 	 */
-	public function injectExtensionService(Tx_Extbase_Service_ExtensionService $extensionService) {
+	public function injectExtensionService(\TYPO3\CMS\Extbase\Service\ExtensionService $extensionService) {
 		$this->extensionService = $extensionService;
 	}	
 	
 	/**
 	 * Injects the MVC dispatcher
 	 *
-	 * @param Tx_ExtbaseHijax_MVC_Dispatcher $mvcDispatcher
+	 * @param \EssentialDots\ExtbaseHijax\MVC\Dispatcher $mvcDispatcher
 	 * @return void
 	 */
-	public function injectMVCDispatcher(Tx_ExtbaseHijax_MVC_Dispatcher $mvcDispatcher) {
+	public function injectMVCDispatcher(\EssentialDots\ExtbaseHijax\MVC\Dispatcher $mvcDispatcher) {
 		$this->mvcDispatcher = $mvcDispatcher;
 	}
 	
@@ -98,18 +100,19 @@ class Tx_ExtbaseHijax_Service_JSBuilder implements t3lib_Singleton {
 	 */
 	protected function isCached() {
 		$userObjType = $this->configurationManager->getContentObject()->getUserObjectType();
-		return ($userObjType !== tslib_cObj::OBJECTTYPE_USER_INT);
+		return ($userObjType !== \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer::OBJECTTYPE_USER_INT);
 	}	
 	
 	/**
 	 * Returns JS callback for the given action
-	 * 
-	 * @param string $action
+	 *
+	 * @param null $action
 	 * @param array $arguments
-	 * @param string $controller
-	 * @param string $extensionName
-	 * @param string $pluginName
+	 * @param null $controller
+	 * @param null $extensionName
+	 * @param null $pluginName
 	 * @param string $format
+	 * @param string $section
 	 * @return string
 	 */
 	public function getAjaxFunction($action = NULL, array $arguments = array(), $controller = NULL, $extensionName = NULL, $pluginName = NULL, $format = '', $section='footer') {
@@ -166,7 +169,7 @@ class Tx_ExtbaseHijax_Service_JSBuilder implements t3lib_Singleton {
 			}
 		} else {
 			// additionalFooterData not possible in USER_INT
-			$GLOBALS['TSFE']->additionalHeaderData[md5($content)] = t3lib_div::wrapJS($content);
+			$GLOBALS['TSFE']->additionalHeaderData[md5($content)] = \TYPO3\CMS\Core\Utility\GeneralUtility::wrapJS($content);
 		}
 		
 		return $functionName;

@@ -963,7 +963,7 @@
 
 				var addPendingOperation = function(method, args) {
 					pendingOperations.push({method: method, args: Array.prototype.slice.call(args)});
-				}
+				};
 
 				var executePendingOperations = function() {
 					var op;
@@ -971,7 +971,7 @@
 					while (op = pendingOperations.shift()) {
 						$.hStorage[op.method].apply(null, op.args);
 					}
-				}
+				};
 
 				$.hStorage.set = function(key, value) {
 					if (!hStorageFrameLoaded) {
@@ -987,7 +987,7 @@
 							iframe.contentWindow.postMessage(JSON.stringify(obj), 'https://' + window.location.hostname);
 						}
 					}
-				}
+				};
 
 				$.hStorage.get = function(key, def, callback) {
 					if (!hStorageFrameLoaded) {
@@ -1006,7 +1006,7 @@
 							iframe.contentWindow.postMessage(JSON.stringify(obj), 'https://' + window.location.hostname);
 						}
 					}
-				}
+				};
 
 				$.hStorage.deleteKey = function(key) {
 					if (!hStorageFrameLoaded) {
@@ -1021,7 +1021,7 @@
 							iframe.contentWindow.postMessage(JSON.stringify(obj), 'https://' + window.location.hostname);
 						}
 					}
-				}
+				};
 
 				iframe.src = 'https://' + window.location.hostname + '/index.php?eID=extbase_hijax_dispatcher&r[0][secureLocalStorage]=1';
 				// iframe.id = 'hStorageFrame';

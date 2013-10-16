@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\ViewHelpers;
+
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+ *  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -22,7 +24,7 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-class Tx_ExtbaseHijax_ViewHelpers_TranslateViewHelper extends Tx_Fluid_Core_ViewHelper_AbstractViewHelper {
+class TranslateViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelper {
 
 	/**
 	 * Translate a given key or use the tag body as default.
@@ -39,7 +41,7 @@ class Tx_ExtbaseHijax_ViewHelpers_TranslateViewHelper extends Tx_Fluid_Core_View
 			$request = $this->controllerContext->getRequest();
 			$extensionName = $request->getControllerExtensionName();
 		}
-		$value = Tx_Extbase_Utility_Localization::translate($key, $extensionName, $arguments);
+		$value = \TYPO3\CMS\Extbase\Utility\LocalizationUtility::translate($key, $extensionName, $arguments);
 		if ($value === NULL) {
 			$value = $default !== NULL ? $default : $this->renderChildren();
 		} elseif ($htmlEscape) {

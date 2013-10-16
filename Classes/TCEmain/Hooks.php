@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\TCEmain;
+
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+ *  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -22,10 +24,10 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-class Tx_ExtbaseHijax_TCEmain_Hooks implements t3lib_Singleton {
+class Hooks implements \TYPO3\CMS\Core\SingletonInterface {
 	
 	/**
-	 * @var Tx_ExtbaseHijax_Tracking_Manager
+	 * @var \EssentialDots\ExtbaseHijax\Tracking\Manager
 	 */
 	protected $trackingManager;
 	
@@ -33,7 +35,7 @@ class Tx_ExtbaseHijax_TCEmain_Hooks implements t3lib_Singleton {
 	 * Constructor
 	 */
 	public function __construct() {
-		$this->trackingManager = t3lib_div::makeInstance('Tx_ExtbaseHijax_Tracking_Manager');
+		$this->trackingManager = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('EssentialDots\\ExtbaseHijax\\Tracking\\Manager');
 	}
 	
 	/**
@@ -52,7 +54,7 @@ class Tx_ExtbaseHijax_TCEmain_Hooks implements t3lib_Singleton {
 		switch ($params['cacheCmd']) {
 			case 'all':
 				$this->trackingManager->flushTrackingInfo();
-				$thumbnailGenerator = t3lib_div::makeInstance('Tx_ExtbaseHijax_Utility_Ajax_ThumbnailGenerator'); /* @var $thumbnailGenerator Tx_ExtbaseHijax_Utility_Ajax_ThumbnailGenerator */
+				$thumbnailGenerator = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('EssentialDots\\ExtbaseHijax\\Utility\\Ajax\\ThumbnailGenerator'); /* @var $thumbnailGenerator \EssentialDots\ExtbaseHijax\Utility\Ajax\ThumbnailGenerator */
 				$thumbnailGenerator->flushCache();
 				break;
 			default:
@@ -66,7 +68,7 @@ class Tx_ExtbaseHijax_TCEmain_Hooks implements t3lib_Singleton {
 	 * @param	array $fieldArray The field names and their values to be processed (passed by reference)
 	 * @param	string $table The table TCEmain is currently processing
 	 * @param	string $id The records id (if any)
-	 * @param	t3lib_TCEmain $pObj  Reference to the parent object (TCEmain)
+	 * @param	\TYPO3\CMS\Core\DataHandling\DataHandler $pObj  Reference to the parent object (TCEmain)
 	 * @return	void
 	 * @access public
 	 */
@@ -81,7 +83,7 @@ class Tx_ExtbaseHijax_TCEmain_Hooks implements t3lib_Singleton {
 	 * @param	string $table The table TCEmain is currently processing
 	 * @param	string $id The records id (if any)
 	 * @param	array $fieldArray The field names and their values to be processed (passed by reference)
-	 * @param	t3lib_TCEmain $pObj  Reference to the parent object (TCEmain)
+	 * @param	\TYPO3\CMS\Core\DataHandling\DataHandler $pObj  Reference to the parent object (TCEmain)
 	 * @return	void
 	 * @access public
 	 */
@@ -96,18 +98,18 @@ class Tx_ExtbaseHijax_TCEmain_Hooks implements t3lib_Singleton {
 	 * @param	string $table The table TCEmain is currently processing
 	 * @param	string $id The records id (if any)
 	 * @param	string $value 
-	 * @param	t3lib_TCEmain $pObj  Reference to the parent object (TCEmain)
+	 * @param	\TYPO3\CMS\Core\DataHandling\DataHandler $pObj  Reference to the parent object (TCEmain)
 	 * @return	void
 	 * @access public
 	 */	
 	public function processCmdmap_preProcess($command, $table, $id, $value, $pObj) {
-		if (t3lib_utility_Math::canBeInterpretedAsInteger($id)) {
+		if (\TYPO3\CMS\Core\Utility\MathUtility::canBeInterpretedAsInteger($id)) {
 			$objectIdentifier = $this->trackingManager->getObjectIdentifierForRecord($table, $id);
 			if (!in_array($objectIdentifier, $this->pendingIdentifiers)) {
 				$this->pendingIdentifiers[] = $objectIdentifier;
 			}
 			
-			$row = t3lib_BEfunc::getRecord($table, $id);
+			$row = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord($table, $id);
 			$pid = $row['pid'];
 				
 			if ($pid > 0) {
@@ -126,7 +128,7 @@ class Tx_ExtbaseHijax_TCEmain_Hooks implements t3lib_Singleton {
 	 * @param	string $table The table TCEmain is currently processing
 	 * @param	string $id The records id (if any)
 	 * @param	string $value 
-	 * @param	t3lib_TCEmain $pObj  Reference to the parent object (TCEmain)
+	 * @param	\TYPO3\CMS\Core\DataHandling\DataHandler $pObj  Reference to the parent object (TCEmain)
 	 * @return	void
 	 * @access public
 	 */
@@ -143,22 +145,22 @@ class Tx_ExtbaseHijax_TCEmain_Hooks implements t3lib_Singleton {
 	 * @param	string $table The table TCEmain is currently processing
 	 * @param	string $rawId The records id (if any)
 	 * @param	array $fieldArray The field names and their values to be processed (passed by reference)
-	 * @param	t3lib_TCEmain $pObj  Reference to the parent object (TCEmain)
+	 * @param	\TYPO3\CMS\Core\DataHandling\DataHandler $pObj  Reference to the parent object (TCEmain)
 	 * @return	void
 	 * @access public
 	 */
 	 public function processDatamap_afterDatabaseOperations($status, $table, $rawId, $fieldArray, $pObj) {
-		if (!t3lib_utility_Math::canBeInterpretedAsInteger($rawId)) {
+		if (!\TYPO3\CMS\Core\Utility\MathUtility::canBeInterpretedAsInteger($rawId)) {
 			$rawId = $pObj->substNEWwithIDs[$rawId];
 		}
-		if (t3lib_utility_Math::canBeInterpretedAsInteger($rawId)) {
+		if (\TYPO3\CMS\Core\Utility\MathUtility::canBeInterpretedAsInteger($rawId)) {
 			$objectIdentifier = $this->trackingManager->getObjectIdentifierForRecord($table, $rawId);
 			$this->trackingManager->clearPageCacheForObjectIdentifier($objectIdentifier);
 			
-			if ($fieldArray['pid'] && t3lib_utility_Math::canBeInterpretedAsInteger($fieldArray['pid'])) {
+			if ($fieldArray['pid'] && \TYPO3\CMS\Core\Utility\MathUtility::canBeInterpretedAsInteger($fieldArray['pid'])) {
 				$pid = $fieldArray['pid'];
 			} else {
-				$row = t3lib_BEfunc::getRecord($table, $rawId);
+				$row = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord($table, $rawId);
 				$pid = $row['pid'];
 			}
 			

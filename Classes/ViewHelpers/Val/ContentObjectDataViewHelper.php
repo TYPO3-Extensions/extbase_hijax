@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\ViewHelpers\Val;
+
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+ *  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -22,18 +24,18 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-class Tx_ExtbaseHijax_ViewHelpers_Val_ContentObjectDataViewHelper extends Tx_Fluid_Core_ViewHelper_AbstractViewHelper {
+class ContentObjectDataViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelper {
 
 	/**
-	 * @var Tx_Extbase_Configuration_ConfigurationManagerInterface
+	 * @var \TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface
 	 */
 	protected $configurationManager;
 
 	/**
-	 * @param Tx_Extbase_Configuration_ConfigurationManagerInterface $configurationManager
+	 * @param \TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface $configurationManager
 	 * @return void
 	 */
-	public function injectConfigurationManager(Tx_Extbase_Configuration_ConfigurationManagerInterface $configurationManager) {
+	public function injectConfigurationManager(\TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface $configurationManager) {
 		$this->configurationManager = $configurationManager;
 	}
 
@@ -45,13 +47,13 @@ class Tx_ExtbaseHijax_ViewHelpers_Val_ContentObjectDataViewHelper extends Tx_Flu
 	}
 
 	/**
-	 * @return void
+	 * @return string
 	 */
 	public function render() {
 		$value = $this->configurationManager->getContentObject() ? $this->configurationManager->getContentObject()->data : array();
 
 		if ($this->arguments['as']) {
-			$variableNameArr = t3lib_div::trimExplode('.', $this->arguments['as'], TRUE, 2);
+			$variableNameArr = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode('.', $this->arguments['as'], TRUE, 2);
 
 			$variableName = $variableNameArr[0];
 			$attributePath = $variableNameArr[1];
@@ -73,6 +75,7 @@ class Tx_ExtbaseHijax_ViewHelpers_Val_ContentObjectDataViewHelper extends Tx_Flu
 				$templateValue = $value;
 			}
 			$this->templateVariableContainer->add($variableName, $templateValue);
+			return '';
 		} else {
 			return $value;
 		}

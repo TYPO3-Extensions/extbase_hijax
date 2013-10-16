@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\Service\Serialization;
+
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+ *  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -22,10 +24,10 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-class Tx_ExtbaseHijax_Service_Serialization_ListenerFactory extends Tx_ExtbaseHijax_Service_Serialization_AbstractFactory {
+class ListenerFactory extends \EssentialDots\ExtbaseHijax\Service\Serialization\AbstractFactory {
 	
 	/**
-	 * @var Tx_ExtbaseHijax_Service_Content
+	 * @var \EssentialDots\ExtbaseHijax\Service\Content
 	 */
 	protected $serviceContent;
 
@@ -39,7 +41,7 @@ class Tx_ExtbaseHijax_Service_Serialization_ListenerFactory extends Tx_ExtbaseHi
 	 */
 	public function __construct() {
 		parent::__construct();
-		$this->serviceContent = $this->objectManager->get('Tx_ExtbaseHijax_Service_Content');
+		$this->serviceContent = $this->objectManager->get('EssentialDots\\ExtbaseHijax\\Service\\Content');
 	}
 	
 	/**
@@ -51,7 +53,7 @@ class Tx_ExtbaseHijax_Service_Serialization_ListenerFactory extends Tx_ExtbaseHi
 			$object = parent::findById($listenerId);
 			
 			if (!$object) {
-				list($table, $uid, $rawListenerId) = t3lib_div::trimExplode('-', $listenerId, false, 3);
+				list($table, $uid, $rawListenerId) = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode('-', $listenerId, false, 3);
 				
 					// try to generate the listener cache
 				if ($table=='tt_content' && $uid) {
@@ -59,15 +61,15 @@ class Tx_ExtbaseHijax_Service_Serialization_ListenerFactory extends Tx_ExtbaseHi
 				} elseif ($table=='h' || $table=='hInt') {
 					$settingsHash = $uid;
 					$encodedSettings = $rawListenerId;
-					if (t3lib_div::hmac($encodedSettings)==$settingsHash) {
+					if (\TYPO3\CMS\Core\Utility\GeneralUtility::hmac($encodedSettings)==$settingsHash) {
 						$loadContentFromTypoScript = str_replace('---', '.', $encodedSettings);
-						$eventsToListen = t3lib_div::_GP('e');
+						$eventsToListen = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('e');
 						$object = $this->serviceContent->generateListenerCacheForHijaxPi1($loadContentFromTypoScript, $eventsToListen[$listenerId], $table=='h');
 					}
 				} if ($table=='f') {
 					$settingsHash = $uid;
 					$encodedSettings = $rawListenerId;
-					if (t3lib_div::hmac($encodedSettings)==$settingsHash) {
+					if (\TYPO3\CMS\Core\Utility\GeneralUtility::hmac($encodedSettings)==$settingsHash) {
 						$fallbackTypoScriptConfiguration = str_replace('---', '.', $encodedSettings);
 						$object = $this->serviceContent->generateListenerCacheForTypoScriptFallback($fallbackTypoScriptConfiguration);
 					}

@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\MVC;
+
 /***************************************************************
  *  Copyright notice
 *
-*  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+*  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -22,31 +24,31 @@
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
 
-class Tx_ExtbaseHijax_MVC_Dispatcher extends Tx_Extbase_MVC_Dispatcher {
+class Dispatcher extends \TYPO3\CMS\Extbase\Mvc\Dispatcher {
 	/**
-	 * @var Tx_Extbase_Configuration_ConfigurationManagerInterface
+	 * @var \TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface
 	 */
 	protected $configurationManager;
 	
 	/**
-	 * @var Tx_ExtbaseHijax_Event_Dispatcher
+	 * @var \EssentialDots\ExtbaseHijax\Event\Dispatcher
 	 */
 	protected $hijaxEventDispatcher;
 
 	/**
 	 * Extension Configuration
 	 *
-	 * @var Tx_ExtbaseHijax_Configuration_ExtensionInterface
+	 * @var \EssentialDots\ExtbaseHijax\Configuration\ExtensionInterface
 	 */
 	protected $extensionConfiguration;	
 	
 	/**
-	 * @var Tx_ExtbaseHijax_Event_Listener
+	 * @var \EssentialDots\ExtbaseHijax\Event\Listener
 	 */
 	protected $currentListener;
 	
 	/**
-	 * @var Tx_Extbase_MVC_RequestInterface
+	 * @var \TYPO3\CMS\Extbase\Mvc\RequestInterface
 	 */
 	protected $currentRequest;	
 	
@@ -56,7 +58,7 @@ class Tx_ExtbaseHijax_MVC_Dispatcher extends Tx_Extbase_MVC_Dispatcher {
 	protected $requestsStack;	
 	
 	/**
-	 * @var Tx_ExtbaseHijax_Service_Serialization_ListenerFactory
+	 * @var \EssentialDots\ExtbaseHijax\Service\Serialization\ListenerFactory
 	 */
 	protected $listenerFactory;	
 
@@ -71,28 +73,28 @@ class Tx_ExtbaseHijax_MVC_Dispatcher extends Tx_Extbase_MVC_Dispatcher {
 	protected $listenersStack;
 		
 	/**
-	 * @var Tx_ExtbaseHijax_Utility_Ajax_Dispatcher
+	 * @var \EssentialDots\ExtbaseHijax\Utility\Ajax\Dispatcher
 	 */
 	protected $ajaxDispatcher;
 	
 	/**
-	 * @var Tx_ExtbaseHijax_Service_Content
+	 * @var \EssentialDots\ExtbaseHijax\Service\Content
 	 */
 	protected $serviceContent;	
 	
 	/**
 	 * Constructs the global dispatcher
 	 *
-	 * @param Tx_Extbase_Object_ObjectManagerInterface $objectManager A reference to the object manager
+	 * @param \TYPO3\CMS\Extbase\Object\ObjectManagerInterface $objectManager A reference to the object manager
 	 */
-	public function __construct(Tx_Extbase_Object_ObjectManagerInterface $objectManager) {
+	public function __construct(\TYPO3\CMS\Extbase\Object\ObjectManagerInterface $objectManager) {
 		parent::__construct($objectManager);
-		$this->configurationManager = $this->objectManager->get('Tx_Extbase_Configuration_ConfigurationManagerInterface');
-		$this->hijaxEventDispatcher = $this->objectManager->get('Tx_ExtbaseHijax_Event_Dispatcher');
-		$this->ajaxDispatcher = $this->objectManager->get('Tx_ExtbaseHijax_Utility_Ajax_Dispatcher');
-		$this->extensionConfiguration = $this->objectManager->get('Tx_ExtbaseHijax_Configuration_ExtensionInterface');
-		$this->listenerFactory = $this->objectManager->get('Tx_ExtbaseHijax_Service_Serialization_ListenerFactory');
-		$this->serviceContent = $this->objectManager->get('Tx_ExtbaseHijax_Service_Content');
+		$this->configurationManager = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Configuration\\ConfigurationManagerInterface');
+		$this->hijaxEventDispatcher = $this->objectManager->get('EssentialDots\\ExtbaseHijax\\Event\\Dispatcher');
+		$this->ajaxDispatcher = $this->objectManager->get('EssentialDots\\ExtbaseHijax\\Utility\\Ajax\\Dispatcher');
+		$this->extensionConfiguration = $this->objectManager->get('EssentialDots\\ExtbaseHijax\\Configuration\\ExtensionInterface');
+		$this->listenerFactory = $this->objectManager->get('EssentialDots\\ExtbaseHijax\\Service\\Serialization\\ListenerFactory');
+		$this->serviceContent = $this->objectManager->get('EssentialDots\\ExtbaseHijax\\Service\\Content');
 		self::$id = $this->extensionConfiguration->getNextElementId();
 		$this->listenersStack = array();
 		$this->requestsStack = array();
@@ -101,13 +103,13 @@ class Tx_ExtbaseHijax_MVC_Dispatcher extends Tx_Extbase_MVC_Dispatcher {
 	/**
 	 * Dispatches a request to a controller and initializes the security framework.
 	 *
-	 * @param Tx_Extbase_MVC_RequestInterface $request The request to dispatch
-	 * @param Tx_Extbase_MVC_ResponseInterface $response The response, to be modified by the controller
-	 * @param Tx_ExtbaseHijax_Event_Listener $listener Listener
+	 * @param \TYPO3\CMS\Extbase\Mvc\RequestInterface $request The request to dispatch
+	 * @param \TYPO3\CMS\Extbase\Mvc\ResponseInterface $response The response, to be modified by the controller
+	 * @param \EssentialDots\ExtbaseHijax\Event\Listener $listener Listener
 	 * @return void
 	 */
-	public function dispatch(Tx_Extbase_MVC_RequestInterface $request, Tx_Extbase_MVC_ResponseInterface $response, Tx_ExtbaseHijax_Event_Listener $listener = NULL) {	
-		/* @var $request Tx_Extbase_MVC_Request */
+	public function dispatch(\TYPO3\CMS\Extbase\Mvc\RequestInterface $request, \TYPO3\CMS\Extbase\Mvc\ResponseInterface $response, \EssentialDots\ExtbaseHijax\Event\Listener $listener = NULL) {
+		/* @var $request \TYPO3\CMS\Extbase\Mvc\Request */
 		$this->currentRequest = $request;
 		array_push($this->requestsStack, $this->currentRequest);
 		
@@ -118,7 +120,7 @@ class Tx_ExtbaseHijax_MVC_Dispatcher extends Tx_Extbase_MVC_Dispatcher {
 			if ($listener) {
 				$this->currentListener = $listener;
 			} else {
-				$this->currentListener = t3lib_div::makeInstance('Tx_ExtbaseHijax_Event_Listener', $request);
+				$this->currentListener = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('EssentialDots\\ExtbaseHijax\\Event\\Listener', $request);
 			}
 				
 			if (!$this->serviceContent->getExecuteExtbasePlugins()) {
@@ -129,10 +131,10 @@ class Tx_ExtbaseHijax_MVC_Dispatcher extends Tx_Extbase_MVC_Dispatcher {
 				
 				try {
 					parent::dispatch($request, $response);
-				} catch (Tx_Extbase_MVC_Controller_Exception_RequiredArgumentMissingException $requiredArgumentMissingException) {
+				} catch (\TYPO3\CMS\Extbase\Mvc\Controller\Exception\RequiredArgumentMissingException $requiredArgumentMissingException) {
 					try {
 							// this happens with simple reload on pages where some argument is required
-						$configuration = $this->configurationManager->getConfiguration(Tx_Extbase_Configuration_ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK);
+						$configuration = $this->configurationManager->getConfiguration(\TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK);
 						
 						$defaultControllerName = current(array_keys($configuration['controllerConfiguration']));
 	
@@ -148,7 +150,7 @@ class Tx_ExtbaseHijax_MVC_Dispatcher extends Tx_Extbase_MVC_Dispatcher {
 	
 						parent::dispatch($request, $response);
 							
-					} catch (Tx_Extbase_MVC_Controller_Exception_RequiredArgumentMissingException $requiredArgumentMissingException) {
+					} catch (\TYPO3\CMS\Extbase\Mvc\Controller\Exception\RequiredArgumentMissingException $requiredArgumentMissingException) {
 						if ($defaultControllerName!=$request->getControllerName()) {
 							$request->setControllerName($defaultControllerName);
 							$defaultActionName = is_array($allowedControllerActions[$defaultControllerName]) ? current($allowedControllerActions[$defaultControllerName]) : '';
@@ -175,7 +177,7 @@ class Tx_ExtbaseHijax_MVC_Dispatcher extends Tx_Extbase_MVC_Dispatcher {
 				
 					$content = '<!-- ###EVENT_LISTENER_'.self::$id.'### START '.$signature.' -->'.$content.'<!-- ###EVENT_LISTENER_'.self::$id.'### END -->';
 					
-					if (t3lib_div::_GP('eID') && t3lib_div::_GP('eID')!='extbase_hijax_dispatcher') {
+					if (\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('eID') && \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('eID')!='extbase_hijax_dispatcher') {
 						$this->hijaxEventDispatcher->replaceXMLCommentsWithDivs($content, 'html');
 					}
 					$response->setContent($content);
@@ -192,14 +194,14 @@ class Tx_ExtbaseHijax_MVC_Dispatcher extends Tx_Extbase_MVC_Dispatcher {
 	}	
 	
 	/**
-	 * @return Tx_ExtbaseHijax_Event_Listener
+	 * @return \EssentialDots\ExtbaseHijax\Event\Listener
 	 */
 	public function getCurrentListener() {
 		return $this->currentListener;
 	}
 	
 	/**
-	 * @return Tx_Extbase_MVC_Request
+	 * @return \TYPO3\CMS\Extbase\Mvc\Request
 	 */
 	public function getCurrentRequest() {
 		return $this->currentRequest;

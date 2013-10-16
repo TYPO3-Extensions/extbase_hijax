@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\ViewHelpers;
+
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+ *  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -22,7 +24,7 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-class Tx_ExtbaseHijax_ViewHelpers_MathViewHelper extends Tx_Fluid_Core_ViewHelper_AbstractViewHelper {
+class MathViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelper {
 
 	/**
 	 * @return void
@@ -33,7 +35,7 @@ class Tx_ExtbaseHijax_ViewHelpers_MathViewHelper extends Tx_Fluid_Core_ViewHelpe
 	}
 
 	/**
-	 * @return void
+	 * @return string
 	 */
 	public function render() {
 		if ($this->arguments['expression']) {
@@ -41,6 +43,7 @@ class Tx_ExtbaseHijax_ViewHelpers_MathViewHelper extends Tx_Fluid_Core_ViewHelpe
 		} else {
 			$expression = $this->renderChildren();
 		}
+		$number = '';
 		$evalString = "\$number = floatval($expression);";
 		@eval($evalString);
 		if ($this->arguments['as']) {
@@ -48,6 +51,7 @@ class Tx_ExtbaseHijax_ViewHelpers_MathViewHelper extends Tx_Fluid_Core_ViewHelpe
 				$this->templateVariableContainer->remove($this->arguments['as']);
 			}
 			$this->templateVariableContainer->add($this->arguments['as'], $number);
+			return '';
 		} else {
 			return $number;
 		}

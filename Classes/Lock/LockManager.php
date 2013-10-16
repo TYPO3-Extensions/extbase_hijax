@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\Lock;
+
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic@essentialdots.com>
+ *  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic@essentialdots.com>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -22,22 +24,21 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-class Tx_ExtbaseHijax_Lock_LockManager implements t3lib_Singleton {
+class LockManager implements \TYPO3\CMS\Core\SingletonInterface {
 
 	/**
 	 * Lock the process
 	 *
-	 * @param	Tx_ExtbaseHijax_Lock_Lock	Reference to a locking object
-	 * @param	string		String to identify the lock in the system
-	 * @param	boolean		Exclusive lock (shared if FALSE)
-	 * @return	boolean		Returns TRUE if the lock could be obtained, FALSE otherwise
-	 * @see releaseLock()
+	 * @param \EssentialDots\ExtbaseHijax\Lock\Lock $lockObj
+	 * @param $key                  String to identify the lock in the system
+	 * @param bool $exclusive       Exclusive lock (shared if FALSE)
+	 * @return bool                 Returns TRUE if the lock could be obtained, FALSE otherwise
 	 */
 	public function acquireLock(&$lockObj, $key, $exclusive = TRUE)	{
 		try {
 			if (!is_object($lockObj)) {
-				/* @var $lockObj Tx_ExtbaseHijax_Lock_Lock */
-				$lockObj = t3lib_div::makeInstance('Tx_ExtbaseHijax_Lock_Lock', $key);
+				/* @var $lockObj \EssentialDots\ExtbaseHijax\Lock\Lock */
+				$lockObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('EssentialDots\\ExtbaseHijax\\Lock\\Lock', $key);
 			}
 
 			$success = FALSE;
@@ -47,8 +48,8 @@ class Tx_ExtbaseHijax_Lock_LockManager implements t3lib_Singleton {
 					$lockObj->sysLog('Acquired lock');
 				}
 			}
-		} catch (Exception $e) {
-			t3lib_div::sysLog('Locking: Failed to acquire lock: '.$e->getMessage(), 'cms', t3lib_div::SYSLOG_SEVERITY_ERROR);
+		} catch (\Exception $e) {
+			\TYPO3\CMS\Core\Utility\GeneralUtility::sysLog('Locking: Failed to acquire lock: '.$e->getMessage(), 'cms', \TYPO3\CMS\Core\Utility\GeneralUtility::SYSLOG_SEVERITY_ERROR);
 			$success = FALSE;	// If locking fails, return with FALSE and continue without locking
 		}
 
@@ -58,14 +59,14 @@ class Tx_ExtbaseHijax_Lock_LockManager implements t3lib_Singleton {
 	/**
 	 * Release the lock
 	 *
-	 * @param	Tx_ExtbaseHijax_Lock_Lock	Reference to a locking object
+	 * @param	\EssentialDots\ExtbaseHijax\Lock\Lock	Reference to a locking object
 	 * @return	boolean		Returns TRUE on success, FALSE otherwise
 	 * @see acquireLock()
 	 */
 	public function releaseLock(&$lockObj) {
 		$success = FALSE;
 		// If lock object is set and was acquired, release it:
-		if (is_object($lockObj) && $lockObj instanceof Tx_ExtbaseHijax_Lock_Lock && $lockObj->getLockStatus()) {
+		if (is_object($lockObj) && $lockObj instanceof \EssentialDots\ExtbaseHijax\Lock\Lock && $lockObj->getLockStatus()) {
 			$success = $lockObj->release();
 			$lockObj->sysLog('Released lock');
 			$lockObj = NULL;

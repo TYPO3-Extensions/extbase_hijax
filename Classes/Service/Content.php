@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\Service;
+
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+ *  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -22,7 +24,7 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-class Tx_ExtbaseHijax_Service_Content implements t3lib_Singleton {
+class Content implements \TYPO3\CMS\Core\SingletonInterface {
 	
 	/**
 	 * @var string
@@ -35,12 +37,12 @@ class Tx_ExtbaseHijax_Service_Content implements t3lib_Singleton {
 	protected $executeExtbasePlugins = TRUE;
 	
 	/**
-	 * @var Tx_ExtbaseHijax_Event_Listener
+	 * @var \EssentialDots\ExtbaseHijax\Event\Listener
 	 */
 	protected $currentListener;
 
 	/**
-	 * @return the $executeExtbasePlugins
+	 * @return bool
 	 */
 	public function getExecuteExtbasePlugins() {
 		return $this->executeExtbasePlugins;
@@ -54,14 +56,14 @@ class Tx_ExtbaseHijax_Service_Content implements t3lib_Singleton {
 	}
 
 	/**
-	 * @return the $currentListener
+	 * @return \EssentialDots\ExtbaseHijax\Event\Listener
 	 */
 	public function getCurrentListener() {
 		return $this->currentListener;
 	}
 
 	/**
-	 * @param Tx_ExtbaseHijax_Event_Listener $currentListener
+	 * @param \EssentialDots\ExtbaseHijax\Event\Listener $currentListener
 	 */
 	public function setCurrentListener($currentListener) {
 		$this->currentListener = $currentListener;
@@ -71,13 +73,13 @@ class Tx_ExtbaseHijax_Service_Content implements t3lib_Singleton {
 	 * @param string $table
 	 * @param int $uid
 	 * 
-	 * @return Tx_ExtbaseHijax_Event_Listener
+	 * @return \EssentialDots\ExtbaseHijax\Event\Listener
 	 */
 	public function generateListenerCacheForContentElement($table, $uid) {
-			/* @var $tslib_cObj tslib_cObj */
-		$tslib_cObj = t3lib_div::makeInstance('tslib_cObj');
+			/* @var $tslib_cObj \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer */
+		$tslib_cObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\ContentObject\\ContentObjectRenderer');
 			// TODO: implement language overlay functions
-		$data = t3lib_BEfunc::getRecord($table, $uid);
+		$data = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord($table, $uid);
 		if ($data) {
 				// make sure that the actual controller action IS NOT executed
 			$this->setExecuteExtbasePlugins(FALSE);
@@ -102,11 +104,11 @@ class Tx_ExtbaseHijax_Service_Content implements t3lib_Singleton {
 	 * @param string $eventsToListen
 	 * @param boolean $cached
 	 *
-	 * @return Tx_ExtbaseHijax_Event_Listener
+	 * @return \EssentialDots\ExtbaseHijax\Event\Listener
 	 */
 	public function generateListenerCacheForHijaxPi1($loadContentFromTypoScript, $eventsToListen, $cached) {
-		/* @var $tslib_cObj tslib_cObj */
-		$tslib_cObj = t3lib_div::makeInstance('tslib_cObj');
+		/* @var $tslib_cObj \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer */
+		$tslib_cObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\ContentObject\\ContentObjectRenderer');
 		
 		if ($loadContentFromTypoScript) {
 			// make sure that the actual controller action IS NOT executed
@@ -114,7 +116,7 @@ class Tx_ExtbaseHijax_Service_Content implements t3lib_Singleton {
 			$dummyContent = $tslib_cObj->USER(array(
 					'extensionName' => 'ExtbaseHijax',
 					'pluginName' => 'Pi1',
-					'userFunc' => 'Tx_Extbase_Core_Bootstrap->run',
+					'userFunc' => 'TYPO3\\CMS\\Extbase\\Core\\Bootstrap->run',
 					'switchableControllerActions.' => array (
 						'ContentElement.' => array ('0' => $cached ? 'user' : 'userInt')
 					),
@@ -134,12 +136,8 @@ class Tx_ExtbaseHijax_Service_Content implements t3lib_Singleton {
 	}
 
 	/**
-	 *
-	 * @param string $loadContentFromTypoScript
-	 * @param string $eventsToListen
-	 * @param boolean $cached
-	 *
-	 * @return Tx_ExtbaseHijax_Event_Listener
+	 * @param $fallbackTypoScriptConfiguration
+	 * @return \EssentialDots\ExtbaseHijax\Event\Listener
 	 */
 	public function generateListenerCacheForTypoScriptFallback($fallbackTypoScriptConfiguration) {
 
@@ -198,7 +196,7 @@ class Tx_ExtbaseHijax_Service_Content implements t3lib_Singleton {
 			$content = str_replace('"' . $GLOBALS['TYPO3_CONF_VARS']['BE']['fileadminDir'], '"' . $this->absRefPrefix . $GLOBALS['TYPO3_CONF_VARS']['BE']['fileadminDir'], $content);
 			$content = str_replace('"' . $GLOBALS['TYPO3_CONF_VARS']['BE']['RTE_imageStorageDir'], '"' . $this->absRefPrefix . $GLOBALS['TYPO3_CONF_VARS']['BE']['RTE_imageStorageDir'], $content);
 			// Process additional directories
-			$directories = t3lib_div::trimExplode(',', $GLOBALS['TYPO3_CONF_VARS']['FE']['additionalAbsRefPrefixDirectories'], TRUE);
+			$directories = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $GLOBALS['TYPO3_CONF_VARS']['FE']['additionalAbsRefPrefixDirectories'], TRUE);
 			foreach ($directories as $directory) {
 				$content = str_replace('"' . $directory, '"' . $this->absRefPrefix . $directory, $content);
 			}
@@ -229,18 +227,19 @@ class Tx_ExtbaseHijax_Service_Content implements t3lib_Singleton {
 	}
 
 	/**
-	 * @param string $typoscriptObjectPath
-	 * @throws Exception
+	 * @param $typoscriptObjectPath
+	 * @return string
+	 * @throws \Exception
 	 */
 	protected function renderTypoScriptPath($typoscriptObjectPath) {
-		/* @var $tslib_cObj tslib_cObj */
-		$tslib_cObj = t3lib_div::makeInstance('tslib_cObj');
-		$pathSegments = t3lib_div::trimExplode('.', $typoscriptObjectPath);
+		/* @var $tslib_cObj \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer */
+		$tslib_cObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\ContentObject\\ContentObjectRenderer');
+		$pathSegments = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode('.', $typoscriptObjectPath);
 		$lastSegment = array_pop($pathSegments);
 		$setup = $GLOBALS['TSFE']->tmpl->setup;
 		foreach ($pathSegments as $segment) {
 			if (!array_key_exists($segment . '.', $setup)) {
-				throw new Exception('TypoScript object path "' . htmlspecialchars($typoscriptObjectPath) . '" does not exist' , 1253191023);
+				throw new \Exception('TypoScript object path "' . htmlspecialchars($typoscriptObjectPath) . '" does not exist' , 1253191023);
 			}
 			$setup = $setup[$segment . '.'];
 		}
@@ -249,17 +248,17 @@ class Tx_ExtbaseHijax_Service_Content implements t3lib_Singleton {
 
 	/**
 	 * @param string $typoscriptObjectPath
-	 * @throws Exception
+	 * @throws \Exception
 	 */
 	public function isAllowedTypoScriptPath($typoscriptObjectPath) {
-		/* @var $tslib_cObj tslib_cObj */
-		$tslib_cObj = t3lib_div::makeInstance('tslib_cObj');
-		$pathSegments = t3lib_div::trimExplode('.', $typoscriptObjectPath);
+		/* @var $tslib_cObj \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer */
+		$tslib_cObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\ContentObject\\ContentObjectRenderer');
+		$pathSegments = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode('.', $typoscriptObjectPath);
 		$lastSegment = array_pop($pathSegments);
 		$setup = $GLOBALS['TSFE']->tmpl->setup;
 		foreach ($pathSegments as $segment) {
 			if (!array_key_exists($segment . '.', $setup)) {
-				throw new Exception('TypoScript object path "' . htmlspecialchars($typoscriptObjectPath) . '" does not exist' , 1253191023);
+				throw new \Exception('TypoScript object path "' . htmlspecialchars($typoscriptObjectPath) . '" does not exist' , 1253191023);
 			}
 			$setup = $setup[$segment . '.'];
 		}

@@ -1,4 +1,6 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\HTMLConverter;
+
 /***************************************************************
  *  Copyright notice
  *
@@ -22,19 +24,21 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-class Tx_ExtbaseHijax_HTMLConverter_PDFConverter extends Tx_ExtbaseHijax_HTMLConverter_AbstractConverter {
+class PDFConverter extends \EssentialDots\ExtbaseHijax\HTMLConverter\AbstractConverter {
+
 	/**
-	 * @param Tx_Extbase_MVC_Web_Response $response
-	 * @return Tx_Extbase_MVC_Web_Response
+	 * @param \TYPO3\CMS\Extbase\Mvc\Web\Response $response
+	 * @return \TYPO3\CMS\Extbase\Mvc\Web\Response
+	 * @throws FailedConversionException
 	 */
 	public function convert($response) {
 		$pathToPDFGenFile = $this->extensionConfiguration->get('pathToPDFGenFile');
 		if ($pathToPDFGenFile) {
 			list($return_value, $output, $error) = $this->runCommands($pathToPDFGenFile, $response->getContent());
 			if ($return_value != 0) {
-				error_log("Tx_ExtbaseHijax_HTMLConverter_PDFConverter error:\n$error");
-				/* @var $failedConversionException Tx_ExtbaseHijax_HTMLConverter_FailedConversionException */
-				$failedConversionException = t3lib_div::makeInstance('Tx_ExtbaseHijax_HTMLConverter_FailedConversionException');
+				error_log("EssentialDots\\ExtbaseHijax\\HTMLConverter\\PDFConverter error:\n$error");
+				/* @var $failedConversionException \EssentialDots\ExtbaseHijax\HTMLConverter\FailedConversionException */
+				$failedConversionException = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('EssentialDots\\ExtbaseHijax\\HTMLConverter\\FailedConversionException');
 				$failedConversionException->setError($error);
 				$failedConversionException->setInput($response);
 				$failedConversionException->setOutput($output);
@@ -47,8 +51,7 @@ class Tx_ExtbaseHijax_HTMLConverter_PDFConverter extends Tx_ExtbaseHijax_HTMLCon
 				$response->setHeader('Content-Type', 'application/pdf');
 
 				if ($filename) {
-					require_once (PATH_t3lib.'class.t3lib_basicfilefunc.php');
-					$fileFunc = t3lib_div::makeInstance('t3lib_basicFileFunctions'); /* @var $fileFunc t3lib_basicFileFunctions */
+					$fileFunc = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Utility\\File\\BasicFileUtility'); /* @var $fileFunc \TYPO3\CMS\Core\Utility\File\BasicFileUtility */
 					$filename = '; filename = "' . $fileFunc->cleanFileName($filename) . '.pdf"';
 
 					$response->setHeader('Content-Disposition', 'attachment'.$filename);
@@ -72,7 +75,10 @@ class Tx_ExtbaseHijax_HTMLConverter_PDFConverter extends Tx_ExtbaseHijax_HTMLCon
 	}
 
 	/**
-	 * @param string $cmd
+	 * @param string $cmds
+	 * @param string $output
+	 * @param bool $pipe
+	 * @return array
 	 */
 	protected function runCommands($cmds, $output = '', $pipe = TRUE) {
 		if (!is_array($cmds)) {

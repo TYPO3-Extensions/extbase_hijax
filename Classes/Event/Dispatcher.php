@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\Event;
+
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+*  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -22,7 +24,7 @@
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
 
-class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
+class Dispatcher implements \TYPO3\CMS\Core\SingletonInterface {
 	/**
 	 * @var array
 	 */
@@ -69,12 +71,12 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 	protected $nextPhaseSkipPendingEvents = array();
 
 	/**
-	 * @var Tx_Extbase_Object_ObjectManagerInterface
+	 * @var \TYPO3\CMS\Extbase\Object\ObjectManagerInterface
 	 */
 	protected $objectManager;
 	
 	/**
-	 * @var Tx_ExtbaseHijax_Service_Serialization_ListenerFactory
+	 * @var \EssentialDots\ExtbaseHijax\Service\Serialization\ListenerFactory
 	 */
 	protected $listenerFactory;	
 	
@@ -82,13 +84,18 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 	 * @var boolean
 	 */
 	protected $isHijaxElement;
+
+	/**
+	 * @var boolean
+	 */
+	protected $xmlCommentsFound = false;
 	
 	/**
 	 * Constructor
 	 */
 	public function __construct() {
-		$this->objectManager = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager');
-		$this->listenerFactory = $this->objectManager->get('Tx_ExtbaseHijax_Service_Serialization_ListenerFactory');
+		$this->objectManager = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Object\\ObjectManager');
+		$this->listenerFactory = $this->objectManager->get('EssentialDots\\ExtbaseHijax\\Service\\Serialization\\ListenerFactory');
 	}
 	
 	/**
@@ -96,13 +103,14 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 	 *
 	 * @param string 							$name An event name
 	 * @param mixed								$callback Callback function
-	 * @param Tx_ExtbaseHijax_Event_Listener	$listener TYPO3 Extbase listener
+	 * @param \EssentialDots\ExtbaseHijax\Event\Listener	$listener TYPO3 Extbase listener
+	 * @return array
 	 */
 	public function connect($name, $callback = null, $listener = null) {
 		$this->setIsHijaxElement(true);
 		if (!$listener) {
-			/* @var $listener Tx_ExtbaseHijax_Event_Listener */
-			$listener = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager')->get('Tx_ExtbaseHijax_MVC_Dispatcher')->getCurrentListener();
+			/* @var $listener \EssentialDots\ExtbaseHijax\Event\Listener */
+			$listener = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Object\\ObjectManager')->get('EssentialDots\\ExtbaseHijax\\MVC\\Dispatcher')->getCurrentListener();
 		}
 		
 		if (!isset($this->listeners[$name])) {
@@ -113,11 +121,11 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 		
 		if (in_array($name, $this->pendingEventNames)) {
 			foreach ($this->pendingEvents[$name] as $event) {
-				/* @var $event Tx_ExtbaseHijax_Event_Event */
+				/* @var $event \EssentialDots\ExtbaseHijax\Event\Event */
 				$events[] = $event;
 				if ($callback) {
 					if (is_string($callback)) {
-						t3lib_div::callUserFunction($callback, $event, $this, $checkPrefix = false);
+						\TYPO3\CMS\Core\Utility\GeneralUtility::callUserFunction($callback, $event, $this, $checkPrefix = false);
 					} else {
 						call_user_func($callback, $event);
 					}
@@ -156,9 +164,9 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 	 *
 	 * @param string							$name			An event name
 	 * @param mixed								$callback	A PHP callable
-	 * @param Tx_ExtbaseHijax_Event_Listener	$listener TYPO3 Extbase listener
+	 * @param \EssentialDots\ExtbaseHijax\Event\Listener	$listener TYPO3 Extbase listener
 	 *
-	 * @return mixed false if listener does not exist, null otherwise
+	 * @return bool false if listener does not exist, true otherwise
 	 */
 	public function disconnect($name, $callback = null, $listener = null) {
 		if (!isset($this->listeners[$name])) {
@@ -166,7 +174,7 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 		}
 		
 		if (!$listener) {
-			$listener = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager')->get('Tx_ExtbaseHijax_MVC_Dispatcher')->getCurrentListener();
+			$listener = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Object\\ObjectManager')->get('EssentialDots\\ExtbaseHijax\\MVC\\Dispatcher')->getCurrentListener();
 		}
 		
 		foreach ($this->listeners[$name] as $i => $callable) {
@@ -185,19 +193,21 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 					unset($this->currentElementListeners[$name]);
 				}
 			}
-		}		
+		}
+
+		return true;
 	}
 
 	/**
 	 * Notifies all listeners of a given event.
 	 *
-	 * @param Tx_ExtbaseHijax_Event_Event $event A Tx_ExtbaseHijax_Event_Event instance
+	 * @param \EssentialDots\ExtbaseHijax\Event\Event $event A \EssentialDots\ExtbaseHijax\Event\Event instance
 	 * @param boolean $skipNotifier Skips notifier when processing the event (prevents dead loops)
-	 * @param Tx_ExtbaseHijax_Event_Listener	$listener TYPO3 Extbase listener
+	 * @param \EssentialDots\ExtbaseHijax\Event\Listener	$listener TYPO3 Extbase listener
 	 *
-	 * @return Tx_ExtbaseHijax_Event_Event The Tx_ExtbaseHijax_Event_Event instance
+	 * @return \EssentialDots\ExtbaseHijax\Event\Event The \EssentialDots\ExtbaseHijax\Event\Event instance
 	 */
-	public function notify(Tx_ExtbaseHijax_Event_Event $event, $skipNotifier = false, $listener = null) {
+	public function notify(\EssentialDots\ExtbaseHijax\Event\Event $event, $skipNotifier = false, $listener = null) {
 		if (!isset($this->nextPhasePendingEvents[$event->getName()])) {
 			$this->nextPhasePendingEvents[$event->getName()] = array();
 		}
@@ -205,8 +215,8 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 		
 		if ($skipNotifier) {
 			if (!$listener) {
-				/* @var $listener Tx_ExtbaseHijax_Event_Listener */
-				$listener = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager')->get('Tx_ExtbaseHijax_MVC_Dispatcher')->getCurrentListener();
+				/* @var $listener \EssentialDots\ExtbaseHijax\Event\Listener */
+				$listener = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Object\\ObjectManager')->get('EssentialDots\\ExtbaseHijax\\MVC\\Dispatcher')->getCurrentListener();
 			}
 			
 			if (!in_array($event->getName(), $this->nextPhaseSkipPendingEvents)) {
@@ -250,7 +260,9 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 	}
 	
 	/**
-	 * @return boolean
+	 * @param $eventName
+	 * @param $listenerId
+	 * @return bool
 	 */
 	public function hasPendingEventWithName($eventName, $listenerId) {
 		return in_array($eventName, $this->pendingEventNames) && !in_array($eventName.';'.$listenerId, $this->skipPendingEvents);
@@ -285,9 +297,9 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 	/**
 	 * Returns all listeners associated with a given event name.
 	 *
-	 * @param	string	 $name		The event name
-	 *
-	 * @return array	An array of listeners
+	 * @param string $name
+	 * @param bool $current
+	 * @return array
 	 */
 	public function getListeners($name = '', $current = false) {
 		if ($current) {
@@ -329,8 +341,7 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 	}
 	
 	/**
-	 * @param tslib_fe $pObj
-	 * @return void
+	 * @param $content
 	 */
 	public function parseAndRunEventListeners(&$content) {
 		// @todo: migrate this to plain string functions, do not use regular expressions
@@ -374,21 +385,21 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 		}
 			
 		if ($shouldProcess) {
-			/* @var $listener Tx_ExtbaseHijax_Event_Listener */
+			/* @var $listener \EssentialDots\ExtbaseHijax\Event\Listener */
 			$listener = $this->listenerFactory->findById($listenerId);
 			
 			if ($listener) {
-				/* @var $bootstrap Tx_Extbase_Core_Bootstrap */
-				$bootstrap = t3lib_div::makeInstance('Tx_Extbase_Core_Bootstrap');
+				/* @var $bootstrap \TYPO3\CMS\Extbase\Core\Bootstrap */
+				$bootstrap = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Core\\Bootstrap');
 				$bootstrap->cObj = $listener->getCObj();
 				$bootstrap->initialize($listener->getConfiguration());
 				$request = $listener->getRequest();
 				$request->setDispatched(false);
 				
-				/* @var $response Tx_Extbase_MVC_Web_Response */
-				$response = $this->objectManager->create('Tx_Extbase_MVC_Web_Response');
-		
-				$dispatcher = $this->objectManager->get('Tx_Extbase_MVC_Dispatcher');
+				/* @var $response \TYPO3\CMS\Extbase\Mvc\Web\Response */
+				$response = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Mvc\\Web\\Response');
+
+				$dispatcher = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Mvc\\Dispatcher');
 				$dispatcher->dispatch($request, $response);
 					
 				$result = $response->getContent();
@@ -404,8 +415,8 @@ class Tx_ExtbaseHijax_Event_Dispatcher implements t3lib_Singleton {
 	}
 	
 	/**
-	 * @param tslib_fe $pObj
-	 * @return void
+	 * @param $content
+	 * @param string $format
 	 */
 	public function replaceXMLCommentsWithDivs(&$content, $format = 'html') {
 		$this->xmlCommentsFound = TRUE;

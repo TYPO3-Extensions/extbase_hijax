@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\ViewHelpers;
+
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+ *  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -22,20 +24,20 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-class Tx_ExtbaseHijax_ViewHelpers_IsAjaxContextViewHelper extends Tx_Fluid_Core_ViewHelper_AbstractConditionViewHelper {
+class IsAjaxContextViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractConditionViewHelper {
 
 	/**
-	 * @var Tx_ExtbaseHijax_Utility_Ajax_Dispatcher
+	 * @var \EssentialDots\ExtbaseHijax\Utility\Ajax\Dispatcher
 	 */
 	protected $ajaxDispatcher;
 	
 	/**
 	 * Injects the event dispatcher
 	 *
-	 * @param Tx_ExtbaseHijax_Utility_Ajax_Dispatcher $ajaxDispatcher
+	 * @param \EssentialDots\ExtbaseHijax\Utility\Ajax\Dispatcher $ajaxDispatcher
 	 * @return void
 	 */
-	public function injectAjaxDispatcher(Tx_ExtbaseHijax_Utility_Ajax_Dispatcher $ajaxDispatcher) {
+	public function injectAjaxDispatcher(\EssentialDots\ExtbaseHijax\Utility\Ajax\Dispatcher $ajaxDispatcher) {
 		$this->ajaxDispatcher = $ajaxDispatcher;
 	}
 	

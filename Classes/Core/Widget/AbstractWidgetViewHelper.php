@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\Core\Widget;
+
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+*  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
 *  All rights reserved
 *
 *  This script is part of the Typo3 project. The Typo3 project is
@@ -24,14 +26,14 @@
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
 
-abstract class Tx_ExtbaseHijax_Core_Widget_AbstractWidgetViewHelper extends Tx_Fluid_Core_Widget_AbstractWidgetViewHelper {
+abstract class AbstractWidgetViewHelper extends \TYPO3\CMS\Fluid\Core\Widget\AbstractWidgetViewHelper {
 
 	/**
 	 * The Controller associated to this widget.
 	 * This needs to be filled by the individual subclass by an @inject
 	 * annotation.
 	 *
-	 * @var Tx_Fluid_Core_Widget_AbstractWidgetController
+	 * @var \TYPO3\CMS\Fluid\Core\Widget\AbstractWidgetController
 	 * @api
 	 */
 	protected $controller;
@@ -45,47 +47,47 @@ abstract class Tx_ExtbaseHijax_Core_Widget_AbstractWidgetViewHelper extends Tx_F
 	protected $ajaxWidget = FALSE;
 
 	/**
-	 * @var Tx_Fluid_Core_Widget_AjaxWidgetContextHolder
+	 * @var \TYPO3\CMS\Fluid\Core\Widget\AjaxWidgetContextHolder
 	 */
 	protected $ajaxWidgetContextHolder;
 
 	/**
-	 * @var Tx_Extbase_Object_ObjectManagerInterface
+	 * @var \TYPO3\CMS\Extbase\Object\ObjectManagerInterface
 	 */
 	protected $objectManager;
 
 	/**
-	 * @var Tx_Extbase_Service_ExtensionService
+	 * @var \TYPO3\CMS\Extbase\Service\ExtensionService
 	 */
 	protected $extensionService;
 
 	/**
-	 * @var Tx_ExtbaseHijax_Core_Widget_WidgetContext
+	 * @var \EssentialDots\ExtbaseHijax\Core\Widget\WidgetContext
 	 */
 	protected $widgetContext;
 
 	/**
-	 * @param Tx_Fluid_Core_Widget_AjaxWidgetContextHolder $ajaxWidgetContextHolder
+	 * @param \TYPO3\CMS\Fluid\Core\Widget\AjaxWidgetContextHolder $ajaxWidgetContextHolder
 	 * @return void
 	 */
-	public function injectAjaxWidgetContextHolder(Tx_Fluid_Core_Widget_AjaxWidgetContextHolder $ajaxWidgetContextHolder) {
+	public function injectAjaxWidgetContextHolder(\TYPO3\CMS\Fluid\Core\Widget\AjaxWidgetContextHolder $ajaxWidgetContextHolder) {
 		$this->ajaxWidgetContextHolder = $ajaxWidgetContextHolder;
 	}
 
 	/**
-	 * @param Tx_Extbase_Object_ObjectManagerInterface $objectManager
+	 * @param \TYPO3\CMS\Extbase\Object\ObjectManagerInterface $objectManager
 	 * @return void
 	 */
-	public function injectObjectManager(Tx_Extbase_Object_ObjectManagerInterface $objectManager) {
+	public function injectObjectManager(\TYPO3\CMS\Extbase\Object\ObjectManagerInterface $objectManager) {
 		$this->objectManager = $objectManager;
-		$this->widgetContext = $this->objectManager->create('Tx_ExtbaseHijax_Core_Widget_WidgetContext');
+		$this->widgetContext = $this->objectManager->get('EssentialDots\\ExtbaseHijax\\Core\\Widget\\WidgetContext');
 	}
 
 	/**
-	 * @param Tx_Extbase_Service_ExtensionService $extensionService
+	 * @param \TYPO3\CMS\Extbase\Service\ExtensionService $extensionService
 	 * @return void
 	 */
-	public function injectExtensionService(Tx_Extbase_Service_ExtensionService $extensionService) {
+	public function injectExtensionService(\TYPO3\CMS\Extbase\Service\ExtensionService $extensionService) {
 		$this->extensionService = $extensionService;
 	}
 
@@ -110,18 +112,15 @@ abstract class Tx_ExtbaseHijax_Core_Widget_AbstractWidgetViewHelper extends Tx_F
 	protected function initializeWidgetContext() {
 		$this->widgetContext->setWidgetConfiguration($this->getWidgetConfiguration());
 		$this->initializeWidgetIdentifier();
-
-		$controllerObjectName = ($this->controller instanceof Tx_Fluid_AOP_ProxyInterface) ? $this->controller->FLOW3_AOP_Proxy_getProxyTargetClassName() : get_class($this->controller);
-		$this->widgetContext->setControllerObjectName($controllerObjectName);
-
+		$this->widgetContext->setControllerObjectName(get_class($this->controller));
 		$extensionName = $this->controllerContext->getRequest()->getControllerExtensionName();
 		$pluginName = $this->controllerContext->getRequest()->getPluginName();
 		$this->widgetContext->setParentExtensionName($extensionName);
 		$this->widgetContext->setParentPluginName($pluginName);
 		$pluginNamespace = $this->extensionService->getPluginNamespace($extensionName, $pluginName);
 		$this->widgetContext->setParentPluginNamespace($pluginNamespace);
+		// set parent context
 		$this->widgetContext->setParentControllerContext($this->controllerContext);
-		
 		$this->widgetContext->setWidgetViewHelperClassName(get_class($this));
 		if ($this->ajaxWidget === TRUE) {
 			$this->ajaxWidgetContextHolder->store($this->widgetContext);
@@ -136,7 +135,7 @@ abstract class Tx_ExtbaseHijax_Core_Widget_AbstractWidgetViewHelper extends Tx_F
 	 * @return void
 	 */
 	public function setChildNodes(array $childNodes) {
-		$rootNode = $this->objectManager->create('Tx_Fluid_Core_Parser_SyntaxTree_RootNode');
+		$rootNode = $this->objectManager->get('TYPO3\\CMS\\Fluid\\Core\\Parser\\SyntaxTree\\RootNode');
 		foreach ($childNodes as $childNode) {
 			$rootNode->addChildNode($childNode);
 		}
@@ -157,22 +156,22 @@ abstract class Tx_ExtbaseHijax_Core_Widget_AbstractWidgetViewHelper extends Tx_F
 	 * Initiate a sub request to $this->controller. Make sure to fill $this->controller
 	 * via Dependency Injection.
 	 *
-	 * @return Tx_Extbase_MVC_ResponseInterface the response of this request.
-	 * @api
+	 * @return \TYPO3\CMS\Extbase\Mvc\ResponseInterface the response of this request.
+	 * @throws \TYPO3\CMS\Fluid\Core\Widget\Exception\MissingControllerException
 	 */
 	protected function initiateSubRequest() {
-		if (!($this->controller instanceof Tx_Fluid_Core_Widget_AbstractWidgetController)) {
+		if (!($this->controller instanceof \TYPO3\CMS\Fluid\Core\Widget\AbstractWidgetController)) {
 			if (isset($this->controller)) {
-				throw new Tx_Fluid_Core_Widget_Exception_MissingControllerException('initiateSubRequest() can not be called if there is no valid controller extending Tx_Fluid_Core_Widget_AbstractWidgetController. Got "' . get_class($this->controller) . '" in class "' . get_class($this) . '".', 1289422564);
+				throw new \TYPO3\CMS\Fluid\Core\Widget\Exception\MissingControllerException('initiateSubRequest() can not be called if there is no valid controller extending TYPO3\\CMS\\Fluid\\Core\\Widget\\AbstractWidgetController. Got "' . get_class($this->controller) . '" in class "' . get_class($this) . '".', 1289422564);
 			}
-			throw new Tx_Fluid_Core_Widget_Exception_MissingControllerException('initiateSubRequest() can not be called if there is no controller inside $this->controller. Make sure to add a corresponding injectController method to your WidgetViewHelper class "' . get_class($this) . '".', 1284401632);
+			throw new \TYPO3\CMS\Fluid\Core\Widget\Exception\MissingControllerException('initiateSubRequest() can not be called if there is no controller inside $this->controller. Make sure to add a corresponding injectController method to your WidgetViewHelper class "' . get_class($this) . '".', 1284401632);
 		}
 
-		$subRequest = $this->objectManager->create('Tx_Fluid_Core_Widget_WidgetRequest');
+		$subRequest = $this->objectManager->get('TYPO3\\CMS\\Fluid\\Core\\Widget\\WidgetRequest');
 		$subRequest->setWidgetContext($this->widgetContext);
 		$this->passArgumentsToSubRequest($subRequest);
 
-		$subResponse = $this->objectManager->create('Tx_Extbase_MVC_Web_Response');
+		$subResponse = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Mvc\\Web\\Response');
 		$this->controller->processRequest($subRequest, $subResponse);
 		return $subResponse;
 	}
@@ -180,10 +179,10 @@ abstract class Tx_ExtbaseHijax_Core_Widget_AbstractWidgetViewHelper extends Tx_F
 	/**
 	 * Pass the arguments of the widget to the subrequest.
 	 *
-	 * @param Tx_Fluid_Core_Widget_WidgetRequest $subRequest
+	 * @param \TYPO3\CMS\Fluid\Core\Widget\WidgetRequest $subRequest
 	 * @return void
 	 */
-	protected function passArgumentsToSubRequest(Tx_Fluid_Core_Widget_WidgetRequest $subRequest) {
+	protected function passArgumentsToSubRequest(\TYPO3\CMS\Fluid\Core\Widget\WidgetRequest $subRequest) {
 		$arguments = $this->controllerContext->getRequest()->getArguments();
 		$widgetIdentifier = $this->widgetContext->getWidgetIdentifier();
 		if (isset($arguments[$widgetIdentifier])) {
@@ -204,13 +203,13 @@ abstract class Tx_ExtbaseHijax_Core_Widget_AbstractWidgetViewHelper extends Tx_F
 	 * @todo clean up, and make it somehow more routing compatible.
 	 */
 	protected function initializeWidgetIdentifier() {
-		if (!$this->viewHelperVariableContainer->exists('Tx_Fluid_Core_Widget_AbstractWidgetViewHelper', 'nextWidgetNumber')) {
+		if (!$this->viewHelperVariableContainer->exists('TYPO3\\CMS\\Fluid\\Core\\Widget\\AbstractWidgetViewHelper', 'nextWidgetNumber')) {
 			$widgetCounter = 0;
 		} else {
-			$widgetCounter = $this->viewHelperVariableContainer->get('Tx_Fluid_Core_Widget_AbstractWidgetViewHelper', 'nextWidgetNumber');
+			$widgetCounter = $this->viewHelperVariableContainer->get('TYPO3\\CMS\\Fluid\\Core\\Widget\\AbstractWidgetViewHelper', 'nextWidgetNumber');
 		}
 		$widgetIdentifier = '__widget_' . $widgetCounter;
-		$this->viewHelperVariableContainer->addOrUpdate('Tx_Fluid_Core_Widget_AbstractWidgetViewHelper', 'nextWidgetNumber', $widgetCounter + 1);
+		$this->viewHelperVariableContainer->addOrUpdate('TYPO3\\CMS\\Fluid\\Core\\Widget\\AbstractWidgetViewHelper', 'nextWidgetNumber', $widgetCounter + 1);
 
 		$this->widgetContext->setWidgetIdentifier($widgetIdentifier);
 	}

@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\Event;
+
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+*  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -22,10 +24,10 @@
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
 
-class Tx_ExtbaseHijax_Event_CObj {
+class CObj {
 	
 	/**
-	 * @var tslib_cObj
+	 * @var \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer
 	 */
 	protected $cObj;
 	
@@ -40,9 +42,9 @@ class Tx_ExtbaseHijax_Event_CObj {
 	protected $table;
 	
 	/**
-	 * Constructs a new Tx_ExtbaseHijax_Event_Listener.
+	 * Constructs a new \EssentialDots\ExtbaseHijax\Event\Listener.
 	 *
-	 * @param tslib_cObj		$cObj	 	An array of parameters
+	 * @param \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer		$cObj	 	An array of parameters
 	 */
 	public function __construct($cObj = null) {
 		$this->cObj = $cObj;
@@ -50,10 +52,10 @@ class Tx_ExtbaseHijax_Event_CObj {
 		$reset = true;
 		
 		if ($this->cObj && $this->cObj->currentRecord) {
-			list($table, $uid) = t3lib_div::trimExplode(':', $this->cObj->currentRecord);
+			list($table, $uid) = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(':', $this->cObj->currentRecord);
 			if ($table=='tt_content' && $uid) {
 				$this->data = $this->cObj->data;
-				list($this->table) = t3lib_div::trimExplode(':', $this->cObj->currentRecord);
+				list($this->table) = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(':', $this->cObj->currentRecord);
 				$reset = false;
 			}
 		} 
@@ -61,7 +63,7 @@ class Tx_ExtbaseHijax_Event_CObj {
 		if ($reset) {
 			$this->data = ($this->cObj && $this->cObj->data) ? $this->cObj->data : array();
 			$this->table = '';
-			$this->cObj = t3lib_div::makeInstance('tslib_cObj');
+			$this->cObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\ContentObject\\ContentObjectRenderer');
 			$this->cObj->start($this->data, $this->table);
 		}
 	}
@@ -70,33 +72,33 @@ class Tx_ExtbaseHijax_Event_CObj {
 	 * @return void
 	 */
 	public function reconstitute() {
-		$this->cObj = t3lib_div::makeInstance('tslib_cObj');
+		$this->cObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\ContentObject\\ContentObjectRenderer');
 		$this->cObj->start($this->data, $this->table);
 	}
 	
 	/**
-	 * @return the $cObj
+	 * @return \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer
 	 */
 	public function getCObj() {
 		return $this->cObj;
 	}
 
 	/**
-	 * @return the $data
+	 * @return array
 	 */
 	public function getData() {
 		return $this->data;
 	}
 
 	/**
-	 * @return the $table
+	 * @return string
 	 */
 	public function getTable() {
 		return $this->table;
 	}
 
 	/**
-	 * @param tslib_cObj $cObj
+	 * @param \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer $cObj
 	 */
 	public function setCObj($cObj) {
 		$this->cObj = $cObj;

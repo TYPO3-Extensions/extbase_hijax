@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\Persistence;
+
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+*  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
 *  All rights reserved
 *
 *  This script is part of the Typo3 project. The Typo3 project is
@@ -27,7 +29,7 @@
 /**
  * The Query class used to run queries against the database
  */
-class Tx_ExtbaseHijax_Persistence_Query extends Tx_Extbase_Persistence_Query {
+class Query extends \TYPO3\CMS\Extbase\Persistence\Generic\Query {
 
 	/**
 	 * @var array
@@ -40,20 +42,20 @@ class Tx_ExtbaseHijax_Persistence_Query extends Tx_Extbase_Persistence_Query {
 	protected $sqlStatement = '';
 	
 	/**
-	 * @var Tx_ExtbaseHijax_Persistence_Parser_SQL
+	 * @var \EssentialDots\ExtbaseHijax\Persistence\Parser\SQL
 	 */
 	protected $sqlParser;
 	
 	/**
 	 * Sets the property names to order the result by. Expected like this:
 	 * array(
-	 *  'foo' => Tx_Extbase_Persistence_QueryInterface::ORDER_ASCENDING,
-	 *  'bar' => Tx_Extbase_Persistence_QueryInterface::ORDER_DESCENDING
+	 *  'foo' => \TYPO3\CMS\Extbase\Persistence\Generic\QueryInterface::ORDER_ASCENDING,
+	 *  'bar' => \TYPO3\CMS\Extbase\Persistence\Generic\QueryInterface::ORDER_DESCENDING
 	 * )
 	 * where 'foo' and 'bar' are property names.
 	 *
 	 * @param array $orderings The property names to order by
-	 * @return Tx_Extbase_Persistence_QueryInterface
+	 * @return \TYPO3\CMS\Extbase\Persistence\QueryInterface
 	 */
 	// TODO: implement this
 	/*
@@ -67,8 +69,8 @@ class Tx_ExtbaseHijax_Persistence_Query extends Tx_Extbase_Persistence_Query {
 	/**
 	 * Returns the property names to order the result by. Like this:
 	 * array(
-	 *  'foo' => Tx_Extbase_Persistence_QueryInterface::ORDER_ASCENDING,
-	 *  'bar' => Tx_Extbase_Persistence_QueryInterface::ORDER_DESCENDING
+	 *  'foo' => \TYPO3\CMS\Extbase\Persistence\Generic\QueryInterface::ORDER_ASCENDING,
+	 *  'bar' => \TYPO3\CMS\Extbase\Persistence\Generic\QueryInterface::ORDER_DESCENDING
 	 * )
 	 *
 	 * @return array
@@ -85,7 +87,7 @@ class Tx_ExtbaseHijax_Persistence_Query extends Tx_Extbase_Persistence_Query {
 	 * for chaining (fluid interface)
 	 *
 	 * @param integer $limit
-	 * @return Tx_Extbase_Persistence_QueryInterface
+	 * @return \TYPO3\CMS\Extbase\Persistence\QueryInterface
 	 */
 	public function setLimit($limit) {
 		parent::setLimit($limit);
@@ -102,7 +104,7 @@ class Tx_ExtbaseHijax_Persistence_Query extends Tx_Extbase_Persistence_Query {
 	 * Resets a previously set maximum size of the result set. Returns $this to allow
 	 * for chaining (fluid interface)
 	 *
-	 * @return Tx_Extbase_Persistence_QueryInterface
+	 * @return \TYPO3\CMS\Extbase\Persistence\QueryInterface
 	 */
 	public function unsetLimit() {
 		parent::unsetLimit();
@@ -120,7 +122,7 @@ class Tx_ExtbaseHijax_Persistence_Query extends Tx_Extbase_Persistence_Query {
 	 * allow for chaining (fluid interface)
 	 *
 	 * @param integer $offset
-	 * @return Tx_Extbase_Persistence_QueryInterface
+	 * @return \TYPO3\CMS\Extbase\Persistence\QueryInterface
 	 */
 	public function setOffset($offset) {
 		parent::setOffset($offset);
@@ -156,14 +158,14 @@ class Tx_ExtbaseHijax_Persistence_Query extends Tx_Extbase_Persistence_Query {
 	 * Sets the statement of this query programmatically. If you use this, you will lose the abstraction from a concrete storage
 	 * backend (database).
 	 *
-	 * @param string $statement The statement
-	 * @param array $paramerters An array of parameters. These will be bound to placeholders '?' in the $statement.
-	 * @return Tx_Extbase_Persistence_QueryInterface
+	 * @param string $statement     The statement
+	 * @param array $parameters     An array of parameters. These will be bound to placeholders '?' in the $statement.
+	 * @return $this|\TYPO3\CMS\Extbase\Persistence\QueryInterface
 	 */
 	public function statement($statement, array $parameters = array()) {
 		$this->parameters = $parameters;
 		$this->sqlStatement = $statement;
-		$this->sqlParser = Tx_ExtbaseHijax_Persistence_Parser_SQL::ParseString($statement);
+		$this->sqlParser = \EssentialDots\ExtbaseHijax\Persistence\Parser\SQL::ParseString($statement);
 		$this->statement = $this->qomFactory->statement($statement, $parameters);
 		return $this;
 	}

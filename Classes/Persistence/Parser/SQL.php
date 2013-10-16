@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\Persistence\Parser;
+
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+*  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
 *  All rights reserved
 *
 *  This script is part of the Typo3 project. The Typo3 project is
@@ -24,9 +26,9 @@
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
 
-class Tx_ExtbaseHijax_Persistence_Parser_SQL {
+class SQL {
 
-	var $handle = null;
+	protected static $handle = null;
 
 	// statements
 	public static $querysections = array('alter','create','drop',
@@ -123,8 +125,9 @@ class Tx_ExtbaseHijax_Persistence_Parser_SQL {
 	/**
 	 * Simple SQL Tokenizer
 	 *
-	 * @param string $sqlQuery
-	 * @return token array
+	 * @param $sqlQuery
+	 * @param bool $cleanWhitespace
+	 * @return array
 	 */
 	public static function Tokenize($sqlQuery, $cleanWhitespace = true) {
 
@@ -183,17 +186,17 @@ class Tx_ExtbaseHijax_Persistence_Parser_SQL {
 	/**
 	 * Simple SQL Parser
 	 *
-	 * @param string $sqlQuery
-	 * @param bool optional $cleanup
-	 * @return Tx_ExtbaseHijax_Persistence_Parser_SQL Object
+	 * @param $sqlQuery
+	 * @param bool $cleanWhitespace
+	 * @return null|\EssentialDots\ExtbaseHijax\Persistence\Parser\SQL
 	 */
 	public static function ParseString($sqlQuery, $cleanWhitespace = true) {
 
 		// instantiate if called statically
-		if (!isset($this)) {
-			$handle = t3lib_div::makeInstance('Tx_ExtbaseHijax_Persistence_Parser_SQL');
+		if (!isset(self::$handle)) {
+			$handle = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('EssentialDots\\ExtbaseHijax\\Persistence\\Parser\\SQL');
 		} else {
-			$handle = $this;
+			$handle = self::$handle;
 		}
 
 		// copy and tokenize the query
@@ -246,7 +249,6 @@ class Tx_ExtbaseHijax_Persistence_Parser_SQL {
 
 			if (in_array($tokens[$position], self::$startparens)) {
 				$sub.= $this->readsub($tokens, $position);
-				$subs++;
 			} else {
 				$sub.= $tokens[$position];
 			}
@@ -260,7 +262,8 @@ class Tx_ExtbaseHijax_Persistence_Parser_SQL {
 	 * Returns manipulated sql to get the number of rows in the query.
 	 * Can be used for simple pagination, for example.
 	 *
-	 * @return string sql
+	 * @param string $optName
+	 * @return string
 	 */
 	public function getCountQuery($optName = 'count') {
 
@@ -319,7 +322,8 @@ class Tx_ExtbaseHijax_Persistence_Parser_SQL {
 	/**
 	 * Sets the limit section of the query.
 	 *
-	 * @return Tx_ExtbaseHijax_Persistence_Parser_SQL
+	 * @param $limit
+	 * @return \EssentialDots\ExtbaseHijax\Persistence\Parser\SQL
 	 */
 	public function setLimitStatement($limit) {
 	
@@ -331,7 +335,8 @@ class Tx_ExtbaseHijax_Persistence_Parser_SQL {
 	/**
 	 * Returns the specified section of the query.
 	 *
-	 * @return string sql
+	 * @param $which
+	 * @return bool|string
 	 */
 	public function get($which) {
 

@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\ViewHelpers\Widget;
+
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+*  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
 *  All rights reserved
 *
 *  This script is part of the Typo3 project. The Typo3 project is
@@ -24,52 +26,52 @@
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
 
-class Tx_ExtbaseHijax_ViewHelpers_Widget_LinkViewHelper extends Tx_Fluid_ViewHelpers_Widget_LinkViewHelper {
+class LinkViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\Widget\LinkViewHelper {
 	
 	/**
-	 * @var Tx_Extbase_Service_ExtensionService
+	 * @var \TYPO3\CMS\Extbase\Service\ExtensionService
 	 */
 	protected $extensionService;
 	
 	/**
-	 * @var Tx_ExtbaseHijax_Event_Dispatcher
+	 * @var \EssentialDots\ExtbaseHijax\Event\Dispatcher
 	 */
 	protected $hijaxEventDispatcher;
 	
 	/**
-	 * @var	tslib_cObj
+	 * @var	\TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer
 	 */
 	protected $contentObject;
 	
 	/**
-	 * @var Tx_Extbase_Configuration_ConfigurationManagerInterface
+	 * @var \TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface
 	 */
 	protected $configurationManager;
 	
 	/**
-	 * @param Tx_Extbase_Configuration_ConfigurationManagerInterface $configurationManager
+	 * @param \TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface $configurationManager
 	 * @return void
 	 */
-	public function injectConfigurationManager(Tx_Extbase_Configuration_ConfigurationManagerInterface $configurationManager) {
+	public function injectConfigurationManager(\TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface $configurationManager) {
 		$this->configurationManager = $configurationManager;
 		$this->contentObject = $this->configurationManager->getContentObject();
 	}
 	
 	/**
-	 * @param Tx_Extbase_Service_ExtensionService $extensionService
+	 * @param \TYPO3\CMS\Extbase\Service\ExtensionService $extensionService
 	 * @return void
 	 */
-	public function injectExtensionService(Tx_Extbase_Service_ExtensionService $extensionService) {
+	public function injectExtensionService(\TYPO3\CMS\Extbase\Service\ExtensionService $extensionService) {
 		$this->extensionService = $extensionService;
 	}
 
 	/**
 	 * Injects the event dispatcher
 	 *
-	 * @param Tx_ExtbaseHijax_Event_Dispatcher $eventDispatcher
+	 * @param \EssentialDots\ExtbaseHijax\Event\Dispatcher $eventDispatcher
 	 * @return void
 	 */
-	public function injectEventDispatcher(Tx_ExtbaseHijax_Event_Dispatcher $eventDispatcher) {
+	public function injectEventDispatcher(\EssentialDots\ExtbaseHijax\Event\Dispatcher $eventDispatcher) {
 		$this->hijaxEventDispatcher = $eventDispatcher;
 	}
 	
@@ -97,13 +99,18 @@ class Tx_ExtbaseHijax_ViewHelpers_Widget_LinkViewHelper extends Tx_Fluid_ViewHel
 	/**
 	 * Renders hijax-related data attributes
 	 *
-	 * @return void
+	 * @param null $action
+	 * @param array $arguments
+	 * @param array $contextArguments
+	 * @param bool $ajax
+	 * @param bool $cachedAjaxIfPossible
+	 * @return string
 	 */
 	protected function getWidgetUri($action = NULL, array $arguments = array(), array $contextArguments = array(), $ajax = TRUE, $cachedAjaxIfPossible = TRUE) {
 		$this->hijaxEventDispatcher->setIsHijaxElement(true);		
 		
 		$request = $this->controllerContext->getRequest();
-			/* @var $widgetContext Tx_ExtbaseHijax_Core_Widget_WidgetContext */
+			/* @var $widgetContext \EssentialDots\ExtbaseHijax\Core\Widget\WidgetContext */
 		$widgetContext = $request->getWidgetContext();
 		$tagAttributes = array();
 
@@ -165,15 +172,15 @@ class Tx_ExtbaseHijax_ViewHelpers_Widget_LinkViewHelper extends Tx_Fluid_ViewHel
 			$tagAttributes['data-hijax-arguments'] = serialize($requestArguments);
 		}
 			
-			/* @var $listener Tx_ExtbaseHijax_Event_Listener */
-		$listener = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager')->get('Tx_ExtbaseHijax_MVC_Dispatcher')->getCurrentListener();
+			/* @var $listener \EssentialDots\ExtbaseHijax\Event\Listener */
+		$listener = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Object\\ObjectManager')->get('EssentialDots\\ExtbaseHijax\\MVC\\Dispatcher')->getCurrentListener();
 		if ($ajax) {
 			$tagAttributes['data-hijax-settings'] = $listener->getId();
 		}
 		
 		if ($cachedAjaxIfPossible) {
-			/* @var $cacheHash t3lib_cacheHash */
-			$cacheHash = t3lib_div::makeInstance('t3lib_cacheHash');
+			/* @var $cacheHash \TYPO3\CMS\Frontend\Page\CacheHashCalculator */
+			$cacheHash = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\Page\\CacheHashCalculator');
 			$tagAttributes['data-hijax-chash'] = $cacheHash->calculateCacheHash(array(
 				'encryptionKey' => $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'],
 				'action' => $tagAttributes['data-hijax-action'],
@@ -199,7 +206,7 @@ class Tx_ExtbaseHijax_ViewHelpers_Widget_LinkViewHelper extends Tx_Fluid_ViewHel
 
 		return $uriBuilder
 			->reset()
-			//->setUseCacheHash($this->contentObject->getUserObjectType() === tslib_cObj::OBJECTTYPE_USER)
+			//->setUseCacheHash($this->contentObject->getUserObjectType() === \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer::OBJECTTYPE_USER)
 			->setArguments(array($pluginNamespace => $requestArguments))
 			->setSection($this->arguments['section'])
 			->setAddQueryString(TRUE)

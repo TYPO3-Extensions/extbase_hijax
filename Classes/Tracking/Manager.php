@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\Tracking;
+
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+ *  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -22,49 +24,49 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-class Tx_ExtbaseHijax_Tracking_Manager implements t3lib_Singleton {
+class Manager implements \TYPO3\CMS\Core\SingletonInterface {
 	/**
 	 * the page cache object, use this to save pages to the cache and to
 	 * retrieve them again
 	 *
-	 * @var t3lib_cache_AbstractBackend
+	 * @var \TYPO3\CMS\Core\Cache\Backend\AbstractBackend
 	 */
 	protected $pageCache;
 	
 	/**
-	 * @var t3lib_cache_frontend_VariableFrontend
+	 * @var \TYPO3\CMS\Core\Cache\Frontend\VariableFrontend
 	 */
 	protected $trackingCache;
 	
 	/**
-	 * @var tslib_fe
+	 * @var \TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController
 	 */
 	protected $fe;
 
 	/**
-	 * @var Tx_Extbase_Object_ObjectManager
+	 * @var \TYPO3\CMS\Extbase\Object\ObjectManager
 	 */
 	protected $objectManager;
 		
 	/**
-	 * @var Tx_Extbase_Persistence_Mapper_DataMapper
+	 * @var \TYPO3\CMS\Extbase\Persistence\Generic\Mapper\DataMapper
 	 */
 	protected $dataMapper;
 	
 	/**
-	 * @var Tx_Extbase_Configuration_ConfigurationManagerInterface
+	 * @var \TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface
 	 */
 	protected $configurationManager;	
 	
 	/**
-	 * @var Tx_ExtbaseHijax_Utility_Ajax_Dispatcher
+	 * @var \EssentialDots\ExtbaseHijax\Utility\Ajax\Dispatcher
 	 */
 	protected $ajaxDispatcher;
 		
 	/**
 	 * Extension Configuration
 	 *
-	 * @var Tx_ExtbaseHijax_Configuration_ExtensionInterface
+	 * @var \EssentialDots\ExtbaseHijax\Configuration\ExtensionInterface
 	 */
 	protected $extensionConfiguration;
 	
@@ -74,12 +76,12 @@ class Tx_ExtbaseHijax_Tracking_Manager implements t3lib_Singleton {
 	public function __construct() {
 		$this->fe = $GLOBALS['TSFE'];
 		$this->trackingCache = $GLOBALS['typo3CacheManager']->getCache('extbase_hijax_tracking');
-		$this->objectManager = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager');
-		$this->dataMapper = $this->objectManager->get('Tx_Extbase_Persistence_Mapper_DataMapper');
+		$this->objectManager = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Object\\ObjectManager');
+		$this->dataMapper = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\DataMapper');
 		$this->pageCache = $GLOBALS['typo3CacheManager']->getCache('cache_pages');
-		$this->configurationManager = $this->objectManager->get('Tx_Extbase_Configuration_ConfigurationManagerInterface');
-		$this->ajaxDispatcher = $this->objectManager->get('Tx_ExtbaseHijax_Utility_Ajax_Dispatcher');
-		$this->extensionConfiguration = $this->objectManager->get('Tx_ExtbaseHijax_Configuration_ExtensionInterface');
+		$this->configurationManager = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Configuration\\ConfigurationManagerInterface');
+		$this->ajaxDispatcher = $this->objectManager->get('EssentialDots\\ExtbaseHijax\\Utility\\Ajax\\Dispatcher');
+		$this->extensionConfiguration = $this->objectManager->get('EssentialDots\\ExtbaseHijax\\Configuration\\ExtensionInterface');
 	}
 	
 	/**
@@ -90,7 +92,7 @@ class Tx_ExtbaseHijax_Tracking_Manager implements t3lib_Singleton {
 	public function clearPageCacheForObjects($objects) {
 		if ($objects) {
 			foreach ($objects as $object) {
-					/* @var $object Tx_Extbase_DomainObject_AbstractDomainObject */
+					/* @var $object \TYPO3\CMS\Extbase\DomainObject\AbstractDomainObject */
 				$objectIdentifier = $this->getObjectIdentifierForObject($object);
 				$this->clearPageCacheForObjectIdentifier($objectIdentifier);
 			}
@@ -102,16 +104,16 @@ class Tx_ExtbaseHijax_Tracking_Manager implements t3lib_Singleton {
 	/**
 	 * Clears cache of pages where single object is shown
 	 *
-	 * @param Tx_Extbase_DomainObject_AbstractDomainObject $object
+	 * @param \TYPO3\CMS\Extbase\DomainObject\AbstractDomainObject $object
 	 */
 	public function clearPageCacheForObject($object) {
-		return $this->clearPageCacheForObjects(array($object));
+		$this->clearPageCacheForObjects(array($object));
 	}
 	
 	/**
 	 * Clears cache of pages where objects are shown
 	 *
-	 * @param array $objects
+	 * @param array $objectIdentifiers
 	 */
 	public function clearPageCacheForObjectIdentifiers($objectIdentifiers) {
 		if ($objectIdentifiers) {
@@ -206,20 +208,20 @@ class Tx_ExtbaseHijax_Tracking_Manager implements t3lib_Singleton {
 						break;
 				}		
 
-				if ($object instanceof Tx_Extbase_Persistence_RepositoryInterface) {
+				if ($object instanceof \TYPO3\CMS\Extbase\Persistence\RepositoryInterface) {
 					$objectType = preg_replace(array('/_Repository_(?!.*_Repository_)/', '/Repository$/'), array('_Model_', ''), get_class($object));
 					$tableName = $this->dataMapper->getDataMap($objectType)->getTableName();
-				} elseif ($object instanceof Tx_Extbase_DomainObject_AbstractDomainObject) {
+				} elseif ($object instanceof \TYPO3\CMS\Extbase\DomainObject\AbstractDomainObject) {
 					$objectType = get_class($object);
 					$tableName = $this->dataMapper->getDataMap($objectType)->getTableName();
 				} else {
 					$tableName = (string) $object;
 				}
 				
-				$frameworkConfiguration = $this->configurationManager->getConfiguration(Tx_Extbase_Configuration_ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK);
+				$frameworkConfiguration = $this->configurationManager->getConfiguration(\TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK);
 				
 				if ($tableName && $frameworkConfiguration['persistence']['storagePid']) {
-					$storagePids = t3lib_div::intExplode(',', $frameworkConfiguration['persistence']['storagePid'], true);
+					$storagePids = \TYPO3\CMS\Core\Utility\GeneralUtility::intExplode(',', $frameworkConfiguration['persistence']['storagePid'], true);
 					
 					foreach ($storagePids as $storagePid) {
 						$objectIdentifier = $this->getObjectIdentifierForRepository($tableName, $storagePid);
@@ -260,12 +262,12 @@ class Tx_ExtbaseHijax_Tracking_Manager implements t3lib_Singleton {
 	/**
 	 * Tracks display of an object on a page
 	 * 
-	 * @param Tx_Extbase_DomainObject_AbstractDomainObject $object Object to use
+	 * @param \TYPO3\CMS\Extbase\DomainObject\AbstractDomainObject $object Object to use
 	 * @param mixed $hash Hash or page id (depending on the type) for which the object display will be associated
 	 * @param string $type 'hash' (for only one hash) or 'id' (for complete page cache of a page, for all hash combinations)
 	 * @return void
 	 */
-	public function trackObjectOnPage(Tx_Extbase_DomainObject_AbstractDomainObject $object = NULL, $type = 'hash', $hash = false) {
+	public function trackObjectOnPage(\TYPO3\CMS\Extbase\DomainObject\AbstractDomainObject $object = NULL, $type = 'hash', $hash = false) {
 		if ($object && !$this->ajaxDispatcher->getIsActive()) {
 			if ($type) {
 				switch ($type) {
@@ -321,10 +323,10 @@ class Tx_ExtbaseHijax_Tracking_Manager implements t3lib_Singleton {
 	/**
 	 * Returns the identifier for an object
 	 * 
-	 * @param Tx_Extbase_DomainObject_AbstractDomainObject $object
+	 * @param \TYPO3\CMS\Extbase\DomainObject\AbstractDomainObject $object
 	 * @return string
 	 */
-	public function getObjectIdentifierForObject(Tx_Extbase_DomainObject_AbstractDomainObject $object = NULL) {
+	public function getObjectIdentifierForObject(\TYPO3\CMS\Extbase\DomainObject\AbstractDomainObject $object = NULL) {
 		$objectIdentifier = false;
 		
 		if ($object) {
@@ -339,7 +341,7 @@ class Tx_ExtbaseHijax_Tracking_Manager implements t3lib_Singleton {
 	/**
 	 * Returns the identifier for a record
 	 *
-	 * @param Tx_Extbase_DomainObject_AbstractDomainObject $object
+	 * @param string $table
 	 * @param int $id
 	 * @return string
 	 */
@@ -356,7 +358,7 @@ class Tx_ExtbaseHijax_Tracking_Manager implements t3lib_Singleton {
 	/**
 	 * Returns the identifier for a record
 	 *
-	 * @param Tx_Extbase_DomainObject_AbstractDomainObject $object
+	 * @param string $table
 	 * @param int $pid
 	 * @return string
 	 */
@@ -380,17 +382,16 @@ class Tx_ExtbaseHijax_Tracking_Manager implements t3lib_Singleton {
 	/**
 	 * Lock the process
 	 *
-	 * @param	Tx_ExtbaseHijax_Lock_Lock	Reference to a locking object
-	 * @param	string		String to identify the lock in the system
-	 * @param	boolean		Exclusive lock (shared if FALSE)
-	 * @return	boolean		Returns TRUE if the lock could be obtained, FALSE otherwise 
-	 * @see releaseLock()
+	 * @param \EssentialDots\ExtbaseHijax\Lock\Lock $lockObj
+	 * @param $key                  String to identify the lock in the system
+	 * @param bool $exclusive       Exclusive lock (shared if FALSE)
+	 * @return bool                 Returns TRUE if the lock could be obtained, FALSE otherwise
 	 */
 	protected function acquireLock(&$lockObj, $key, $exclusive = TRUE)	{
 		try {
 			if (!is_object($lockObj)) {
-					/* @var $lockObj Tx_ExtbaseHijax_Lock_Lock */
-				$lockObj = t3lib_div::makeInstance('Tx_ExtbaseHijax_Lock_Lock', $key);
+					/* @var $lockObj \EssentialDots\ExtbaseHijax\Lock\Lock */
+				$lockObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('EssentialDots\\ExtbaseHijax\\Lock\\Lock', $key);
 			}
 	
 			$success = FALSE;
@@ -400,8 +401,8 @@ class Tx_ExtbaseHijax_Tracking_Manager implements t3lib_Singleton {
 					$lockObj->sysLog('Acquired lock');
 				}
 			}
-		} catch (Exception $e) {
-			t3lib_div::sysLog('Locking: Failed to acquire lock: '.$e->getMessage(), 'cms', t3lib_div::SYSLOG_SEVERITY_ERROR);
+		} catch (\Exception $e) {
+			\TYPO3\CMS\Core\Utility\GeneralUtility::sysLog('Locking: Failed to acquire lock: '.$e->getMessage(), 'cms', \TYPO3\CMS\Core\Utility\GeneralUtility::SYSLOG_SEVERITY_ERROR);
 			$success = FALSE;	// If locking fails, return with FALSE and continue without locking
 		}
 	
@@ -411,14 +412,14 @@ class Tx_ExtbaseHijax_Tracking_Manager implements t3lib_Singleton {
 	/**
 	 * Release the lock
 	 *
-	 * @param	Tx_ExtbaseHijax_Lock_Lock	Reference to a locking object
+	 * @param	\EssentialDots\ExtbaseHijax\Lock\Lock	Reference to a locking object
 	 * @return	boolean		Returns TRUE on success, FALSE otherwise
 	 * @see acquireLock()
 	 */
 	protected function releaseLock(&$lockObj) {
 		$success = FALSE;
 			// If lock object is set and was acquired, release it:
-		if (is_object($lockObj) && $lockObj instanceof Tx_ExtbaseHijax_Lock_Lock && $lockObj->getLockStatus()) {
+		if (is_object($lockObj) && $lockObj instanceof \EssentialDots\ExtbaseHijax\Lock\Lock && $lockObj->getLockStatus()) {
 			$success = $lockObj->release();
 			$lockObj->sysLog('Released lock');
 			$lockObj = NULL;

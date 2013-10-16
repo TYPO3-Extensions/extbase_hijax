@@ -1,5 +1,5 @@
 <?php
-namespace EssentialDots\ExtbaseHijax\ViewHelpers\Widget;
+namespace EssentialDots\ExtbaseHijax\Core\Parser;
 
 /***************************************************************
 *  Copyright notice
@@ -26,34 +26,26 @@ namespace EssentialDots\ExtbaseHijax\ViewHelpers\Widget;
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
 
-class PaginateViewHelper extends \EssentialDots\ExtbaseHijax\Core\Widget\AbstractWidgetViewHelper {
+class TemplateParser extends \TYPO3\CMS\Fluid\Core\Parser\TemplateParser {
 
 	/**
-	 * @var \EssentialDots\ExtbaseHijax\ViewHelpers\Widget\Controller\PaginateController
-	 */
-	protected $controller;
-
-	/**
-	 * @param \EssentialDots\ExtbaseHijax\ViewHelpers\Widget\Controller\PaginateController $controller
-	 * @return void
-	 */
-	public function injectController(\EssentialDots\ExtbaseHijax\ViewHelpers\Widget\Controller\PaginateController $controller) {
-		$this->controller = $controller;
-	}
-
-	/**
+	 * Extracts namespace definitions out of the given template string and sets
+	 * $this->namespaces.
 	 *
-	 * @param mixed $objects
-	 * @param string $as
-	 * @param array $configuration
-	 * @param array $variables
-	 * @return string
+	 * @param string $templateString Template string to extract the namespaces from
+	 * @return string The updated template string without namespace declarations inside
+	 * @throws \TYPO3\CMS\Fluid\Core\Parser\Exception if a namespace can't be resolved or has been declared already
 	 */
-	public function render($objects, $as, array $configuration = array('itemsPerPage' => 10, 'insertAbove' => FALSE, 'insertBelow' => TRUE, 'pagerTemplate' => FALSE, 'widgetIdentifier' => ''), $variables = array()) {
-		if ($configuration['widgetIdentifier']) {
-			$this->widgetContext->setWidgetIdentifier($configuration['widgetIdentifier']);
+	protected function extractNamespaceDefinitions($templateString) {
+		$templateString = parent::extractNamespaceDefinitions($templateString);
+
+		foreach ($this->namespaces as $identifier => $phpNamespace) {
+			if ($phpNamespace=='Tx_ExtbaseHijax_ViewHelpers') {
+				$this->namespaces[$identifier] = 'EssentialDots\\ExtbaseHijax\\ViewHelpers';
+			}
 		}
-		return $this->initiateSubRequest();
+
+		return $templateString;
 	}
 }
 

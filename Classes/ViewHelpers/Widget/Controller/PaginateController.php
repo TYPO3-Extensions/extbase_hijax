@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\ViewHelpers\Widget\Controller;
+
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+*  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
 *  All rights reserved
 *
 *  This script is part of the Typo3 project. The Typo3 project is
@@ -24,7 +26,7 @@
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
 
-class Tx_ExtbaseHijax_ViewHelpers_Widget_Controller_PaginateController extends Tx_Fluid_Core_Widget_AbstractWidgetController {
+class PaginateController extends \TYPO3\CMS\Fluid\Core\Widget\AbstractWidgetController {
 
 	/**
 	 * @var array
@@ -37,7 +39,7 @@ class Tx_ExtbaseHijax_ViewHelpers_Widget_Controller_PaginateController extends T
 	protected $variables = array();
 
 	/**
-	 * @var Tx_Extbase_Persistence_QueryResultInterface
+	 * @var \TYPO3\CMS\Extbase\Persistence\QueryResultInterface
 	 */
 	protected $objects;
 
@@ -56,7 +58,7 @@ class Tx_ExtbaseHijax_ViewHelpers_Widget_Controller_PaginateController extends T
 	 */
 	public function initializeAction() {
 		$this->objects = $this->widgetConfiguration['objects'];
-		$this->configuration = t3lib_div::array_merge_recursive_overrule($this->configuration, $this->widgetConfiguration['configuration'], TRUE);
+		$this->configuration = \TYPO3\CMS\Core\Utility\GeneralUtility::array_merge_recursive_overrule($this->configuration, $this->widgetConfiguration['configuration'], TRUE);
 		$this->variables = $this->widgetConfiguration['variables'];
 		
 		$objectsCount = 0;
@@ -94,7 +96,7 @@ class Tx_ExtbaseHijax_ViewHelpers_Widget_Controller_PaginateController extends T
 				$offset = (integer)(($itemsPerPage * ($this->currentPage - 1)) + count($paginatedItems) - $previousObjectSetsCount);
 			}
 
-			if ($objects instanceof Tx_Extbase_Persistence_QueryResultInterface || $objects instanceof \TYPO3\CMS\Extbase\Persistence\QueryResultInterface) {
+			if ($objects instanceof \TYPO3\CMS\Extbase\Persistence\Generic\QueryResult || $objects instanceof \TYPO3\CMS\Extbase\Persistence\QueryResultInterface) {
 				$query = $objects->getQuery();
 				$query->setLimit($limit);
 				$query->setOffset($offset);
@@ -148,16 +150,16 @@ class Tx_ExtbaseHijax_ViewHelpers_Widget_Controller_PaginateController extends T
 	}
 	
 	/**
-	 * @param Tx_Extbase_MVC_View_ViewInterface $view
+	 * @param \TYPO3\CMS\Extbase\Mvc\View\ViewInterface $view
 	 * @return void
 	 */
-	protected function setViewConfiguration(Tx_Extbase_MVC_View_ViewInterface $view) {
+	protected function setViewConfiguration(\TYPO3\CMS\Extbase\Mvc\View\ViewInterface $view) {
 		parent::setViewConfiguration($view);
 
 			// Template Path Override
 		if ($this->configuration['pagerTemplate']) {
-			$templatePathAndFilename = t3lib_div::getFileAbsFileName($this->configuration['pagerTemplate']);
-			if (t3lib_div::isAllowedAbsPath($templatePathAndFilename)) {
+			$templatePathAndFilename = \TYPO3\CMS\Core\Utility\GeneralUtility::getFileAbsFileName($this->configuration['pagerTemplate']);
+			if (\TYPO3\CMS\Core\Utility\GeneralUtility::isAllowedAbsPath($templatePathAndFilename)) {
 				$view->setTemplatePathAndFilename($templatePathAndFilename);
 			}			
 		}

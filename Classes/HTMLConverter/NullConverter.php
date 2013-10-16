@@ -1,4 +1,6 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\HTMLConverter;
+
 /***************************************************************
  *  Copyright notice
  *
@@ -22,10 +24,10 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-class Tx_ExtbaseHijax_HTMLConverter_NullConverter extends Tx_ExtbaseHijax_HTMLConverter_AbstractConverter {
+class NullConverter extends \EssentialDots\ExtbaseHijax\HTMLConverter\AbstractConverter {
 	/**
-	 * @param Tx_Extbase_MVC_Web_Response $response
-	 * @return Tx_Extbase_MVC_Web_Response
+	 * @param \TYPO3\CMS\Extbase\Mvc\Web\Response $response
+	 * @return \TYPO3\CMS\Extbase\Mvc\Web\Response
 	 */
 	public function convert($response) {
 		return $response;

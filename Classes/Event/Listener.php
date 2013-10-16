@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\Event;
+
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+*  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -22,30 +24,30 @@
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
 
-class Tx_ExtbaseHijax_Event_Listener {
+class Listener {
 	
 	/**
-	 * @var Tx_Extbase_Object_ObjectManager
+	 * @var \TYPO3\CMS\Extbase\Object\ObjectManager
 	 */
 	protected $objectManager;
 	
 	/**
-	 * @var Tx_Extbase_Configuration_ConfigurationManagerInterface
+	 * @var \TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface
 	 */
 	protected $configurationManager;
 
 	/**
-	 * @var Tx_ExtbaseHijax_Service_AutoIDService
+	 * @var \EssentialDots\ExtbaseHijax\Service\AutoIDService
 	 */
 	protected $autoIDService;
 	
 	/**
-	 * @var Tx_Extbase_MVC_RequestInterface
+	 * @var \TYPO3\CMS\Extbase\Mvc\RequestInterface
 	 */
 	protected $request;
 	
 	/**
-	 * @var tslib_cObj
+	 * @var \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer
 	 */
 	protected $cObj;
 	
@@ -60,37 +62,37 @@ class Tx_ExtbaseHijax_Event_Listener {
 	protected $id;
 	
 	/**
-	 * @param Tx_Extbase_Object_ObjectManager $objectManager
+	 * @param \TYPO3\CMS\Extbase\Object\ObjectManager $objectManager
 	 */
-	public function injectObjectManager(Tx_Extbase_Object_ObjectManager $objectManager) {
+	public function injectObjectManager(\TYPO3\CMS\Extbase\Object\ObjectManager $objectManager) {
 		$this->objectManager = $objectManager;
 	}
 	
 	/**
-	 * @param Tx_Extbase_Configuration_ConfigurationManagerInterface $configurationManager
+	 * @param \TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface $configurationManager
 	 */
-	public function injectConfigurationManager(Tx_Extbase_Configuration_ConfigurationManagerInterface $configurationManager) {
+	public function injectConfigurationManager(\TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface $configurationManager) {
 		$this->configurationManager = $configurationManager;
 	}
 	
 	/**
-	 * @param Tx_ExtbaseHijax_Service_AutoIDService $autoIDService
+	 * @param \EssentialDots\ExtbaseHijax\Service\AutoIDService $autoIDService
 	 */
-	public function injectAutoIDService(Tx_ExtbaseHijax_Service_AutoIDService $autoIDService) {
+	public function injectAutoIDService(\EssentialDots\ExtbaseHijax\Service\AutoIDService $autoIDService) {
 		$this->autoIDService = $autoIDService;
 	}
 	
 	/**
-	 * Constructs a new Tx_ExtbaseHijax_Event_Listener.
+	 * Constructs a new \EssentialDots\ExtbaseHijax\Event\Listener.
 	 *
-	 * @param Tx_Extbase_MVC_RequestInterface		$request		The request
+	 * @param \TYPO3\CMS\Extbase\Mvc\RequestInterface		$request		The request
 	 * @param array 								$configuration 	Framework configuraiton
-	 * @param tslib_cObj	 						$cObj	 	An array of parameters
+	 * @param \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer	 						$cObj	 	An array of parameters
 	 */
-	public function __construct(Tx_Extbase_MVC_RequestInterface $request, $configuration = null, $cObj = null) {
-		$this->injectObjectManager(t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager'));
-		$this->injectConfigurationManager($this->objectManager->get('Tx_Extbase_Configuration_ConfigurationManagerInterface'));
-		$this->injectAutoIDService($this->objectManager->get('Tx_ExtbaseHijax_Service_AutoIDService'));
+	public function __construct(\TYPO3\CMS\Extbase\Mvc\RequestInterface $request, $configuration = null, $cObj = null) {
+		$this->injectObjectManager(\TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Object\\ObjectManager'));
+		$this->injectConfigurationManager($this->objectManager->get('TYPO3\\CMS\\Extbase\\Configuration\\ConfigurationManagerInterface'));
+		$this->injectAutoIDService($this->objectManager->get('EssentialDots\\ExtbaseHijax\\Service\\AutoIDService'));
 		
 		$this->request = $request;
 		if (method_exists($this->request, 'setMethod')) {
@@ -100,7 +102,7 @@ class Tx_ExtbaseHijax_Event_Listener {
 		if ($configuration) {
 			$this->configuration = $configuration;
 		} else {
-			$this->configuration = $this->configurationManager->getConfiguration(Tx_Extbase_Configuration_ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK);
+			$this->configuration = $this->configurationManager->getConfiguration(\TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK);
 		}
 		
 		if ($cObj) {
@@ -109,21 +111,21 @@ class Tx_ExtbaseHijax_Event_Listener {
 			$this->cObj = $this->configurationManager->getContentObject();
 		}
 		
-			/* @var $listenerFactory Tx_ExtbaseHijax_Service_Serialization_ListenerFactory */
-		$listenerFactory = $this->objectManager->get('Tx_ExtbaseHijax_Service_Serialization_ListenerFactory');
+			/* @var $listenerFactory \EssentialDots\ExtbaseHijax\Service\Serialization\ListenerFactory */
+		$listenerFactory = $this->objectManager->get('EssentialDots\\ExtbaseHijax\\Service\\Serialization\\ListenerFactory');
 			// old logic - using autoincrement
 		//$this->id = $this->autoIDService->getAutoId(get_class($this));
 			// new logic - determine the id based on md5 hash
 		$this->id = ''; // resetting the id so it doesn't affect the hash
 		$serialized = $listenerFactory->serialize($this);
-		list($table, $uid) = t3lib_div::trimExplode(':', $this->cObj->currentRecord);
+		list($table, $uid) = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(':', $this->cObj->currentRecord);
 		if ($table=='tt_content' && $uid) {
 			$this->id = str_replace(':', '-', $this->cObj->currentRecord).'-'.md5($serialized);
 		} else {
 				// test if this is ExtbaseHijax Pi1
 			if (method_exists($this->request, 'getControllerExtensionName') && method_exists($this->request, 'getPluginName') && $this->request->getControllerExtensionName()=='ExtbaseHijax' && $this->request->getPluginName()=='Pi1') {
 				$encodedSettings = str_replace('.', '---', $this->configuration['settings']['loadContentFromTypoScript']);
-				$settingsHash = t3lib_div::hmac($encodedSettings);
+				$settingsHash = \TYPO3\CMS\Core\Utility\GeneralUtility::hmac($encodedSettings);
 				if ($this->configuration['switchableControllerActions']['ContentElement'][0]=='user') {
 					$this->id = 'h-'.$settingsHash.'-'.$encodedSettings;
 				} else {
@@ -131,7 +133,7 @@ class Tx_ExtbaseHijax_Event_Listener {
 				}
 			} elseif ($this->configuration['settings']['fallbackTypoScriptConfiguration']) {
 				$encodedSettings = str_replace('.', '---', $this->configuration['settings']['fallbackTypoScriptConfiguration']);
-				$settingsHash = t3lib_div::hmac($encodedSettings);
+				$settingsHash = \TYPO3\CMS\Core\Utility\GeneralUtility::hmac($encodedSettings);
 				$this->id = 'f-'.$settingsHash.'-'.$encodedSettings;
 			} else {
 				$this->id = md5($serialized);
@@ -140,49 +142,49 @@ class Tx_ExtbaseHijax_Event_Listener {
 	}
 
 	/**
-	 * @return Tx_Extbase_MVC_RequestInterface
+	 * @return \TYPO3\CMS\Extbase\Mvc\RequestInterface
 	 */
 	public function getRequest() {
 		return $this->request;
 	}
 	
 	/**
-	 * @return the $request
+	 * @return string
 	 */
 	public function getSerializedRequest() {
-		return $this->objectManager->get('Tx_ExtbaseHijax_Service_Serialization_RequestFactory')->serialize($this->request);
+		return $this->objectManager->get('EssentialDots\\ExtbaseHijax\\Service\\Serialization\\RequestFactory')->serialize($this->request);
 	}
 	
 	/**
-	 * @return the $request
+	 * @return string
 	 */
 	public function getSerializedCObj() {
-		return $this->objectManager->get('Tx_ExtbaseHijax_Service_Serialization_CObjFactory')->serialize(t3lib_div::makeInstance('Tx_ExtbaseHijax_Event_CObj', $this->cObj));
+		return $this->objectManager->get('EssentialDots\\ExtbaseHijax\\Service\\Serialization\\CObjFactory')->serialize(\TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('EssentialDots\\ExtbaseHijax\\Event\\CObj', $this->cObj));
 	}	
 
 	/**
-	 * @return tslib_cObj $cObj
+	 * @return \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer $cObj
 	 */
 	public function getCObj() {
 		return $this->cObj;
 	}
 
 	/**
-	 * @return the $configuration
+	 * @return array
 	 */
 	public function getConfiguration() {
 		return $this->configuration;
 	}
 
 	/**
-	 * @return the $id
+	 * @return string
 	 */
 	public function getId() {
 		return $this->id;
 	}
 
 	/**
-	 * @param Tx_Extbase_MVC_RequestInterface $request
+	 * @param \TYPO3\CMS\Extbase\Mvc\RequestInterface $request
 	 */
 	public function setRequest($request) {
 		$this->request = $request;
@@ -192,21 +194,21 @@ class Tx_ExtbaseHijax_Event_Listener {
 	 * @param string $request
 	 */
 	public function setSerializedRequest($request) {
-		$this->request = $this->objectManager->get('Tx_ExtbaseHijax_Service_Serialization_RequestFactory')->unserialize($request);
+		$this->request = $this->objectManager->get('EssentialDots\\ExtbaseHijax\\Service\\Serialization\\RequestFactory')->unserialize($request);
 	}
 	
 	/**
 	 * @param string $cObj
 	 */
 	public function setSerializedCObj($cObj) {
-			/* @var $eventCObj Tx_ExtbaseHijax_Event_CObj */
-		$eventCObj = $this->objectManager->get('Tx_ExtbaseHijax_Service_Serialization_CObjFactory')->unserialize($cObj);
+			/* @var $eventCObj \EssentialDots\ExtbaseHijax\Event\CObj */
+		$eventCObj = $this->objectManager->get('EssentialDots\\ExtbaseHijax\\Service\\Serialization\\CObjFactory')->unserialize($cObj);
 		$eventCObj->reconstitute();
 		$this->cObj = $eventCObj->getCObj();
 	}	
 	
 	/**
-	 * @param tslib_cObj $cObj
+	 * @param \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer $cObj
 	 */
 	public function setCObj($cObj) {
 		$this->cObj = $cObj;

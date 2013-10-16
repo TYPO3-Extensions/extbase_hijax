@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\ViewHelpers;
+
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+ *  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -22,48 +24,48 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-class Tx_ExtbaseHijax_ViewHelpers_AjaxLinkViewHelper extends Tx_Fluid_Core_ViewHelper_AbstractViewHelper {
+class AjaxLinkViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelper {
 
 	/**
-	 * @var Tx_ExtbaseHijax_MVC_Dispatcher
+	 * @var \EssentialDots\ExtbaseHijax\MVC\Dispatcher
 	 */
 	protected $mvcDispatcher;
 	
 	/**
-	 * @var Tx_Extbase_Service_ExtensionService
+	 * @var \TYPO3\CMS\Extbase\Service\ExtensionService
 	 */
 	protected $extensionService;
 	
 	/**
 	 * Injects the MVC dispatcher
 	 *
-	 * @param Tx_ExtbaseHijax_MVC_Dispatcher $mvcDispatcher
+	 * @param \EssentialDots\ExtbaseHijax\MVC\Dispatcher $mvcDispatcher
 	 * @return void
 	 */
-	public function injectMVCDispatcher(Tx_ExtbaseHijax_MVC_Dispatcher $mvcDispatcher) {
+	public function injectMVCDispatcher(\EssentialDots\ExtbaseHijax\MVC\Dispatcher $mvcDispatcher) {
 		$this->mvcDispatcher = $mvcDispatcher;
 	}
 	
 	/**
-	 * @param Tx_Extbase_Service_ExtensionService $extensionService
+	 * @param \TYPO3\CMS\Extbase\Service\ExtensionService $extensionService
 	 * @return void
 	 */
-	public function injectExtensionService(Tx_Extbase_Service_ExtensionService $extensionService) {
+	public function injectExtensionService(\TYPO3\CMS\Extbase\Service\ExtensionService $extensionService) {
 		$this->extensionService = $extensionService;
 	}
 		
 	/**
-	 * @var Tx_ExtbaseHijax_Service_JSBuilder
+	 * @var \EssentialDots\ExtbaseHijax\Service\JSBuilder
 	 */
 	protected $jsBuilder;
 	
 	/**
 	 * injectJSBuilder
 	 *
-	 * @param Tx_ExtbaseHijax_Service_JSBuilder $jsBuilder
+	 * @param \EssentialDots\ExtbaseHijax\Service\JSBuilder $jsBuilder
 	 * @return void
 	 */
-	public function injectJSBuilder(Tx_ExtbaseHijax_Service_JSBuilder $jsBuilder) {
+	public function injectJSBuilder(\EssentialDots\ExtbaseHijax\Service\JSBuilder $jsBuilder) {
 		$this->jsBuilder = $jsBuilder;
 	}
 			
@@ -112,8 +114,8 @@ class Tx_ExtbaseHijax_ViewHelpers_AjaxLinkViewHelper extends Tx_Fluid_Core_ViewH
 			$additionalParams .= '&'.implode('&', $additionalArguments);
 		}
 		
-		/* @var $cObj tslib_cObj */
-		$cObj = t3lib_div::makeInstance('tslib_cObj'); 
+		/* @var $cObj \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer */
+		$cObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\ContentObject\\ContentObjectRenderer');
 		
 		return $cObj->typoLink('', array(
 				'returnLast' => 'url',

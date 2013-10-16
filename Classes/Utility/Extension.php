@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\Utility;
+
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+ *  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -22,7 +24,7 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-class Tx_ExtbaseHijax_Utility_Extension extends Tx_Extbase_Utility_Extension {
+class Extension extends \TYPO3\CMS\Extbase\Utility\ExtensionUtility {
 	/**
 	 * Add auto-generated TypoScript to configure the Extbase Dispatcher.
 	 *
@@ -39,15 +41,16 @@ class Tx_ExtbaseHijax_Utility_Extension extends Tx_Extbase_Utility_Extension {
 	 * @param string $pluginName must be a unique id for your plugin in UpperCamelCase (the string length of the extension key added to the length of the plugin name should be less than 32!)
 	 * @param array $controllerActions is an array of allowed combinations of controller and action stored in an array (controller name as key and a comma separated list of action names as value, the first controller and its first action is chosen as default)
 	 * @param array $nonCacheableControllerActions is an optional array of controller name and  action names which should not be cached (array as defined in $controllerActions)
-	 * @param string $pluginType either Tx_Extbase_Utility_Extension::TYPE_PLUGIN (default) or Tx_Extbase_Utility_Extension::TYPE_CONTENT_ELEMENT
+	 * @param string $pluginType either \TYPO3\CMS\Extbase\Utility\ExtensionUtility::TYPE_PLUGIN (default) or \TYPO3\CMS\Extbase\Utility\ExtensionUtility::TYPE_CONTENT_ELEMENT
 	 * @return void
+	 * @throws \InvalidArgumentException
 	 */
 	static public function configurePlugin($extensionName, $pluginName, array $controllerActions, array $nonCacheableControllerActions = array(), $pluginType = self::PLUGIN_TYPE_PLUGIN) {
 		if (empty($pluginName)) {
-			throw new InvalidArgumentException('The plugin name must not be empty', 1239891987);
+			throw new \InvalidArgumentException('The plugin name must not be empty', 1239891987);
 		}
 		if (empty($extensionName)) {
-			throw new InvalidArgumentException('The extension name was invalid (must not be empty and must match /[A-Za-z][_A-Za-z0-9]/)', 1239891989);
+			throw new \InvalidArgumentException('The extension name was invalid (must not be empty and must match /[A-Za-z][_A-Za-z0-9]/)', 1239891989);
 		}
 		$extensionName = str_replace(' ', '', ucwords(str_replace('_', ' ', $extensionName)));
 		$pluginSignature = strtolower($extensionName) . '_' . strtolower($pluginName);
@@ -56,9 +59,9 @@ class Tx_ExtbaseHijax_Utility_Extension extends Tx_Extbase_Utility_Extension {
 		}
 
 		foreach ($controllerActions as $controllerName => $actionsList) {
-			$GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['extbase']['extensions'][$extensionName]['plugins'][$pluginName]['controllers'][$controllerName] = array('actions' => t3lib_div::trimExplode(',', $actionsList));
+			$GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['extbase']['extensions'][$extensionName]['plugins'][$pluginName]['controllers'][$controllerName] = array('actions' => \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $actionsList));
 			if (!empty($nonCacheableControllerActions[$controllerName])) {
-				$GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['extbase']['extensions'][$extensionName]['plugins'][$pluginName]['controllers'][$controllerName]['nonCacheableActions'] = t3lib_div::trimExplode(',', $nonCacheableControllerActions[$controllerName]);
+				$GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['extbase']['extensions'][$extensionName]['plugins'][$pluginName]['controllers'][$controllerName]['nonCacheableActions'] = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $nonCacheableControllerActions[$controllerName]);
 			}
 		}
 
@@ -78,7 +81,7 @@ class Tx_ExtbaseHijax_Utility_Extension extends Tx_Extbase_Utility_Extension {
 		defaultPid =
 	}
 }';
-		t3lib_extMgm::addTypoScript($extensionName, 'setup', '
+		\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addTypoScript($extensionName, 'setup', '
 # Setting ' . $extensionName . ' plugin TypoScript
 ' . $pluginTemplate);
 
@@ -87,7 +90,7 @@ class Tx_ExtbaseHijax_Utility_Extension extends Tx_Extbase_Utility_Extension {
 				$pluginContent = trim('
 tt_content.list.20.' . $pluginSignature . ' = USER
 tt_content.list.20.' . $pluginSignature . ' {
-	userFunc = Tx_Extbase_Core_Bootstrap->run
+	userFunc = TYPO3\\CMS\\Extbase\\Core\\Bootstrap->run
 	extensionName = ' . $extensionName . '
 	pluginName = ' . $pluginName . '
 }');
@@ -99,18 +102,18 @@ tt_content.' . $pluginSignature . ' {
 	10 = < lib.stdheader
 	20 = USER
 	20 {
-		userFunc = Tx_Extbase_Core_Bootstrap->run
+		userFunc = TYPO3\\CMS\\Extbase\\Core\\Bootstrap->run
 		extensionName = ' . $extensionName . '
 		pluginName = ' . $pluginName . '
 	}
 }');
 				break;
 			default:
-				throw new InvalidArgumentException('The pluginType "' . $pluginType .'" is not suported', 1289858856);
+				throw new \InvalidArgumentException('The pluginType "' . $pluginType .'" is not suported', 1289858856);
 		}
 		$GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['extbase']['extensions'][$extensionName]['plugins'][$pluginName]['pluginType'] = $pluginType;
 
-		t3lib_extMgm::addTypoScript($extensionName, 'setup', '
+		\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addTypoScript($extensionName, 'setup', '
 # Setting ' . $extensionName . ' plugin TypoScript
 ' . $pluginContent, 43);
 	}
@@ -119,20 +122,21 @@ tt_content.' . $pluginSignature . ' {
 	 * Register an Extbase Hijax actions
 	 * FOR USE IN ext_localconf.php FILES
 	 *
-	 * @param string $extensionName The extension name (in UpperCamelCase) or the extension key (in lower_underscore)
-	 * @param string $controllerActions is an array of allowed combinations of controller and action stored in an array (controller name as key and a comma separated list of action names as value, the first controller and its first action is chosen as default)
-	 * @param string $nonCacheableControllerActions is an optional array of controller name and  action names which should not be cached (array as defined in $controllerActions)
+	 * @param string $extensionKey The extension name (in UpperCamelCase) or the extension key (in lower_underscore)
+	 * @param array $controllerActions is an array of allowed combinations of controller and action stored in an array (controller name as key and a comma separated list of action names as value, the first controller and its first action is chosen as default)
+	 * @param array $nonCacheableControllerActions is an optional array of controller name and  action names which should not be cached (array as defined in $controllerActions)
 	 * @return void
+	 * @throws \InvalidArgumentException
 	 */
 	static public function registerHijaxPlugin($extensionKey, array $controllerActions, array $nonCacheableControllerActions = array()) {
 		if (empty($extensionKey)) {
-			throw new InvalidArgumentException('The extension name was invalid (must not be empty and must match /[A-Za-z][_A-Za-z0-9]/)', 1239891989);
+			throw new \InvalidArgumentException('The extension name was invalid (must not be empty and must match /[A-Za-z][_A-Za-z0-9]/)', 1239891989);
 		}
-		$extensionName = t3lib_div::underscoredToUpperCamelCase($extensionKey);
+		$extensionName = \TYPO3\CMS\Core\Utility\GeneralUtility::underscoredToUpperCamelCase($extensionKey);
 		foreach ($controllerActions as $controllerName => $actionsList) {
-			$GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['extbase_hijax']['extensions'][$extensionName]['controllers'][$controllerName] = array('actions' => t3lib_div::trimExplode(',', $actionsList));
+			$GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['extbase_hijax']['extensions'][$extensionName]['controllers'][$controllerName] = array('actions' => \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $actionsList));
 			if (!empty($nonCacheableControllerActions[$controllerName])) {
-				$GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['extbase_hijax']['extensions'][$extensionName]['controllers'][$controllerName]['nonCacheableActions'] = t3lib_div::trimExplode(',', $nonCacheableControllerActions[$controllerName]);
+				$GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['extbase_hijax']['extensions'][$extensionName]['controllers'][$controllerName]['nonCacheableActions'] = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $nonCacheableControllerActions[$controllerName]);
 			}
 		}		
 	}

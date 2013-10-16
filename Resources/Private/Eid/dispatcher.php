@@ -22,7 +22,6 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-$dispatcher = t3lib_div::makeInstance('Tx_ExtbaseHijax_Utility_Ajax_Dispatcher');
+$dispatcher = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('EssentialDots\\ExtbaseHijax\\Utility\\Ajax\\Dispatcher');
 $dispatcher->dispatch();
 
-?>

@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\Service\Serialization;
+
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic@essentialdots.com>
+ *  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic@essentialdots.com>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -22,7 +24,7 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-abstract class Tx_ExtbaseHijax_Service_Serialization_AbstractFactory implements t3lib_Singleton {
+abstract class AbstractFactory implements \TYPO3\CMS\Core\SingletonInterface {
 	
 	/**
 	 * @var array
@@ -30,17 +32,17 @@ abstract class Tx_ExtbaseHijax_Service_Serialization_AbstractFactory implements 
 	protected $properties = array();
 	
 	/**
-	 * @var t3lib_cache_frontend_VariableFrontend
+	 * @var \TYPO3\CMS\Core\Cache\Frontend\VariableFrontend
 	 */
 	protected $storage;	
 	
 	/**
-	 * @var Tx_Extbase_Object_Container_Container
+	 * @var \TYPO3\CMS\Extbase\Object\Container\Container
 	 */
 	protected $objectContainer;
 	
 	/**
-	 * @var Tx_Extbase_Object_ObjectManager
+	 * @var \TYPO3\CMS\Extbase\Object\ObjectManager
 	 */
 	protected $objectManager;	
 	
@@ -53,8 +55,8 @@ abstract class Tx_ExtbaseHijax_Service_Serialization_AbstractFactory implements 
 	 * Constructor
 	 */
 	public function __construct() {
-		$this->objectContainer = t3lib_div::makeInstance('Tx_Extbase_Object_Container_Container');	
-		$this->objectManager = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager');
+		$this->objectContainer = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Object\\Container\\Container');
+		$this->objectManager = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Object\\ObjectManager');
 		$this->storage = $GLOBALS['typo3CacheManager']->getCache('extbase_hijax_storage');
 		$this->objectCache = array();
 	}
@@ -63,6 +65,7 @@ abstract class Tx_ExtbaseHijax_Service_Serialization_AbstractFactory implements 
 	 * Serialize an object
 	 * 
 	 * @param object $object
+	 * @return string
 	 */
 	public function serialize($object) {
 		$properties = array();
@@ -98,7 +101,7 @@ abstract class Tx_ExtbaseHijax_Service_Serialization_AbstractFactory implements 
 	}	
 	
 	/**
-	 * @param unknown_type $object
+	 * @param object $object
 	 * @return boolean
 	 */
 	public function persist($object) {
@@ -118,7 +121,7 @@ abstract class Tx_ExtbaseHijax_Service_Serialization_AbstractFactory implements 
 	 * @return object
 	 */
 	public function findById($id) {
-		$fullId = 'serialized-'.get_class($this).'-'.$id;
+		$fullId = 'serialized-'.str_replace('\\', '_', get_class($this)).'-'.$id;
 		$object = null;
 		
 		if ($this->objectCache[$fullId]) {
@@ -138,7 +141,7 @@ abstract class Tx_ExtbaseHijax_Service_Serialization_AbstractFactory implements 
 	 */
 	protected function getIdForObject($object) {
 		if (method_exists($object, 'getId')) {
-			$result = 'serialized-'.get_class($this).'-'.$object->getId();
+			$result = 'serialized-'.str_replace('\\', '_', get_class($this)).'-'.$object->getId();
 		} else {
 			$result = false;
 		}

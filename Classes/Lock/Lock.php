@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\Lock;
+
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic@essentialdots.com>
+ *  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic@essentialdots.com>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -22,7 +24,7 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-class Tx_ExtbaseHijax_Lock_Lock {
+class Lock {
 	/**
 	 * @var string Locking method: One of 'flock', 'semaphore' or 'disable'
 	 */
@@ -65,6 +67,8 @@ class Tx_ExtbaseHijax_Lock_Lock {
 	 *
 	 * @param string $id ID to identify this lock in the system
 	 * @param string $method Define which locking method to use. Defaults to "flock".
+	 * @throws \InvalidArgumentException
+	 * @throws \Exception
 	 */
 	public function __construct($id, $method = null) {
 			// Force ID to be string
@@ -80,11 +84,11 @@ class Tx_ExtbaseHijax_Lock_Lock {
 			case 'flock':
 				$genTempPath = PATH_site . 'typo3temp'.DIRECTORY_SEPARATOR.'extbase_hijax'.DIRECTORY_SEPARATOR;
 				if (!is_dir($genTempPath)) {
-					t3lib_div::mkdir($genTempPath);
+					\TYPO3\CMS\Core\Utility\GeneralUtility::mkdir($genTempPath);
 				}
 				$path = PATH_site . 'typo3temp'.DIRECTORY_SEPARATOR.'extbase_hijax'.DIRECTORY_SEPARATOR.'locks'.DIRECTORY_SEPARATOR;
 				if (!is_dir($path)) {
-					t3lib_div::mkdir($path);
+					\TYPO3\CMS\Core\Utility\GeneralUtility::mkdir($path);
 				}
 				$this->id = md5($id);
 				$this->resource = $path . $this->id;
@@ -92,7 +96,7 @@ class Tx_ExtbaseHijax_Lock_Lock {
 			case 'semaphore':
 				$this->id = abs(crc32($id));
 				if (($this->resource = sem_get($this->id, 1)) === FALSE) {
-					throw new Exception(
+					throw new \Exception(
 							'Unable to get semaphore',
 							1313828196
 					);
@@ -101,7 +105,7 @@ class Tx_ExtbaseHijax_Lock_Lock {
 			case 'disable':
 				break;
 			default:
-				throw new InvalidArgumentException(
+				throw new \InvalidArgumentException(
 				'No such method "' . $method . '"',
 				1294586097
 				);
@@ -128,7 +132,9 @@ class Tx_ExtbaseHijax_Lock_Lock {
 	 *
 	 * It is important to know that the lock will be acquired in any case, even if the request was blocked first. Therefore, the lock needs to be released in every situation.
 	 *
-	 * @return	boolean		Returns TRUE if lock could be acquired without waiting, FALSE otherwise.
+	 * @param bool $exclusive
+	 * @return bool
+	 * @throws \RuntimeException
 	 */
 	public function acquire($exclusive = TRUE) {
 		$isAcquired = FALSE;
@@ -136,7 +142,7 @@ class Tx_ExtbaseHijax_Lock_Lock {
 		switch ($this->method) {
 			case 'flock':
 				if (($this->filepointer = fopen($this->resource, 'w+')) == FALSE) {
-					throw new RuntimeException('Lock file could not be opened', 1294586099);
+					throw new \RuntimeException('Lock file could not be opened', 1294586099);
 				}
 				
 				if ($exclusive) {
@@ -182,7 +188,7 @@ class Tx_ExtbaseHijax_Lock_Lock {
 					$success = FALSE;
 				}
 				fclose($this->filepointer);
-				//if (t3lib_div::isAllowedAbsPath($this->resource) && t3lib_div::isFirstPartOfStr($this->resource, PATH_site . 'typo3temp'.DIRECTORY_SEPARATOR.'extbase_hijax'.DIRECTORY_SEPARATOR.'locks'.DIRECTORY_SEPARATOR)) {
+				//if (\TYPO3\CMS\Core\Utility\GeneralUtility::isAllowedAbsPath($this->resource) && \TYPO3\CMS\Core\Utility\GeneralUtility::isFirstPartOfStr($this->resource, PATH_site . 'typo3temp'.DIRECTORY_SEPARATOR.'extbase_hijax'.DIRECTORY_SEPARATOR.'locks'.DIRECTORY_SEPARATOR)) {
 					// TODO: add a scheduler task to remove old lock files
 					// unlink($this->resource);
 				//}
@@ -259,7 +265,7 @@ class Tx_ExtbaseHijax_Lock_Lock {
 	}
 	
 	/**
-	 * Adds a common log entry for this locking API using t3lib_div::sysLog().
+	 * Adds a common log entry for this locking API using \TYPO3\CMS\Core\Utility\GeneralUtility::sysLog().
 	 * Example: 25-02-08 17:58 - cms: Locking [flock::0aeafd2a67a6bb8b9543fb9ea25ecbe2]: Acquired
 	 *
 	 * @param	string		$message: The message to be logged
@@ -268,7 +274,7 @@ class Tx_ExtbaseHijax_Lock_Lock {
 	 */
 	public function sysLog($message, $severity = 0) {
 		if ($this->isLoggingEnabled) {
-			t3lib_div::sysLog('Locking [' . $this->method . '::' . $this->id . ']: ' . trim($message), $this->syslogFacility, $severity);
+			\TYPO3\CMS\Core\Utility\GeneralUtility::sysLog('Locking [' . $this->method . '::' . $this->id . ']: ' . trim($message), $this->syslogFacility, $severity);
 		}
 	}	
 	

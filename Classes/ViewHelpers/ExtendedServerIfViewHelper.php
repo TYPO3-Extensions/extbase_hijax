@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\ViewHelpers;
+
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+*  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
 *  All rights reserved
 *
 *  This script is part of the Typo3 project. The Typo3 project is
@@ -24,18 +26,18 @@
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
 
-class Tx_ExtbaseHijax_ViewHelpers_ExtendedServerIfViewHelper extends Tx_Fluid_Core_ViewHelper_AbstractConditionViewHelper {
+class ExtendedServerIfViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractConditionViewHelper {
 
 	/**
-	 * @var Tx_Extbase_Configuration_ConfigurationManagerInterface
+	 * @var \TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface
 	 */
 	protected $configurationManager;
 	
 	/**
-	 * @param Tx_Extbase_Configuration_ConfigurationManagerInterface $configurationManager
+	 * @param \TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface $configurationManager
 	 * @return void
 	 */
-	public function injectConfigurationManager(Tx_Extbase_Configuration_ConfigurationManagerInterface $configurationManager) {
+	public function injectConfigurationManager(\TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface $configurationManager) {
 		$this->configurationManager = $configurationManager;
 	}	
 	
@@ -53,8 +55,8 @@ class Tx_ExtbaseHijax_ViewHelpers_ExtendedServerIfViewHelper extends Tx_Fluid_Co
 	/**
 	 * renders <f:then> child if $condition is true, otherwise renders <f:else> child.
 	 *
-	 * @return string the rendered string
-	 * @api
+	 * @return bool|string
+	 * @throws \Exception
 	 */
 	public function render() {
 		$condition = $this->arguments['condition'];
@@ -66,7 +68,7 @@ class Tx_ExtbaseHijax_ViewHelpers_ExtendedServerIfViewHelper extends Tx_Fluid_Co
 			return $this->renderElseChild();
 		} elseif (is_array($condition)) {
 			return (count($condition) > 0);
-		} elseif ($condition instanceof Countable) {
+		} elseif ($condition instanceof \Countable) {
 			return (count($condition) > 0);
 		} elseif (is_string($condition) && trim($condition) === '') {
 			if (trim($condition) === '') {
@@ -75,19 +77,19 @@ class Tx_ExtbaseHijax_ViewHelpers_ExtendedServerIfViewHelper extends Tx_Fluid_Co
 				$condition = '\'' . $condition . '\'';
 			}
 		} elseif (is_object($condition)) {
-			if ($condition instanceof Iterator && method_exists($condition, 'count')) {
-				return (call_user_method('count', $condition) > 0);
-			} else if ($condition instanceof DateTime) {
+			if ($condition instanceof \Iterator && method_exists($condition, 'count')) {
+				return (call_user_func(array($condition, 'count')) > 0);
+			} else if ($condition instanceof \DateTime) {
 				return $this->renderThenChild();
-			} else if ($condition instanceof stdClass) {
+			} else if ($condition instanceof \stdClass) {
 				return $this->renderThenChild();
 			} else {
-				$access = t3lib_div::makeInstance('Tx_Extbase_Reflection_ObjectAccess');
+				$access = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Reflection\\ObjectAccess');
 				$propertiesCount = count($access->getGettableProperties($condition));
 				if ($propertiesCount > 0) {
 					return $this->renderThenChild();
 				} else {
-					throw new Exception('Unknown object type in IfViewHelper condition: ' . get_class($condition), 1309493049);
+					throw new \Exception('Unknown object type in IfViewHelper condition: ' . get_class($condition), 1309493049);
 				}
 			}
 		}
@@ -96,12 +98,12 @@ class Tx_ExtbaseHijax_ViewHelpers_ExtendedServerIfViewHelper extends Tx_Fluid_Co
 		$singleQuoteCount = substr_count($condition, '\'');
 		$escapedSingleQuoteCount = substr_count($condition, '\\\'');
 		if ($rightParenthesisCount !== $leftParenthesisCount) {
-			throw new Exception('Syntax error in IfViewHelper condition, mismatched number of opening and closing paranthesis', 1309490125);
+			throw new \Exception('Syntax error in IfViewHelper condition, mismatched number of opening and closing paranthesis', 1309490125);
 		}
 		if (($singleQuoteCount-$escapedSingleQuoteCount) % 2 != 0) {
-			throw new Exception('Syntax error in IfViewHelper condition, mismatched number of unescaped single quotes', 1309490125);
+			throw new \Exception('Syntax error in IfViewHelper condition, mismatched number of unescaped single quotes', 1309490125);
 		}
-		$configuration = $this->configurationManager->getConfiguration(Tx_Extbase_Configuration_ConfigurationManager::CONFIGURATION_TYPE_FRAMEWORK);
+		$configuration = $this->configurationManager->getConfiguration(\TYPO3\CMS\Extbase\Configuration\ConfigurationManager::CONFIGURATION_TYPE_FRAMEWORK);
 		$allowedFunctions = explode(',', $configuration['fluid']['allowedFunctions']);
 		$languageConstructs = explode(',', $configuration['fluid']['disallowedConstructs']);
 		$functions = get_defined_functions();
@@ -115,7 +117,7 @@ class Tx_ExtbaseHijax_ViewHelpers_ExtendedServerIfViewHelper extends Tx_Fluid_Co
 				continue;
 			}
 			if (preg_match('/' . $evilFunction . '([\s]){0,}\(/', $condition) === 1) {
-				throw new Exception('Disallowed PHP function "' . $evilFunction . '" used in IfViewHelper condition. Allowed functions: ' . $goodFunctions, 1309613359);
+				throw new \Exception('Disallowed PHP function "' . $evilFunction . '" used in IfViewHelper condition. Allowed functions: ' . $goodFunctions, 1309613359);
 			}
 		}
 
@@ -125,8 +127,7 @@ class Tx_ExtbaseHijax_ViewHelpers_ExtendedServerIfViewHelper extends Tx_Fluid_Co
 		$evaluationExpression = '$evaluation = (bool) (' . $evaluationCondition . ');';
 		@eval($evaluationExpression);
 		if ($evaluation === NULL) {
-			throw new Exception('Syntax error while analyzing computed IfViewHelper expression: ' . $evaluationExpression, 1309537403);
-			return $this->renderElseChild();
+			throw new \Exception('Syntax error while analyzing computed IfViewHelper expression: ' . $evaluationExpression, 1309537403);
 		} else if ($evaluation === TRUE) {
 			return $this->renderThenChild();
 		} else {

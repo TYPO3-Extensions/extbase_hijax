@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\Utility\Ajax;
+
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+ *  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -25,7 +27,7 @@
 /**
  * An AJAX dispatcher.
  */
-class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
+class Dispatcher implements \TYPO3\CMS\Core\SingletonInterface {
 	/**
 	 * @var int
 	 */
@@ -44,32 +46,32 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 	protected $requestArguments = array();
      
 	/**
-	 * @var Tx_Extbase_Object_ObjectManager
+	 * @var \TYPO3\CMS\Extbase\Object\ObjectManager
 	 */
 	protected $objectManager;
 
 	/**
-	 * @var t3lib_cache_frontend_VariableFrontend
+	 * @var \TYPO3\CMS\Core\Cache\Frontend\VariableFrontend
 	 */
 	protected $cacheInstance;
 	
 	/**
-	 * @var Tx_ExtbaseHijax_Event_Dispatcher
+	 * @var \EssentialDots\ExtbaseHijax\Event\Dispatcher
 	 */
 	protected $hijaxEventDispatcher;
 
 	/**
-	 * @var Tx_ExtbaseHijax_Service_Serialization_ListenerFactory
+	 * @var \EssentialDots\ExtbaseHijax\Service\Serialization\ListenerFactory
 	 */
 	protected $listenerFactory;
 	
 	/**
-	 * @var Tx_ExtbaseHijax_Service_Content
+	 * @var \EssentialDots\ExtbaseHijax\Service\Content
 	 */
 	protected $serviceContent;
 
 	/**
-	 * @var Tx_Extbase_Service_ExtensionService
+	 * @var \TYPO3\CMS\Extbase\Service\ExtensionService
 	 */
 	protected $extensionService;
 	
@@ -79,7 +81,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 	protected $preventMarkupUpdateOnAjaxLoad;
 
 	/**
-	 * @var Tx_EdCache_Domain_Repository_CacheRepository
+	 * @var \Tx_EdCache_Domain_Repository_CacheRepository
 	 */
 	protected $cacheRepository;
 
@@ -97,15 +99,15 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 	 * Constructor
 	 */
 	public function __construct() {
-		$this->objectManager = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager');
-		$this->hijaxEventDispatcher = $this->objectManager->get('Tx_ExtbaseHijax_Event_Dispatcher');
-		$this->serviceContent = $this->objectManager->get('Tx_ExtbaseHijax_Service_Content');
-		$this->listenerFactory = $this->objectManager->get('Tx_ExtbaseHijax_Service_Serialization_ListenerFactory');
-		$this->extensionService = $this->objectManager->get('Tx_Extbase_Service_ExtensionService');
+		$this->objectManager = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Object\\ObjectManager');
+		$this->hijaxEventDispatcher = $this->objectManager->get('EssentialDots\\ExtbaseHijax\\Event\\Dispatcher');
+		$this->serviceContent = $this->objectManager->get('EssentialDots\\ExtbaseHijax\\Service\\Content');
+		$this->listenerFactory = $this->objectManager->get('EssentialDots\\ExtbaseHijax\\Service\\Serialization\\ListenerFactory');
+		$this->extensionService = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Service\\ExtensionService');
 		$this->cacheInstance = $GLOBALS['typo3CacheManager']->getCache('extbase_hijax_storage');
 		$this->preventMarkupUpdateOnAjaxLoad = false;
-		if (t3lib_extMgm::isLoaded('ed_cache')) {
-			$this->cacheRepository = t3lib_div::makeInstance('Tx_EdCache_Domain_Repository_CacheRepository');
+		if (\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::isLoaded('ed_cache')) {
+			$this->cacheRepository = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('Tx_EdCache_Domain_Repository_CacheRepository');
 		}
 	}
 	
@@ -117,9 +119,9 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 	 */
 	public function dispatch() {
 		$this->setIsActive(true);
-		$callback = t3lib_div::_GP('callback');
-		$requests = t3lib_div::_GP('r');
-		$eventsToListen = t3lib_div::_GP('evts') ? t3lib_div::_GP('evts') : t3lib_div::_GP('e');
+		$callback = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('callback');
+		$requests = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('r');
+		$eventsToListen = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('evts') ? \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('evts') : \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('e');
 		$preventDirectOutput = false;
 		try {
 			$this->initializeDatabase();
@@ -133,7 +135,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 			foreach ($requests as $r) {
 
 				if ($r['secureLocalStorage']) {
-					echo file_get_contents(t3lib_extMgm::extPath('extbase_hijax', 'Resources/Private/Templates/SecureLocalStorage/IFrame.html'));
+					echo file_get_contents(\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extPath('extbase_hijax', 'Resources/Private/Templates/SecureLocalStorage/IFrame.html'));
 					exit;
 				}
 
@@ -142,8 +144,8 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 
 				$allowCaching = FALSE;
 				if ($r['chash']) {
-					/* @var $cacheHash t3lib_cacheHash */
-					$cacheHash = t3lib_div::makeInstance('t3lib_cacheHash');
+					/* @var $cacheHash \TYPO3\CMS\Frontend\Page\CacheHashCalculator */
+					$cacheHash = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\Page\\CacheHashCalculator');
 					$allowCaching = $r['chash'] == $cacheHash->calculateCacheHash(array(
 						'encryptionKey' => $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'],
 						'action' => $r['action'],
@@ -158,9 +160,9 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 				if ($r['tsSource']) {
 					$this->initialize();
 					if ($this->serviceContent->isAllowedTypoScriptPath($r['tsSource'])) {
-						/* @var $listener Tx_ExtbaseHijax_Event_Listener */
+						/* @var $listener \EssentialDots\ExtbaseHijax\Event\Listener */
 						$encodedSettings = str_replace('.', '---', $r['tsSource']);
-						$settingsHash = t3lib_div::hmac($encodedSettings);
+						$settingsHash = \TYPO3\CMS\Core\Utility\GeneralUtility::hmac($encodedSettings);
 						$listener = $this->listenerFactory->findById('h-'.$settingsHash.'-'.$encodedSettings);
 						$configuration = $listener->getConfiguration();
 						$r['extension'] = $configuration['extensionName'];
@@ -168,21 +170,21 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 						$r['controller'] = $configuration['controller'];
 						$r['action'] = $configuration['action'];
 					} else {
-						throw new Exception('Path not allowed.', 503);
+						throw new \Exception('Path not allowed.', 503);
 					}
 				} elseif ($r['settingsHash']) {
-					/* @var $listener Tx_ExtbaseHijax_Event_Listener */
+					/* @var $listener \EssentialDots\ExtbaseHijax\Event\Listener */
 					$listener = $this->listenerFactory->findById($r['settingsHash']);
 				}
 				
-				$bootstrap = t3lib_div::makeInstance('Tx_Extbase_Core_Bootstrap');
+				$bootstrap = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Core\\Bootstrap');
 				
 					// load settings saved under settingsHash
 				if ($listener) {
 					$configuration = $listener->getConfiguration();
 					$request = $listener->getRequest();	
 					$bootstrap->cObj = $listener->getCObj();
-				} elseif (Tx_ExtbaseHijax_Utility_Extension::isAllowedHijaxAction($r['extension'], $r['controller'], $r['action'])) {
+				} elseif (\EssentialDots\ExtbaseHijax\Utility\Extension::isAllowedHijaxAction($r['extension'], $r['controller'], $r['action'])) {
 					$allowCaching = FALSE; // we do not want to cache this request
 					$configuration['extensionName'] = $r['extension'];
 					$configuration['pluginName']    = $r['plugin'];
@@ -245,7 +247,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 			}
 			
 			$this->cleanShutDown();
-		} catch (Tx_ExtbaseHijax_MVC_Exception_RedirectAction $redirectException) {
+		} catch (\EssentialDots\ExtbaseHijax\MVC\Exception\RedirectAction $redirectException) {
 			$responses = array(
 				'redirect' => array(
 					'url' => $redirectException->getUrl(),
@@ -253,7 +255,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 				)
 			);
 			$preventDirectOutput = true;
-		} catch (Exception $e) {
+		} catch (\Exception $e) {
 			header('HTTP/1.1 503 Service Unavailable');
 			header('Status: 503 Service Unavailable');
 			
@@ -286,25 +288,27 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 	 * @param $r
 	 * @param $request
 	 * @param $listener
+	 * @param bool $isCacheCallback
 	 * @return array
+	 * @throws \Tx_EdCache_Exception_PreventActionCaching
 	 */
 	public function handleFrontendRequest($bootstrap, $configuration, $r, $request, $listener, $isCacheCallback = FALSE) {
 		$this->initialize();
 
 		$bootstrap->initialize($configuration);
 		$this->setPreventMarkupUpdateOnAjaxLoad(false);
-		/* @var $request Tx_Extbase_MVC_Web_Request */
+		/* @var $request \TYPO3\CMS\Extbase\Mvc\Web\Request */
 		$request = $this->buildRequest($r, $request);
 		$request->setDispatched(false);
 
 		$namespace = $this->extensionService->getPluginNamespace($request->getControllerExtensionName(), $request->getPluginName());
 		$_POST[$namespace] = $request->getArguments();
 
-		/* @var $response Tx_Extbase_MVC_Web_Response */
-		$response = $this->objectManager->create('Tx_Extbase_MVC_Web_Response');
+		/* @var $response \TYPO3\CMS\Extbase\Mvc\Web\Response */
+		$response = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Mvc\\Web\\Response');
 
-		/* @var $dispatcher Tx_ExtbaseHijax_MVC_Dispatcher */
-		$dispatcher = $this->objectManager->get('Tx_ExtbaseHijax_MVC_Dispatcher');
+		/* @var $dispatcher \EssentialDots\ExtbaseHijax\MVC\Dispatcher */
+		$dispatcher = $this->objectManager->get('EssentialDots\\ExtbaseHijax\\MVC\\Dispatcher');
 		$dispatcher->dispatch($request, $response, $listener);
 
 		$_POST[$namespace] = array();
@@ -315,12 +319,12 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 		$response->setContent($content);
 
 		// convert HTML to specified format
-		$htmlConverter = $this->objectManager->get('Tx_ExtbaseHijax_HTMLConverter_ConverterFactory'); /* @var $htmlConverter Tx_ExtbaseHijax_HTMLConverter_ConverterFactory */
+		$htmlConverter = $this->objectManager->get('EssentialDots\\ExtbaseHijax\\HTMLConverter\\ConverterFactory'); /* @var $htmlConverter \EssentialDots\ExtbaseHijax\HTMLConverter\ConverterFactory */
 		$converter = $htmlConverter->getConverter($request->getFormat());
 
 		try {
 			$response = $converter->convert($response);
-		} catch (Tx_ExtbaseHijax_HTMLConverter_FailedConversionException $e) {
+		} catch (\EssentialDots\ExtbaseHijax\HTMLConverter\FailedConversionException $e) {
 			$this->errorWhileConverting = TRUE;
 		}
 
@@ -328,8 +332,8 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 
 		if (!$this->errorWhileConverting && $isCacheCallback && !$request->isCached() && $this->cacheRepository) {
 			error_log('Throwing Tx_EdCache_Exception_PreventActionCaching, did you missconfigure cacheable actions in Extbase?');
-			/* @var $preventActionCaching Tx_EdCache_Exception_PreventActionCaching */
-			$preventActionCaching = t3lib_div::makeInstance('Tx_EdCache_Exception_PreventActionCaching');
+			/* @var $preventActionCaching \Tx_EdCache_Exception_PreventActionCaching */
+			$preventActionCaching = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('Tx_EdCache_Exception_PreventActionCaching');
 			$preventActionCaching->setResult($result);
 			throw $preventActionCaching;
 		}
@@ -338,8 +342,9 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 	}
 	
 	/**
-	 * @param tslib_fe $pObj
-	 * @return void
+	 * @param $responses
+	 * @param $eventsToListen
+	 * @param bool $processOriginal
 	 */
 	protected function parseAndRunEventListeners(&$responses, $eventsToListen, $processOriginal=TRUE) {
 		if ($processOriginal) {
@@ -358,24 +363,24 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 				}
 
 				if ($shouldProcess) {
-						/* @var $listener Tx_ExtbaseHijax_Event_Listener */
+						/* @var $listener \EssentialDots\ExtbaseHijax\Event\Listener */
 					$listener = $this->listenerFactory->findById($listenerId);
 
 					if ($listener) {
-						$bootstrap = t3lib_div::makeInstance('Tx_Extbase_Core_Bootstrap');
+						$bootstrap = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Core\\Bootstrap');
 						$bootstrap->cObj = $listener->getCObj();
 						$bootstrap->initialize($listener->getConfiguration());
 
-						/* @var $request Tx_Extbase_MVC_Web_Request */
+						/* @var $request \TYPO3\CMS\Extbase\Mvc\Web\Request */
 						$request = $listener->getRequest();
 						$request->setDispatched(false);
 						$this->setPreventMarkupUpdateOnAjaxLoad(false);
 
-						/* @var $response Tx_Extbase_MVC_Web_Response */
-						$response = $this->objectManager->create('Tx_Extbase_MVC_Web_Response');
+						/* @var $response \TYPO3\CMS\Extbase\Mvc\Web\Response */
+						$response = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Mvc\\Web\\Response');
 
-						/* @var $dispatcher Tx_ExtbaseHijax_MVC_Dispatcher */
-						$dispatcher = $this->objectManager->get('Tx_ExtbaseHijax_MVC_Dispatcher');
+						/* @var $dispatcher \EssentialDots\ExtbaseHijax\MVC\Dispatcher */
+						$dispatcher = $this->objectManager->get('EssentialDots\\ExtbaseHijax\\MVC\\Dispatcher');
 						$dispatcher->dispatch($request, $response, $listener);
 
 						$content = $response->getContent();
@@ -407,7 +412,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 	 * @return void
 	 */
 	protected function initializeDatabase() {
-		tslib_eidtools::connectDB();
+		\TYPO3\CMS\Frontend\Utility\EidUtility::connectDB();
 	}
 	
 	/**
@@ -416,7 +421,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 	 * @return void
 	 */
 	protected function initializeTca() {
-		tslib_eidtools::initTCA();
+		\TYPO3\CMS\Frontend\Utility\EidUtility::initTCA();
 	}
 	
 	/**
@@ -425,8 +430,8 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 	 * @return void
 	 */
 	protected function initializeTsfe() {
-		/* @var $tsfe tslib_fe */
-		$tsfe = t3lib_div::makeInstance('tslib_fe', $GLOBALS['TYPO3_CONF_VARS'], t3lib_div::_GP('id'), t3lib_div::_GP('type'), true);
+		/* @var $tsfe \TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController */
+		$tsfe = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\Controller\\TypoScriptFrontendController', $GLOBALS['TYPO3_CONF_VARS'], \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('id'), \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('type'), true);
 		$GLOBALS['TSFE'] = &$tsfe;
 
 		$tsfe->initFEuser();
@@ -434,7 +439,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 		$tsfe->checkAlternativeIdMethods();
 		$tsfe->determineId();
 		$tsfe->getCompressedTCarray();
-		$tsfe->sys_page = t3lib_div::makeInstance('t3lib_pageSelect');
+		$tsfe->sys_page = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\Page\\PageRepository');
 		$tsfe->initTemplate();
 		$tsfe->getConfigArray();
 		$tsfe->settingLanguage();
@@ -449,21 +454,21 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 	 * @return void
 	 */
 	protected function cleanShutDown() {
-		$this->objectManager->get('Tx_Extbase_Persistence_Manager')->persistAll();
-		$this->objectManager->get('Tx_Extbase_Reflection_Service')->shutdown();
+		$this->objectManager->get('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\PersistenceManager')->persistAll();
+		$this->objectManager->get('TYPO3\\CMS\\Extbase\\Reflection\\ReflectionService')->shutdown();
 	}
 	
 	/**
 	 * Build a request object
 	 * 
 	 * @param array $r
-	 * @param Tx_Extbase_MVC_Web_Request $request
-	 * @return Tx_Extbase_MVC_Request
+	 * @param \TYPO3\CMS\Extbase\Mvc\Web\Request $request
+	 * @return \TYPO3\CMS\Extbase\Mvc\Request
 	 */
 	protected function buildRequest($r, &$request = null) {
 		
 		if (!$request) {
-			$request = $this->objectManager->get('Tx_Extbase_MVC_Web_Request');
+			$request = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Mvc\\Web\\Request');
 		}
 		
 		$request->setControllerExtensionName($r['extension']);
@@ -476,7 +481,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 			$this->stringify($r['arguments']);
 		}
 
-		$request->setArguments(t3lib_div::array_merge_recursive_overrule($request->getArguments(), !is_array($r['arguments']) ? array() : $r['arguments']));
+		$request->setArguments(\TYPO3\CMS\Core\Utility\GeneralUtility::array_merge_recursive_overrule($request->getArguments(), !is_array($r['arguments']) ? array() : $r['arguments']));
 				
 		return $request;
 	}
@@ -497,7 +502,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 	}
 
 	/**
-	 * @return the $isActive
+	 * @return bool
 	 */
 	public function getIsActive() {
 		return $this->isActive;
@@ -511,7 +516,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 	}
 	
 	/**
-	 * @return the $preventMarkupUpdateOnAjaxLoad
+	 * @return bool
 	 */
 	public function getPreventMarkupUpdateOnAjaxLoad() {
 		return $this->preventMarkupUpdateOnAjaxLoad;

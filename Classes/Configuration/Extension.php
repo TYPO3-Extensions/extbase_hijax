@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\Configuration;
+
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+ *  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -22,7 +24,7 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-class Tx_ExtbaseHijax_Configuration_Extension implements Tx_ExtbaseHijax_Configuration_ExtensionInterface, t3lib_Singleton {
+class Extension implements ExtensionInterface, \TYPO3\CMS\Core\SingletonInterface {
 	
 	/**
 	 * @var array
@@ -30,12 +32,12 @@ class Tx_ExtbaseHijax_Configuration_Extension implements Tx_ExtbaseHijax_Configu
 	protected $configuration;
 	
 	/**
-	 * @var Tx_Extbase_Configuration_ConfigurationManagerInterface
+	 * @var \\TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface
 	 */
 	protected $configurationManager;	
 	
 	/**
-	 * @var Tx_Extbase_Object_ObjectManager
+	 * @var \TYPO3\CMS\Extbase\Object\ObjectManager
 	 */
 	protected $objectManager;
 		
@@ -44,8 +46,8 @@ class Tx_ExtbaseHijax_Configuration_Extension implements Tx_ExtbaseHijax_Configu
 	 */
 	public function __construct() {
 		$this->configuration = $GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['extbase_hijax'] ? unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['extbase_hijax']) : array();
-		$this->objectManager = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager');
-		$this->configurationManager = $this->objectManager->get('Tx_Extbase_Configuration_ConfigurationManagerInterface');
+		$this->objectManager = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Object\\ObjectManager');
+		$this->configurationManager = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Configuration\\ConfigurationManagerInterface');
 	}
 
 	/**
@@ -141,7 +143,7 @@ class Tx_ExtbaseHijax_Configuration_Extension implements Tx_ExtbaseHijax_Configu
 	}
 
 	/**
-	 * @param boolean $includedSofe
+	 * @param boolean $addedBodyClass
 	 * @return void
 	 */
 	public function setAddedBodyClass($addedBodyClass) {
@@ -152,14 +154,14 @@ class Tx_ExtbaseHijax_Configuration_Extension implements Tx_ExtbaseHijax_Configu
 	 * @return string
 	 */
 	public function getBaseUrl() {
-		return $GLOBALS['TSFE']->baseUrl ? $GLOBALS['TSFE']->baseUrl : ( t3lib_div::getIndpEnv('TYPO3_REQUEST_HOST') . $GLOBALS['TSFE']->absRefPrefix ) ;
+		return $GLOBALS['TSFE']->baseUrl ? $GLOBALS['TSFE']->baseUrl : ( \TYPO3\CMS\Core\Utility\GeneralUtility::getIndpEnv('TYPO3_REQUEST_HOST') . $GLOBALS['TSFE']->absRefPrefix ) ;
 	}
 	
 	/**
 	 * @return string
 	 */
 	public function getCacheInvalidationLevel() {
-		$frameworkConfiguration = $this->configurationManager->getConfiguration(Tx_Extbase_Configuration_ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK);
+		$frameworkConfiguration = $this->configurationManager->getConfiguration(\TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK);
 		
 		return (string) ($frameworkConfiguration['settings']['cacheInvalidationLevel'] ? $frameworkConfiguration['settings']['cacheInvalidationLevel'] : 'noinvalidation');
 	}

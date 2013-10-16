@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\ViewHelpers;
+
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+ *  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -22,45 +24,45 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-class Tx_ExtbaseHijax_ViewHelpers_ScriptViewHelper extends Tx_Fluid_Core_ViewHelper_AbstractViewHelper {
+class ScriptViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelper {
 
 	/**
-	 * @var Tx_Extbase_Configuration_ConfigurationManagerInterface
+	 * @var \TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface
 	 */
 	protected $configurationManager;
 	
 	/**
-	 * @param Tx_Extbase_Configuration_ConfigurationManagerInterface $configurationManager
+	 * @param \TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface $configurationManager
 	 * @return void
 	 */
-	public function injectConfigurationManager(Tx_Extbase_Configuration_ConfigurationManagerInterface $configurationManager) {
+	public function injectConfigurationManager(\TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface $configurationManager) {
 		$this->configurationManager = $configurationManager;
 	}
 
 	/**
-	 * @var Tx_ExtbaseHijax_Utility_Ajax_Dispatcher
+	 * @var \EssentialDots\ExtbaseHijax\Utility\Ajax\Dispatcher
 	 */
 	protected $ajaxDispatcher;
 	
 	/**
 	 * Injects the event dispatcher
 	 *
-	 * @param Tx_ExtbaseHijax_Utility_Ajax_Dispatcher $ajaxDispatcher
+	 * @param \EssentialDots\ExtbaseHijax\Utility\Ajax\Dispatcher $ajaxDispatcher
 	 * @return void
 	 */
-	public function injectAjaxDispatcher(Tx_ExtbaseHijax_Utility_Ajax_Dispatcher $ajaxDispatcher) {
+	public function injectAjaxDispatcher(\EssentialDots\ExtbaseHijax\Utility\Ajax\Dispatcher $ajaxDispatcher) {
 		$this->ajaxDispatcher = $ajaxDispatcher;
 	}	
 	
 	/**
-	 * @var t3lib_PageRenderer
+	 * @var \TYPO3\CMS\Core\Page\PageRenderer
 	 */
 	protected $pageRenderer;
 	
 	/**
-	 * @param t3lib_PageRenderer $pageRenderer
+	 * @param \TYPO3\CMS\Core\Page\PageRenderer $pageRenderer
 	 */
-	public function injectPageRenderer(t3lib_PageRenderer $pageRenderer) {
+	public function injectPageRenderer(\TYPO3\CMS\Core\Page\PageRenderer $pageRenderer) {
 		$this->pageRenderer = $pageRenderer;
 	}	
 	
@@ -71,7 +73,7 @@ class Tx_ExtbaseHijax_ViewHelpers_ScriptViewHelper extends Tx_Fluid_Core_ViewHel
 	 */
 	protected function isCached() {
 		$userObjType = $this->configurationManager->getContentObject()->getUserObjectType();
-		return ($userObjType !== tslib_cObj::OBJECTTYPE_USER_INT);
+		return ($userObjType !== \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer::OBJECTTYPE_USER_INT);
 	}
 	
 	/**
@@ -84,10 +86,11 @@ class Tx_ExtbaseHijax_ViewHelpers_ScriptViewHelper extends Tx_Fluid_Core_ViewHel
 	 * @param string $section
 	 * @param boolean $preventMarkupUpdateOnAjaxLoad
 	 * @param boolean $moveToExternalFile
+	 * @param boolean $noCache
 	 * 
      * @return string
 	 */
-	public function render($src="", $type = 'text/javascript', $compress = TRUE, $forceOnTop = FALSE, $allWrap = '', $excludeFromConcatenation = FALSE, $section = 'footer', $preventMarkupUpdateOnAjaxLoad = false, $moveToExternalFile = false) {
+	public function render($src="", $type = 'text/javascript', $compress = TRUE, $forceOnTop = FALSE, $allWrap = '', $excludeFromConcatenation = FALSE, $section = 'footer', $preventMarkupUpdateOnAjaxLoad = false, $moveToExternalFile = false, $noCache = false) {
         $content = $this->renderChildren();
         
         if ($this->ajaxDispatcher->getIsActive()) {
@@ -96,16 +99,16 @@ class Tx_ExtbaseHijax_ViewHelpers_ScriptViewHelper extends Tx_Fluid_Core_ViewHel
         	}
         		// need to just echo the code in ajax call
         	if (!$src) {
-        		return t3lib_div::wrapJS($content);
+        		return \TYPO3\CMS\Core\Utility\GeneralUtility::wrapJS($content);
         	} else {
         		return '<script type="'.htmlspecialchars($type).'" src="'.htmlspecialchars($src).'"></script>';
         	}
         } else {
-	        if ($this->isCached()) {
+	        if (!$noCache && $this->isCached()) {
 	        	
 	        	if (!$src && $moveToExternalFile) {
 	        		$src = 'typo3temp'.DIRECTORY_SEPARATOR.'extbase_hijax'.DIRECTORY_SEPARATOR.md5($content).'.js';
-	        		t3lib_div::writeFileToTypo3tempDir(PATH_site.$src, $content);
+	        		\TYPO3\CMS\Core\Utility\GeneralUtility::writeFileToTypo3tempDir(PATH_site.$src, $content);
 	        		
 	        		if ($GLOBALS['TSFE']) {
 	        			if ($GLOBALS['TSFE']->baseUrl) {
@@ -132,12 +135,14 @@ class Tx_ExtbaseHijax_ViewHelpers_ScriptViewHelper extends Tx_Fluid_Core_ViewHel
 	        } else {
 	        		// additionalFooterData not possible in USER_INT
 	        	if (!$src) {
-	        		$GLOBALS['TSFE']->additionalHeaderData[md5($content)] = t3lib_div::wrapJS($content);
+	        		$GLOBALS['TSFE']->additionalHeaderData[md5($content)] = \TYPO3\CMS\Core\Utility\GeneralUtility::wrapJS($content);
 	        	} else {
 	        		$GLOBALS['TSFE']->additionalHeaderData[md5($src)] = '<script type="'.htmlspecialchars($type).'" src="'.htmlspecialchars($src).'"></script>';
 	        	}
 	        }
         }
+
+		return '';
 	}
 }
 ?>

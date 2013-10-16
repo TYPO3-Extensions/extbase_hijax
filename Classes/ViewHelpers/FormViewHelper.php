@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\ViewHelpers;
+
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+ *  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -22,36 +24,36 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-class Tx_ExtbaseHijax_ViewHelpers_FormViewHelper extends Tx_Fluid_ViewHelpers_FormViewHelper {
+class FormViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\FormViewHelper {
 
 	/**
-	 * @var Tx_Extbase_Configuration_ConfigurationManagerInterface
+	 * @var \TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface
 	 */
 	protected $configurationManager;
-	
+
 	/**
-	 * @var Tx_ExtbaseHijax_Event_Dispatcher
+	 * @var \EssentialDots\ExtbaseHijax\Event\Dispatcher
 	 */
 	protected $hijaxEventDispatcher;
-	
+
 	/**
-	 * @param Tx_Extbase_Configuration_ConfigurationManagerInterface $configurationManager
+	 * @param \TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface $configurationManager
 	 * @return void
 	 */
-	public function injectConfigurationManager(Tx_Extbase_Configuration_ConfigurationManagerInterface $configurationManager) {
+	public function injectConfigurationManager(\TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface $configurationManager) {
 		$this->configurationManager = $configurationManager;
-	}	
-		
+	}
+
 	/**
 	 * Injects the event dispatcher
 	 *
-	 * @param Tx_ExtbaseHijax_Event_Dispatcher $eventDispatcher
+	 * @param \EssentialDots\ExtbaseHijax\Event\Dispatcher $eventDispatcher
 	 * @return void
 	 */
-	public function injectEventDispatcher(Tx_ExtbaseHijax_Event_Dispatcher $eventDispatcher) {
+	public function injectEventDispatcher(\EssentialDots\ExtbaseHijax\Event\Dispatcher $eventDispatcher) {
 		$this->hijaxEventDispatcher = $eventDispatcher;
 	}
-	
+
 	/**
 	 * Render the form.
 	 *
@@ -81,55 +83,59 @@ class Tx_ExtbaseHijax_ViewHelpers_FormViewHelper extends Tx_Fluid_ViewHelpers_Fo
 	public function render($action = NULL, array $arguments = array(), $controller = NULL, $extensionName = NULL, $pluginName = NULL, $pageUid = NULL, $object = NULL, $pageType = 0, $noCache = FALSE, $noCacheHash = FALSE, $section = '', $format = '', array $additionalParams = array(), $absolute = FALSE, $addQueryString = FALSE, array $argumentsToBeExcludedFromQueryString = array(), $fieldNamePrefix = NULL, $actionUri = NULL, $objectName = NULL, $resultTarget = NULL, $loaders = NULL) {
 		$this->renderHijaxDataAttributes($action, $arguments, $controller, $extensionName, $pluginName);
 		$this->hijaxEventDispatcher->setIsHijaxElement(true);
-				
+
 		if ($resultTarget) {
 			$this->tag->addAttribute('data-hijax-result-target', $resultTarget);
 		} else {
-			/* @var $listener Tx_ExtbaseHijax_Event_Listener */
-			$listener = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager')->get('Tx_ExtbaseHijax_MVC_Dispatcher')->getCurrentListener();				
+			/* @var $listener \EssentialDots\ExtbaseHijax\Event\Listener */
+			$listener = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Object\\ObjectManager')->get('EssentialDots\\ExtbaseHijax\\MVC\\Dispatcher')->getCurrentListener();
 			$this->tag->addAttribute('data-hijax-result-target', "jQuery(this).parents('.hijax-element[data-hijax-listener-id=\"".$listener->getId()."\"]')");
 			$this->tag->addAttribute('data-hijax-result-wrap', 'false');
 		}
 		if ($loaders) {
 			$this->tag->addAttribute('data-hijax-loaders', $loaders);
 		}
-		
+
 		parent::render($action, $arguments, $controller, $extensionName, $pluginName, $pageUid, $object, $pageType, $noCache, $noCacheHash, $section, $format, $additionalParams, $absolute, $addQueryString, $argumentsToBeExcludedFromQueryString, $fieldNamePrefix, $actionUri, $objectName);
-		
+
 		$this->tag->setContent('<div class="hijax-content">'.$this->tag->getContent().'</div><div class="hijax-loading"></div>');
-		
+
 		return $this->tag->render();
 	}
 
 	/**
 	 * Renders hijax-related data attributes
 	 *
-	 * @return void
+	 * @param null $action
+	 * @param array $arguments
+	 * @param null $controller
+	 * @param null $extensionName
+	 * @param null $pluginName
 	 */
 	protected function renderHijaxDataAttributes($action = NULL, array $arguments = array(), $controller = NULL, $extensionName = NULL, $pluginName = NULL) {
 		$request = $this->controllerContext->getRequest();
-		
+
 		$this->tag->addAttribute('data-hijax-element-type', 'form');
 		$this->tag->addAttribute('class', trim($this->arguments['class'].' hijax-element'));
-		
-		
+
+
 		if ($action === NULL) {
 			$action = $request->getControllerActionName();
 		}
 		$this->tag->addAttribute('data-hijax-action', $action);
-		
-		
+
+
 		if ($controller === NULL) {
 			$controller = $request->getControllerName();
 		}
 		$this->tag->addAttribute('data-hijax-controller', $controller);
-		
-		
+
+
 		if ($extensionName === NULL) {
 			$extensionName = $request->getControllerExtensionName();
 		}
 		$this->tag->addAttribute('data-hijax-extension', $extensionName);
-		
+
 		if ($pluginName === NULL && TYPO3_MODE === 'FE') {
 			$pluginName = $this->extensionService->getPluginNameByAction($extensionName, $controller, $action);
 		}
@@ -137,15 +143,15 @@ class Tx_ExtbaseHijax_ViewHelpers_FormViewHelper extends Tx_Fluid_ViewHelpers_Fo
 			$pluginName = $request->getPluginName();
 		}
 		$this->tag->addAttribute('data-hijax-plugin', $pluginName);
-		
+
 		if ($arguments) {
 			$this->tag->addAttribute('data-hijax-arguments', serialize($arguments));
 		}
-		
-		/* @var $listener Tx_ExtbaseHijax_Event_Listener */
-		$listener = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager')->get('Tx_ExtbaseHijax_MVC_Dispatcher')->getCurrentListener();
+
+		/* @var $listener \EssentialDots\ExtbaseHijax\Event\Listener */
+		$listener = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Object\\ObjectManager')->get('EssentialDots\\ExtbaseHijax\\MVC\\Dispatcher')->getCurrentListener();
 		$this->tag->addAttribute('data-hijax-settings', $listener->getId());
-	
+
 		$pluginNamespace = $this->extensionService->getPluginNamespace($extensionName, $pluginName);
 		$this->tag->addAttribute('data-hijax-namespace', $pluginNamespace);
 	}

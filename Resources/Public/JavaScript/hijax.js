@@ -1,7 +1,7 @@
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+ *  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -747,7 +747,7 @@
 			} catch (err) {
 			}
 		});
-	}
+	};
 	
 	$.fn.outer = function(val){
 		if (val) {
@@ -1035,7 +1035,7 @@
 
 		// Return the resulting serialization
 		return s.join( "&" ).replace( r20, "+" );
-	}
+	};
 
 	
 	$.hijax = function (settings, pendingElement, loaders) {

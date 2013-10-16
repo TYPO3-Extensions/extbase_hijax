@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\Tslib\FE;
+
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+ *  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -22,26 +24,26 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-class Tx_ExtbaseHijax_Tslib_FE_Hook implements t3lib_Singleton {
+class Hook implements \TYPO3\CMS\Core\SingletonInterface {
 	/**
 	 * @var int
 	 */
 	protected static $loopCount = 0;
 	
 	/**
-	 * @var Tx_Extbase_Object_ObjectManagerInterface
+	 * @var \TYPO3\CMS\Extbase\Object\ObjectManagerInterface
 	 */
 	protected $objectManager;
 		
 	/**
 	 * Extension Configuration
 	 *
-	 * @var Tx_ExtbaseHijax_Configuration_ExtensionInterface
+	 * @var \EssentialDots\ExtbaseHijax\Configuration\ExtensionInterface
 	 */
 	protected $extensionConfiguration;
 	
 	/**
-	 * @var Tx_ExtbaseHijax_Event_Dispatcher
+	 * @var \EssentialDots\ExtbaseHijax\Event\Dispatcher
 	 */
 	protected $hijaxEventDispatcher;
 	
@@ -58,14 +60,14 @@ class Tx_ExtbaseHijax_Tslib_FE_Hook implements t3lib_Singleton {
 	 * @return void
 	 */
 	protected function initializeObjectManager() {
-		$this->objectManager = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager');
-		$this->extensionConfiguration = $this->objectManager->get('Tx_ExtbaseHijax_Configuration_ExtensionInterface');
-		$this->hijaxEventDispatcher = $this->objectManager->get('Tx_ExtbaseHijax_Event_Dispatcher');
+		$this->objectManager = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Object\\ObjectManager');
+		$this->extensionConfiguration = $this->objectManager->get('EssentialDots\\ExtbaseHijax\\Configuration\\ExtensionInterface');
+		$this->hijaxEventDispatcher = $this->objectManager->get('EssentialDots\\ExtbaseHijax\\Event\\Dispatcher');
 	}
 
 	/**
 	 * @param array $params
-	 * @param tslib_fe $pObj
+	 * @param \TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController $pObj
 	 */
 	public function contentPostProcAll($params, $pObj) {
 		$this->contentPostProc($params, $pObj, 'all');
@@ -73,7 +75,7 @@ class Tx_ExtbaseHijax_Tslib_FE_Hook implements t3lib_Singleton {
 
 	/**
 	 * @param array $params
-	 * @param tslib_fe $pObj
+	 * @param \TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController $pObj
 	 */
 	public function contentPostProcOutput($params, $pObj) {
 		$this->contentPostProc($params, $pObj, 'output');
@@ -81,7 +83,7 @@ class Tx_ExtbaseHijax_Tslib_FE_Hook implements t3lib_Singleton {
 	
 	/**
 	 * @param array $params
-	 * @param tslib_fe $pObj
+	 * @param \TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController $pObj
 	 * @param string $hookType
 	 */
 	protected function contentPostProc($params, $pObj, $hookType) {		
@@ -114,7 +116,7 @@ class Tx_ExtbaseHijax_Tslib_FE_Hook implements t3lib_Singleton {
 			preg_match('/<body([^>]*)class="([^>]*)">/msU', $pObj->content, $matches);
 			$count = 0;
 			if (count($matches)) {
-				$classes = t3lib_div::trimExplode(" ", $matches[2], true);
+				$classes = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(" ", $matches[2], true);
 				if (!in_array($bodyClass, $classes)) {
 					$pObj->content = preg_replace('/<body([^>]*)class="([^>]*)">/msU',  '<body$1class="$2 '.$bodyClass.'">', $pObj->content, -1, $count);
 				}
@@ -156,20 +158,20 @@ class Tx_ExtbaseHijax_Tslib_FE_Hook implements t3lib_Singleton {
 
 	/**
 	 * @param array $params
-	 * @param tslib_fe $pObj
+	 * @param \TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController $pObj
 	 */	
 	public function initFEuser($params, $pObj) {
-			/* @var $fe_user tslib_feUserAuth */ 
+			/* @var $fe_user \TYPO3\CMS\Frontend\Authentication\FrontendUserAuthentication */
 		$fe_user = $pObj->fe_user;
 		
-		if ($fe_user->user && t3lib_div::_GP($fe_user->formfield_status)=='login') {
-			$event = new Tx_ExtbaseHijax_Event_Event('user-loggedIn', array('user'=>$fe_user->user));
+		if ($fe_user->user && \TYPO3\CMS\Core\Utility\GeneralUtility::_GP($fe_user->formfield_status)=='login') {
+			$event = new \EssentialDots\ExtbaseHijax\Event\Event('user-loggedIn', array('user'=>$fe_user->user));
 			$this->hijaxEventDispatcher->notify($event);
-		} elseif (!$fe_user->user && t3lib_div::_GP($fe_user->formfield_status)=='logout') {
-			$event = new Tx_ExtbaseHijax_Event_Event('user-loggedOut');
+		} elseif (!$fe_user->user && \TYPO3\CMS\Core\Utility\GeneralUtility::_GP($fe_user->formfield_status)=='logout') {
+			$event = new \EssentialDots\ExtbaseHijax\Event\Event('user-loggedOut');
 			$this->hijaxEventDispatcher->notify($event);
-		} elseif (!$fe_user->user && t3lib_div::_GP($fe_user->formfield_status)=='login') {
-			$event = new Tx_ExtbaseHijax_Event_Event('user-loginFailure');
+		} elseif (!$fe_user->user && \TYPO3\CMS\Core\Utility\GeneralUtility::_GP($fe_user->formfield_status)=='login') {
+			$event = new \EssentialDots\ExtbaseHijax\Event\Event('user-loginFailure');
 			$this->hijaxEventDispatcher->notify($event);
 		}
 	}

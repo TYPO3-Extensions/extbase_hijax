@@ -1,4 +1,6 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\Utility\Ajax;
+
 /***************************************************************
  *  Copyright notice
  *
@@ -25,9 +27,9 @@
 /**
  * Thumbnail generator
  */
-class Tx_ExtbaseHijax_Utility_Ajax_ThumbnailGenerator extends Tx_ExtbaseHijax_Utility_Ajax_Dispatcher {
+class ThumbnailGenerator extends \EssentialDots\ExtbaseHijax\Utility\Ajax\Dispatcher {
 	/**
-	 * @var t3lib_cache_frontend_VariableFrontend
+	 * @var \TYPO3\CMS\Core\Cache\Frontend\VariableFrontend
 	 */
 	protected $cache;
 
@@ -46,12 +48,12 @@ class Tx_ExtbaseHijax_Utility_Ajax_ThumbnailGenerator extends Tx_ExtbaseHijax_Ut
 	 * @return void
 	 */
 	public function dispatch() {
-		$src = t3lib_div::_GP('src');
-		$hash = t3lib_div::_GP('hash');
-		$conf = json_decode(rawurldecode(t3lib_div::_GP('conf')), true);
+		$src = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('src');
+		$hash = \TYPO3\CMS\Core\Utility\GeneralUtility::_GP('hash');
+		$conf = json_decode(rawurldecode(\TYPO3\CMS\Core\Utility\GeneralUtility::_GP('conf')), true);
 
-		/* @var $cacheHash t3lib_cacheHash */
-		$cacheHash = t3lib_div::makeInstance('t3lib_cacheHash');
+		/* @var $cacheHash \TYPO3\CMS\Frontend\Page\CacheHashCalculator */
+		$cacheHash = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\Page\\CacheHashCalculator');
 		$calculatedHash = $cacheHash->calculateCacheHash(array(
 			'encryptionKey' => $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'],
 			'src' => $src,
@@ -111,6 +113,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_ThumbnailGenerator extends Tx_ExtbaseHijax_Ut
 	 * @param null $minHeight
 	 * @param null $maxWidth
 	 * @param null $maxHeight
+	 * @return string
 	 */
 	public function getFallbackImageUrl($src, $width = NULL, $height = NULL, $minWidth = NULL, $minHeight = NULL, $maxWidth = NULL, $maxHeight = NULL) {
 		$conf = array(
@@ -122,8 +125,8 @@ class Tx_ExtbaseHijax_Utility_Ajax_ThumbnailGenerator extends Tx_ExtbaseHijax_Ut
 			'maxHeight' => $maxHeight,
 		);
 
-		/* @var $cacheHash t3lib_cacheHash */
-		$cacheHash = t3lib_div::makeInstance('t3lib_cacheHash');
+		/* @var $cacheHash \TYPO3\CMS\Frontend\Page\CacheHashCalculator */
+		$cacheHash = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\Page\\CacheHashCalculator');
 		$hash = $cacheHash->calculateCacheHash(array(
 			'encryptionKey' => $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'],
 			'src' => $src,
@@ -165,7 +168,7 @@ class Tx_ExtbaseHijax_Utility_Ajax_ThumbnailGenerator extends Tx_ExtbaseHijax_Ut
 		if (!is_array($imageInfo)) {
 			///throw new exception('Could not get image resource for "' . htmlspecialchars($src) . '".' , 1253191060);
 		}
-		$imageInfo[3] = t3lib_div::png_to_gif_by_imagemagick($imageInfo[3]);
+		$imageInfo[3] = \TYPO3\CMS\Core\Utility\GeneralUtility::png_to_gif_by_imagemagick($imageInfo[3]);
 		$GLOBALS['TSFE']->imagesOnPage[] = $imageInfo[3];
 		$imageSource = $GLOBALS['TSFE']->absRefPrefix . $imageInfo[3];
 

@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\ViewHelpers;
+
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+ *  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -22,7 +24,7 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-class Tx_ExtbaseHijax_ViewHelpers_VarViewHelper extends Tx_Fluid_Core_ViewHelper_AbstractViewHelper {
+class VarViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelper {
 
 	/**
 	 * @return void
@@ -34,7 +36,7 @@ class Tx_ExtbaseHijax_ViewHelpers_VarViewHelper extends Tx_Fluid_Core_ViewHelper
 	}
 
 	/**
-	 * @return void
+	 * @return string
 	 */
 	public function render() {
 		if ($this->arguments['expression']) {
@@ -50,7 +52,7 @@ class Tx_ExtbaseHijax_ViewHelpers_VarViewHelper extends Tx_Fluid_Core_ViewHelper
 		}
 		
 		if ($this->arguments['as']) {
-			$variableNameArr = t3lib_div::trimExplode('.', $this->arguments['as'], TRUE, 2);
+			$variableNameArr = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode('.', $this->arguments['as'], TRUE, 2);
 			
 			$variableName = $variableNameArr[0];
 			$attributePath = $variableNameArr[1];
@@ -72,6 +74,7 @@ class Tx_ExtbaseHijax_ViewHelpers_VarViewHelper extends Tx_Fluid_Core_ViewHelper
 				$templateValue = $value;
 			}
 			$this->templateVariableContainer->add($variableName, $templateValue);
+			return '';
 		} else {
 			return $value;
 		}

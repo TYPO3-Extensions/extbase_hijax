@@ -1,7 +1,7 @@
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+ *  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -21,7 +21,7 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-ExtbaseHijax = {}
+ExtbaseHijax = {};
 ExtbaseHijax.Application = Ember.Application.extend({
 	$rootElement: null,
 	$globalLoader: null,
@@ -33,7 +33,7 @@ ExtbaseHijax.Application = Ember.Application.extend({
 			this.$rootElement = $rootElement;
 		} else {
 			$rootElement.wrap('<div class="hijax-element"/>').wrap('<div class="hijax-content"/>');
-			$rootElement.parent().parent().append('<div class="hijax-loading"/>')
+			$rootElement.parent().parent().append('<div class="hijax-loading"/>');
 			this.$rootElement = $rootElement.parent().parent();
 		}
 		this.$globalTarget = this.$rootElement.find('> .hijax-content');
@@ -78,7 +78,7 @@ ExtbaseHijax.DOMReference = ExtbaseHijax.View.extend({
 	willDestroyElement: function() {
 		var $recycler = jQuery('#dom-reference-recycler');
 		if ($recycler.length==0) {
-			$('body').append('<div id="dom-reference-recycler" style="position: absolute; visibility: hidden; overflow: hidden; height: 1px; width: 1px;"></div>')
+			$('body').append('<div id="dom-reference-recycler" style="position: absolute; visibility: hidden; overflow: hidden; height: 1px; width: 1px;"></div>');
 			$recycler = jQuery('#dom-reference-recycler');
 		}
 		if (this.reference) {

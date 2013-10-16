@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\ViewHelpers;
+
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+ *  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -22,32 +24,31 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-class Tx_ExtbaseHijax_ViewHelpers_AjaxFunctionViewHelper extends Tx_Fluid_Core_ViewHelper_AbstractViewHelper {
+class AjaxFunctionViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelper {
 	
 	/**
-	 * @var Tx_ExtbaseHijax_Service_JSBuilder
+	 * @var \EssentialDots\ExtbaseHijax\Service\JSBuilder
 	 */
 	protected $jsBuilder;
 	
 	/**
 	 * injectJSBuilder
 	 *
-	 * @param Tx_ExtbaseHijax_Service_JSBuilder $jsBuilder
+	 * @param \EssentialDots\ExtbaseHijax\Service\JSBuilder $jsBuilder
 	 * @return void
 	 */
-	public function injectJSBuilder(Tx_ExtbaseHijax_Service_JSBuilder $jsBuilder) {
+	public function injectJSBuilder(\EssentialDots\ExtbaseHijax\Service\JSBuilder $jsBuilder) {
 		$this->jsBuilder = $jsBuilder;
 	}
-			
+
 	/**
-	 * @param string $action
+	 * @param null $action
 	 * @param array $arguments
-	 * @param string $controller
-	 * @param string $extensionName
-	 * @param string $pluginName
+	 * @param null $controller
+	 * @param null $extension
+	 * @param null $plugin
 	 * @param string $format
 	 * @param string $section
-	 * 
 	 * @return string
 	 */
 	public function render($action = NULL, array $arguments = array(), $controller = NULL, $extension = NULL, $plugin = NULL, $format = '', $section='footer') {

@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\Persistence\Storage;
+
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+*  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
 *  All rights reserved
 *
 *  This script is part of the Typo3 project. The Typo3 project is
@@ -24,17 +26,18 @@
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
 
-class Tx_ExtbaseHijax_Persistence_Storage_Typo3DbBackend extends Tx_Extbase_Persistence_Storage_Typo3DbBackend {	
+class Typo3DbBackend extends \TYPO3\CMS\Extbase\Persistence\Generic\Storage\Typo3DbBackend {
+
 	/**
 	 * Returns the number of tuples matching the query.
 	 *
-	 * @param Tx_Extbase_Persistence_QOM_QueryObjectModelInterface $query
-	 * @return integer The number of matching tuples
+	 * @param \TYPO3\CMS\Extbase\Persistence\QueryInterface $query
+	 * @return int
 	 */
-	public function getObjectCountByQuery(Tx_Extbase_Persistence_QueryInterface $query) {
-		$parameters = array();
+	public function getObjectCountByQuery(\TYPO3\CMS\Extbase\Persistence\QueryInterface $query) {
+
 		$statement = $query->getStatement();
-		if($statement instanceof Tx_Extbase_Persistence_QOM_Statement) {
+		if($statement instanceof \TYPO3\CMS\Extbase\Persistence\Generic\Qom\Statement) {
 				/*
 				 * Overriding default extbase logic for manually passed SQL
 				 */
@@ -42,7 +45,7 @@ class Tx_ExtbaseHijax_Persistence_Storage_Typo3DbBackend extends Tx_Extbase_Pers
 			$parameters = $statement->getBoundVariables();
 			$this->replacePlaceholders($sql, $parameters);
 			
-			$sqlParser = Tx_ExtbaseHijax_Persistence_Parser_SQL::ParseString($sql);
+			$sqlParser = \EssentialDots\ExtbaseHijax\Persistence\Parser\SQL::ParseString($sql);
 
 			$countQuery = $sqlParser->getCountQuery();
 			$result = $this->databaseHandle->sql_query($countQuery);

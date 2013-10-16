@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\Core\Widget;
+
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
+*  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic(at)essentialdots.com>
 *  All rights reserved
 *
 *  This script is part of the Typo3 project. The Typo3 project is
@@ -24,22 +26,22 @@
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
 
-class Tx_ExtbaseHijax_Core_Widget_WidgetContext extends Tx_Fluid_Core_Widget_WidgetContext {
+class WidgetContext extends \TYPO3\CMS\Fluid\Core\Widget\WidgetContext {
 	/**
 	 * Controller Context to use
-	 * @var Tx_Extbase_MVC_Controller_ControllerContext
+	 * @var \TYPO3\CMS\Extbase\Mvc\Controller\ControllerContext
 	 */
 	protected $parentControllerContext;
 	
 	/**
-	 * @return Tx_Extbase_MVC_Controller_ControllerContext
+	 * @return \TYPO3\CMS\Extbase\Mvc\Controller\ControllerContext
 	 */
 	public function getParentControllerContext() {
 		return $this->parentControllerContext;
 	}
 
 	/**
-	 * @param Tx_Extbase_MVC_Controller_ControllerContext $parentControllerContext
+	 * @param \TYPO3\CMS\Extbase\Mvc\Controller\ControllerContext $parentControllerContext
 	 */
 	public function setParentControllerContext($parentControllerContext) {
 		$this->parentControllerContext = $parentControllerContext;

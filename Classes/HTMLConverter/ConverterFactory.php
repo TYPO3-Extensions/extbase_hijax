@@ -1,4 +1,6 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\HTMLConverter;
+
 /***************************************************************
  *  Copyright notice
  *
@@ -22,7 +24,7 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-class Tx_ExtbaseHijax_HTMLConverter_ConverterFactory implements t3lib_Singleton {
+class ConverterFactory implements \TYPO3\CMS\Core\SingletonInterface {
 
 	/**
 	 * @var array
@@ -30,7 +32,7 @@ class Tx_ExtbaseHijax_HTMLConverter_ConverterFactory implements t3lib_Singleton 
 	protected $converterClassNames = array();
 
 	/**
-	 * @var Tx_Extbase_Object_ObjectManager
+	 * @var \TYPO3\CMS\Extbase\Object\ObjectManager
 	 */
 	protected $objectManager;
 
@@ -38,23 +40,23 @@ class Tx_ExtbaseHijax_HTMLConverter_ConverterFactory implements t3lib_Singleton 
 	 * Constructor
 	 */
 	public function __construct() {
-		$this->objectManager = t3lib_div::makeInstance('Tx_Extbase_Object_ObjectManager');
+		$this->objectManager = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Object\\ObjectManager');
 	}
 
 	/**
 	 * @param $format
-	 * @return Tx_ExtbaseHijax_HTMLConverter_AbstractConverter
+	 * @return \EssentialDots\ExtbaseHijax\HTMLConverter\AbstractConverter
 	 */
 	public function getConverter($format) {
 		$converter = NULL;
 		if ($this->converterClassNames[$format]) {
 			$converter = $this->objectManager->get($this->converterClassNames[$format]);
-		} elseif (class_exists('Tx_ExtbaseHijax_HTMLConverter_'.strtoupper($format).'Converter')) {
-			$converter = $this->objectManager->get('Tx_ExtbaseHijax_HTMLConverter_'.strtoupper($format).'Converter');
+		} elseif (class_exists('EssentialDots\\ExtbaseHijax\\HTMLConverter\\'.strtoupper($format).'Converter')) {
+			$converter = $this->objectManager->get('EssentialDots\\ExtbaseHijax\\HTMLConverter\\'.strtoupper($format).'Converter');
 		} elseif (strpos($format, '.html') !== false) {
 			$converter = $this->getConverter(str_replace('.html', '', $format));
 		} else {
-			$converter = $this->objectManager->get('Tx_ExtbaseHijax_HTMLConverter_NullConverter');
+			$converter = $this->objectManager->get('EssentialDots\\ExtbaseHijax\\HTMLConverter\\NullConverter');
 		}
 
 		return $converter;

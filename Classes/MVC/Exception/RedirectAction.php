@@ -1,8 +1,10 @@
 <?php
+namespace EssentialDots\ExtbaseHijax\MVC\Exception;
+
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2012 Nikola Stojiljkovic <nikola.stojiljkovic@essentialdots.com>
+ *  (c) 2012-2013 Nikola Stojiljkovic <nikola.stojiljkovic@essentialdots.com>
  *  All rights reserved
  *
  *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -22,7 +24,7 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-class Tx_ExtbaseHijax_MVC_Exception_RedirectAction extends Tx_Extbase_MVC_Exception {
+class RedirectAction extends \TYPO3\CMS\Extbase\Mvc\Exception {
 	
 	/**
 	 * @var string
@@ -35,14 +37,14 @@ class Tx_ExtbaseHijax_MVC_Exception_RedirectAction extends Tx_Extbase_MVC_Except
 	protected $httpStatus;
 	
 	/**
-	 * @return the $url
+	 * @return string
 	 */
 	public function getUrl() {
 		return $this->url;
 	}
 
 	/**
-	 * @return the $httpStatus
+	 * @return string
 	 */
 	public function getHttpStatus() {
 		return $this->httpStatus;
