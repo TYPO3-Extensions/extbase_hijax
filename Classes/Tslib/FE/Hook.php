@@ -154,6 +154,19 @@ class Hook implements \TYPO3\CMS\Core\SingletonInterface {
 		if ($hookType=='output' || $pObj->isStaticCacheble()) {
 			$this->hijaxEventDispatcher->replaceXMLCommentsWithDivs($pObj->content);
 		}
+
+		if ($hookType=='output') {
+			if (count($this->nonCacheableFooterCode)) {
+				ksort($this->nonCacheableFooterCode);
+
+				$pObj->content = $this->str_lreplace('</body>',  '<!-- x123456 -->'.implode('', $this->nonCacheableFooterCode).'</body>', $pObj->content);
+			}
+			if (count($this->nonCacheableHeaderCode)) {
+				ksort($this->nonCacheableHeaderCode);
+
+				$pObj->content = $this->str_lreplace('</head>',  '<!-- x123456 -->'.implode('', $this->nonCacheableHeaderCode).'</head>', $pObj->content);
+			}
+		}
 	}
 
 	/**
@@ -174,6 +187,48 @@ class Hook implements \TYPO3\CMS\Core\SingletonInterface {
 			$event = new \EssentialDots\ExtbaseHijax\Event\Event('user-loginFailure');
 			$this->hijaxEventDispatcher->notify($event);
 		}
+	}
+
+	/**
+	 * @var array
+	 */
+	protected $nonCacheableHeaderCode = array();
+
+	/**
+	 * @var array
+	 */
+	protected $nonCacheableFooterCode = array();
+
+	/**
+	 * @param $name
+	 * @param $source
+	 */
+	public function addNonCacheableHeaderCode($name, $source) {
+		$this->nonCacheableHeaderCode[$name] = $source;
+	}
+
+	/**
+	 * @param $name
+	 * @param $source
+	 */
+	public function addNonCacheableFooterCode($name, $source) {
+		$this->nonCacheableFooterCode[$name] = $source;
+	}
+
+	/**
+	 * @param string $search
+	 * @param string $replace
+	 * @param string $subject
+	 * @return string
+	 */
+	protected function str_lreplace($search, $replace, $subject) {
+		$pos = strrpos($subject, $search);
+
+		if($pos !== false) {
+			$subject = substr_replace($subject, $replace, $pos, strlen($search));
+		}
+
+		return $subject;
 	}
 }
 

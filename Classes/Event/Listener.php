@@ -100,9 +100,9 @@ class Listener {
 		}
 
 		if ($configuration) {
-			$this->configuration = $configuration;
+			$this->configuration = $this->ksortRecursive($configuration);
 		} else {
-			$this->configuration = $this->configurationManager->getConfiguration(\TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK);
+			$this->configuration = $this->ksortRecursive($this->configurationManager->getConfiguration(\TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK));
 		}
 		
 		if ($cObj) {
@@ -218,7 +218,7 @@ class Listener {
 	 * @param multitype: $configuration
 	 */
 	public function setConfiguration($configuration) {
-		$this->configuration = $configuration;
+		$this->configuration = $this->ksortRecursive($configuration);
 	}
 
 	/**
@@ -226,5 +226,21 @@ class Listener {
 	 */
 	public function setId($id) {
 		$this->id = $id;
+	}
+
+	/**
+	 * @param array $array
+	 * @return array
+	 */
+	protected function ksortRecursive(array $array) {
+		foreach ($array as $key => $nestedArray) {
+			if (is_array($nestedArray) && !empty($nestedArray)) {
+				$array[$key] = $this->ksortRecursive($nestedArray);
+			}
+		}
+
+		ksort($array);
+
+		return $array;
 	}
 }

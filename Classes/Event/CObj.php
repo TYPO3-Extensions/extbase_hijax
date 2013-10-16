@@ -40,6 +40,11 @@ class CObj {
 	 * @var string
 	 */
 	protected $table;
+
+	/**
+	 * @var bool|int
+	 */
+	protected $userObjectType = false;
 	
 	/**
 	 * Constructs a new \EssentialDots\ExtbaseHijax\Event\Listener.
@@ -50,7 +55,9 @@ class CObj {
 		$this->cObj = $cObj;
 
 		$reset = true;
-		
+
+		$this->userObjectType = $this->cObj->getUserObjectType();
+
 		if ($this->cObj && $this->cObj->currentRecord) {
 			list($table, $uid) = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(':', $this->cObj->currentRecord);
 			if ($table=='tt_content' && $uid) {
@@ -116,5 +123,19 @@ class CObj {
 	 */
 	public function setTable($table) {
 		$this->table = $table;
+	}
+
+	/**
+	 * @param bool|int $userObjectType
+	 */
+	public function setUserObjectType($userObjectType) {
+		$this->userObjectType = $userObjectType;
+	}
+
+	/**
+	 * @return bool|int
+	 */
+	public function getUserObjectType() {
+		return $this->userObjectType;
 	}
 }

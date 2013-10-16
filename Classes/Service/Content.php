@@ -162,12 +162,13 @@ class Content implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @param string $content
 	 */
 	public function processIntScripts(&$content) {
-		$GLOBALS['TSFE']->content = $content;
-		if (!$GLOBALS['TSFE']->config['INTincScript']) {
-			$GLOBALS['TSFE']->config['INTincScript'] = array();
+		$tsfe = &$GLOBALS['TSFE']; /* @var $tsfe \TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController */
+		$tsfe->content = $content;
+		if (!$tsfe->config['INTincScript']) {
+			$tsfe->config['INTincScript'] = array();
 		}
-		$GLOBALS['TSFE']->INTincScript();
-		$content = $GLOBALS['TSFE']->content;
+		$tsfe->INTincScript();
+		$content = $tsfe->content;
 	}
 	
 	/**

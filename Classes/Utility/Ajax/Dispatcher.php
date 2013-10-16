@@ -283,11 +283,11 @@ class Dispatcher implements \TYPO3\CMS\Core\SingletonInterface {
 	}
 
 	/**
-	 * @param $bootstrap
-	 * @param $configuration
-	 * @param $r
-	 * @param $request
-	 * @param $listener
+	 * @param \TYPO3\CMS\Extbase\Core\Bootstrap $bootstrap
+	 * @param array $configuration
+	 * @param array $r
+	 * @param \TYPO3\CMS\Extbase\Mvc\Web\Request $request
+	 * @param \EssentialDots\ExtbaseHijax\Event\Listener $listener
 	 * @param bool $isCacheCallback
 	 * @return array
 	 * @throws \Tx_EdCache_Exception_PreventActionCaching

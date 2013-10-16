@@ -1,5 +1,6 @@
 <?php
 namespace EssentialDots\ExtbaseHijax\ViewHelpers;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /***************************************************************
  *  Copyright notice
@@ -87,10 +88,11 @@ class ScriptViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelp
 	 * @param boolean $preventMarkupUpdateOnAjaxLoad
 	 * @param boolean $moveToExternalFile
 	 * @param boolean $noCache
+	 * @param string $name
 	 * 
      * @return string
 	 */
-	public function render($src="", $type = 'text/javascript', $compress = TRUE, $forceOnTop = FALSE, $allWrap = '', $excludeFromConcatenation = FALSE, $section = 'footer', $preventMarkupUpdateOnAjaxLoad = false, $moveToExternalFile = false, $noCache = false) {
+	public function render($src="", $type = 'text/javascript', $compress = TRUE, $forceOnTop = FALSE, $allWrap = '', $excludeFromConcatenation = FALSE, $section = 'footer', $preventMarkupUpdateOnAjaxLoad = false, $moveToExternalFile = false, $noCache = false, $name = '') {
         $content = $this->renderChildren();
         
         if ($this->ajaxDispatcher->getIsActive()) {
@@ -99,50 +101,97 @@ class ScriptViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelp
         	}
         		// need to just echo the code in ajax call
         	if (!$src) {
+		        if ($compress) {
+			        $content = $this->compressScript($content);
+		        }
         		return \TYPO3\CMS\Core\Utility\GeneralUtility::wrapJS($content);
         	} else {
         		return '<script type="'.htmlspecialchars($type).'" src="'.htmlspecialchars($src).'"></script>';
         	}
         } else {
-	        if (!$noCache && $this->isCached()) {
-	        	
-	        	if (!$src && $moveToExternalFile) {
-	        		$src = 'typo3temp'.DIRECTORY_SEPARATOR.'extbase_hijax'.DIRECTORY_SEPARATOR.md5($content).'.js';
-	        		\TYPO3\CMS\Core\Utility\GeneralUtility::writeFileToTypo3tempDir(PATH_site.$src, $content);
-	        		
-	        		if ($GLOBALS['TSFE']) {
-	        			if ($GLOBALS['TSFE']->baseUrl) {
-	        				$src = $GLOBALS['TSFE']->baseUrl . $src;
-	        			} elseif ($GLOBALS['TSFE']->absRefPrefix) {
-	        				$src = $GLOBALS['TSFE']->absRefPrefix . $src;
-	        			}
-	        		}
-	        	}
-	        	
-	        	if (!$src) {
-	        		if ($section=='footer') {
-	        			$this->pageRenderer->addJsFooterInlineCode(md5($content), $content, $compress, $forceOnTop);
-	        		} else {
-	        			$this->pageRenderer->addJsInlineCode(md5($content), $content, $compress, $forceOnTop);
-	        		}
-	        	} else {
-	        		if ($section=='footer') {
-		        		$this->pageRenderer->addJsFooterFile($src, $type, $compress, $forceOnTop, $allWrap, $excludeFromConcatenation);
-	        		} else {
-	        			$this->pageRenderer->addJsFile($src, $type, $compress, $forceOnTop, $allWrap, $excludeFromConcatenation);
-	        		}
-	        	}
+	        if ($this->isCached()) {
+		        if  ($noCache) {
+			        if ($src) {
+				        $content = '<script type="'.htmlspecialchars($type).'" src="'.htmlspecialchars($src).'"></script>';
+			        } else {
+				        if ($compress) {
+					        $content = $this->compressScript($content);
+				        }
+				        $content = \TYPO3\CMS\Core\Utility\GeneralUtility::wrapJS($content);
+			        }
+			        $tslibFE = GeneralUtility::makeInstance('EssentialDots\\ExtbaseHijax\\Tslib\\FE\\Hook'); /* @var $tslibFE \EssentialDots\ExtbaseHijax\Tslib\FE\Hook */
+
+			        if ($section=='footer') {
+				        $tslibFE->addNonCacheableFooterCode($name ? $name : md5($content), $content);
+			        } else {
+				        $tslibFE->addNonCacheableHeaderCode($name ? $name : md5($content), $content);
+			        }
+
+			        return '';
+		        } else {
+			        if (!$src && $moveToExternalFile) {
+				        $src = 'typo3temp'.DIRECTORY_SEPARATOR.'extbase_hijax'.DIRECTORY_SEPARATOR.md5($content).'.js';
+				        \TYPO3\CMS\Core\Utility\GeneralUtility::writeFileToTypo3tempDir(PATH_site.$src, $content);
+
+				        if ($GLOBALS['TSFE']) {
+					        if ($GLOBALS['TSFE']->baseUrl) {
+						        $src = $GLOBALS['TSFE']->baseUrl . $src;
+					        } elseif ($GLOBALS['TSFE']->absRefPrefix) {
+						        $src = $GLOBALS['TSFE']->absRefPrefix . $src;
+					        }
+				        }
+			        }
+
+			        if (!$src) {
+				        if ($section=='footer') {
+					        $this->pageRenderer->addJsFooterInlineCode($name ? $name : md5($content), $content, $compress, $forceOnTop);
+				        } else {
+					        $this->pageRenderer->addJsInlineCode($name ? $name : md5($content), $content, $compress, $forceOnTop);
+				        }
+			        } else {
+				        if ($section=='footer') {
+					        $this->pageRenderer->addJsFooterFile($src, $type, $compress, $forceOnTop, $allWrap, $excludeFromConcatenation);
+				        } else {
+					        $this->pageRenderer->addJsFile($src, $type, $compress, $forceOnTop, $allWrap, $excludeFromConcatenation);
+				        }
+			        }
+		        }
 	        } else {
 	        		// additionalFooterData not possible in USER_INT
 	        	if (!$src) {
-	        		$GLOBALS['TSFE']->additionalHeaderData[md5($content)] = \TYPO3\CMS\Core\Utility\GeneralUtility::wrapJS($content);
+	        		$GLOBALS['TSFE']->additionalHeaderData[$name ? $name : md5($content)] = \TYPO3\CMS\Core\Utility\GeneralUtility::wrapJS($content);
 	        	} else {
-	        		$GLOBALS['TSFE']->additionalHeaderData[md5($src)] = '<script type="'.htmlspecialchars($type).'" src="'.htmlspecialchars($src).'"></script>';
+	        		$GLOBALS['TSFE']->additionalHeaderData[$name ? $name : md5($content)] = '<script type="'.htmlspecialchars($type).'" src="'.htmlspecialchars($src).'"></script>';
 	        	}
 	        }
         }
 
 		return '';
+	}
+
+	/**
+	 * @param string $source
+	 * @return string
+	 */
+	protected function compressScript($source) {
+		if (!empty($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['jsCompressHandler'])) {
+			$sourceArr = array($source);
+			// Use external compression routine
+			$params = array(
+				'jsInline' => &$sourceArr,
+			);
+			\TYPO3\CMS\Core\Utility\GeneralUtility::callUserFunction($GLOBALS['TYPO3_CONF_VARS'][TYPO3_MODE]['jsCompressHandler'], $params, $this->pageRenderer);
+			$compressedSource = $params['jsInline'][0];
+		} else {
+			$error = '';
+			$compressedSource = \TYPO3\CMS\Core\Utility\GeneralUtility::minifyJavaScript($source, $error);
+			if ($error) {
+				$compressedSource = $source;
+				error_log('Error with minify JS Inline Block: ' . $error);
+			}
+		}
+
+		return $compressedSource;
 	}
 }
 ?>

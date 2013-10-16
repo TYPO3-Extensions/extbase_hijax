@@ -29,5 +29,5 @@ class CObjFactory extends \EssentialDots\ExtbaseHijax\Service\Serialization\Abst
 	/**
 	 * @var array
 	 */
-	protected $properties = array('data', 'table');
+	protected $properties = array('data', 'table', 'userObjectType');
 }
