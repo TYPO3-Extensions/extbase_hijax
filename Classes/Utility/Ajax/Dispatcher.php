@@ -381,12 +381,16 @@ class Dispatcher implements \TYPO3\CMS\Core\SingletonInterface {
 
 						/* @var $dispatcher \EssentialDots\ExtbaseHijax\MVC\Dispatcher */
 						$dispatcher = $this->objectManager->get('EssentialDots\\ExtbaseHijax\\MVC\\Dispatcher');
-						$dispatcher->dispatch($request, $response, $listener);
+						try {
+							$dispatcher->dispatch($request, $response, $listener);
 
-						$content = $response->getContent();
-						$this->serviceContent->processIntScripts($content);
-						$this->serviceContent->processAbsRefPrefix($content, $configuration['settings']['absRefPrefix']);
-						$responses['affected'][] = array( 'id' => $listenerId, 'format' => $request->getFormat(), 'response' => $content, 'preventMarkupUpdate' => $this->getPreventMarkupUpdateOnAjaxLoad() );
+							$content = $response->getContent();
+							$this->serviceContent->processIntScripts($content);
+							$this->serviceContent->processAbsRefPrefix($content, $configuration['settings']['absRefPrefix']);
+							$responses['affected'][] = array( 'id' => $listenerId, 'format' => $request->getFormat(), 'response' => $content, 'preventMarkupUpdate' => $this->getPreventMarkupUpdateOnAjaxLoad() );
+						} catch (\EssentialDots\ExtbaseHijax\MVC\Exception\StopProcessingAction $exception) {
+
+						}
 					} else {
 						// TODO: log error message
 					}
