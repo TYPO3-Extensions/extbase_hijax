@@ -362,9 +362,10 @@ class Tx_ExtbaseHijax_Utility_Ajax_Dispatcher implements t3lib_Singleton {
 					$listener = $this->listenerFactory->findById($listenerId);
 
 					if ($listener) {
+						$configuration = $listener->getConfiguration();
 						$bootstrap = t3lib_div::makeInstance('Tx_Extbase_Core_Bootstrap');
 						$bootstrap->cObj = $listener->getCObj();
-						$bootstrap->initialize($listener->getConfiguration());
+						$bootstrap->initialize($configuration);
 
 						/* @var $request Tx_Extbase_MVC_Web_Request */
 						$request = $listener->getRequest();
