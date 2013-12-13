@@ -367,9 +367,10 @@ class Dispatcher implements \TYPO3\CMS\Core\SingletonInterface {
 					$listener = $this->listenerFactory->findById($listenerId);
 
 					if ($listener) {
+						$configuration = $listener->getConfiguration();
 						$bootstrap = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Core\\Bootstrap');
 						$bootstrap->cObj = $listener->getCObj();
-						$bootstrap->initialize($listener->getConfiguration());
+						$bootstrap->initialize($configuration);
 
 						/* @var $request \TYPO3\CMS\Extbase\Mvc\Web\Request */
 						$request = $listener->getRequest();
