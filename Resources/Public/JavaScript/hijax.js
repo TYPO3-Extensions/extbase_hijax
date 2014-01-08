@@ -254,6 +254,51 @@
 
 		$data = $.hijaxParam({r: processedRequests, evts: eventsToListen})+'&'+$.hijaxParam(fields)+'&eID=extbase_hijax_dispatcher&L='+EXTBASE_HIJAX.sys_language_uid;
 
+		var successCallback = function(data, textStatus, jqXHR) {
+			if (data['redirect'] && data['redirect'].url) {
+				window.location = data['redirect'].url;
+			} else {
+				$.each(EXTBASE_HIJAX.beforeLoadElement, function(i, f) {
+					try {
+						eval(f);
+					} catch (err) {
+					}
+				});
+
+				$.each(pendingElements, function(i, pendingElement) {
+					try {
+						var target = pendingElement['target'];
+						var loaders = pendingElement['loaders'];
+						$(target).hideHijaxLoader(loaders);
+					} catch (err) {
+					}
+				});
+
+				$.each(data['original'], function(i, r) {
+					var element = $('#'+r['id']);
+					if (element) {
+						element.loadHijaxData(r['response'], r['preventMarkupUpdate']);
+					}
+				});
+
+				$.each(data['affected'], function(i, r) {
+					$.each(listeners[r['id']], function(i, element) {
+						element = $(element);
+						if (element) {
+							element.loadHijaxData(r['response'], r['preventMarkupUpdate']);
+						}
+					});
+				});
+
+				$.each(EXTBASE_HIJAX.onLoadElement, function(i, f) {
+					try {
+						eval(f);
+					} catch (err) {
+					}
+				});
+			}
+		};
+
 		var ajaxRequest = $.ajax({
 			url: EXTBASE_HIJAX.url,
 			type: "POST",
@@ -261,60 +306,30 @@
 			data: $data,
 			dataType: "json",
 			//pendingElements: pendingElements,
-			success: function(data, textStatus, jqXHR) {
-				if (data['redirect'] && data['redirect'].url) {
-					window.location = data['redirect'].url;
-				} else {
-					$.each(EXTBASE_HIJAX.beforeLoadElement, function(i, f) {
-						try {
-							eval(f);
-						} catch (err) {
-						}
-					});
-
+			success: successCallback,
+			error: function(jqXHR, textStatus, errorThrown) {
+				error = true;
+				if (jqXHR.status == 401) {
+					try {
+						data = jQuery.parseJSON(jqXHR.responseText);
+						error = false;
+					} catch (err) {
+						error = true;
+					}
+				}
+				if (error) {
 					$.each(pendingElements, function(i, pendingElement) {
 						try {
 							var target = pendingElement['target'];
 							var loaders = pendingElement['loaders'];
 							$(target).hideHijaxLoader(loaders);
+							$(target).showMessage(EXTBASE_HIJAX.errorMessage);
 						} catch (err) {
 						}
 					});
-
-					$.each(data['original'], function(i, r) {
-						var element = $('#'+r['id']);
-						if (element) {
-							element.loadHijaxData(r['response'], r['preventMarkupUpdate']);
-						}
-					});
-
-					$.each(data['affected'], function(i, r) {
-						$.each(listeners[r['id']], function(i, element) {	
-							element = $(element);
-							if (element) {
-								element.loadHijaxData(r['response'], r['preventMarkupUpdate']);
-							}
-						});
-					});
-
-					$.each(EXTBASE_HIJAX.onLoadElement, function(i, f) {
-						try {
-							eval(f);
-						} catch (err) {
-						}
-					});
+				} else {
+					successCallback(data, textStatus, jqXHR);
 				}
-			},
-			error: function(jqXHR, textStatus, errorThrown) {
-				$.each(pendingElements, function(i, pendingElement) {
-					try {
-						var target = pendingElement['target'];
-						var loaders = pendingElement['loaders'];
-						$(target).hideHijaxLoader(loaders);
-						$(target).showMessage(EXTBASE_HIJAX.errorMessage);
-					} catch (err) {
-					}
-				});
 			}
 		});			
 	};
