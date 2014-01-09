@@ -403,7 +403,7 @@ class Dispatcher implements \TYPO3\CMS\Core\SingletonInterface {
 	/**
 	 * initialize TSFE and TCA
 	 */
-	protected function initialize() {
+	public function initialize() {
 		if (!$this->initializedTSFE) {
 			$this->initializedTSFE = TRUE;
 			$this->initializeTca();

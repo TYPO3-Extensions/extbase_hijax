@@ -1,5 +1,6 @@
 <?php
 namespace EssentialDots\ExtbaseHijax\Service;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /***************************************************************
  *  Copyright notice
@@ -77,8 +78,12 @@ class Content implements \TYPO3\CMS\Core\SingletonInterface {
 	 */
 	public function generateListenerCacheForContentElement($table, $uid) {
 			/* @var $tslib_cObj \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer */
-		$tslib_cObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\ContentObject\\ContentObjectRenderer');
+		$tslib_cObj = GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\ContentObject\\ContentObjectRenderer');
 			// TODO: implement language overlay functions
+		if (!$GLOBALS['TSFE']) {
+			$ajaxDispatcher = GeneralUtility::makeInstance('EssentialDots\\ExtbaseHijax\\Utility\\Ajax\\Dispatcher'); /* @var $ajaxDispatcher \EssentialDots\ExtbaseHijax\Utility\Ajax\Dispatcher */
+			$ajaxDispatcher->initialize();
+		}
 		$data = \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord($table, $uid);
 		if ($data) {
 				// make sure that the actual controller action IS NOT executed
@@ -108,7 +113,7 @@ class Content implements \TYPO3\CMS\Core\SingletonInterface {
 	 */
 	public function generateListenerCacheForHijaxPi1($loadContentFromTypoScript, $eventsToListen, $cached) {
 		/* @var $tslib_cObj \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer */
-		$tslib_cObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\ContentObject\\ContentObjectRenderer');
+		$tslib_cObj = GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\ContentObject\\ContentObjectRenderer');
 		
 		if ($loadContentFromTypoScript) {
 			// make sure that the actual controller action IS NOT executed
@@ -197,7 +202,7 @@ class Content implements \TYPO3\CMS\Core\SingletonInterface {
 			$content = str_replace('"' . $GLOBALS['TYPO3_CONF_VARS']['BE']['fileadminDir'], '"' . $this->absRefPrefix . $GLOBALS['TYPO3_CONF_VARS']['BE']['fileadminDir'], $content);
 			$content = str_replace('"' . $GLOBALS['TYPO3_CONF_VARS']['BE']['RTE_imageStorageDir'], '"' . $this->absRefPrefix . $GLOBALS['TYPO3_CONF_VARS']['BE']['RTE_imageStorageDir'], $content);
 			// Process additional directories
-			$directories = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $GLOBALS['TYPO3_CONF_VARS']['FE']['additionalAbsRefPrefixDirectories'], TRUE);
+			$directories = GeneralUtility::trimExplode(',', $GLOBALS['TYPO3_CONF_VARS']['FE']['additionalAbsRefPrefixDirectories'], TRUE);
 			foreach ($directories as $directory) {
 				$content = str_replace('"' . $directory, '"' . $this->absRefPrefix . $directory, $content);
 			}
@@ -234,8 +239,8 @@ class Content implements \TYPO3\CMS\Core\SingletonInterface {
 	 */
 	protected function renderTypoScriptPath($typoscriptObjectPath) {
 		/* @var $tslib_cObj \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer */
-		$tslib_cObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\ContentObject\\ContentObjectRenderer');
-		$pathSegments = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode('.', $typoscriptObjectPath);
+		$tslib_cObj = GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\ContentObject\\ContentObjectRenderer');
+		$pathSegments = GeneralUtility::trimExplode('.', $typoscriptObjectPath);
 		$lastSegment = array_pop($pathSegments);
 		$setup = $GLOBALS['TSFE']->tmpl->setup;
 		foreach ($pathSegments as $segment) {
@@ -253,8 +258,8 @@ class Content implements \TYPO3\CMS\Core\SingletonInterface {
 	 */
 	public function isAllowedTypoScriptPath($typoscriptObjectPath) {
 		/* @var $tslib_cObj \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer */
-		$tslib_cObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\ContentObject\\ContentObjectRenderer');
-		$pathSegments = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode('.', $typoscriptObjectPath);
+		$tslib_cObj = GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\ContentObject\\ContentObjectRenderer');
+		$pathSegments = GeneralUtility::trimExplode('.', $typoscriptObjectPath);
 		$lastSegment = array_pop($pathSegments);
 		$setup = $GLOBALS['TSFE']->tmpl->setup;
 		foreach ($pathSegments as $segment) {
