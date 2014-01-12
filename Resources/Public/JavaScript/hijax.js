@@ -219,7 +219,7 @@
 		return( arrData );
 	};
 	
-	_ajaxRequest = function (requests) {
+	_ajaxRequest = function (requests, stateUrl) {
 		var pendingElements = [];
 		var processedRequests = [];
 		var fields = [];
@@ -256,8 +256,17 @@
 
 		var successCallback = function(data, textStatus, jqXHR) {
 			if (data['redirect'] && data['redirect'].url) {
-				window.location = data['redirect'].url;
+				if (typeof window.History != 'undefined' && window.History.enabled) {
+					EXTBASE_HIJAX.url = data['redirect'].url;
+					History.pushState({hijax: false, custom: false}, null, data['redirect'].url);
+				} else {
+					window.location = data['redirect'].url;
+				}
 			} else {
+				if (typeof window.History != 'undefined' && window.History.enabled && typeof stateUrl != 'undefined' && stateUrl) {
+					History.pushState({hijax: true, custom: true}, null, stateUrl);
+				}
+
 				$.each(EXTBASE_HIJAX.beforeLoadElement, function(i, f) {
 					try {
 						eval(f);
@@ -484,7 +493,7 @@
 
 							requests.push(el);
 
-							_ajaxRequest(requests);
+							_ajaxRequest(requests, $(this).attr('action'));
 						});
 						break;
 					case 'ajax':
@@ -542,7 +551,7 @@
 
 							requests.push(el);
 							
-							_ajaxRequest(requests);
+							_ajaxRequest(requests, $(this).attr('href'));
 						});
 						break;
 					default: 
@@ -1142,7 +1151,12 @@
 					this.parentSuccessCallback(data, textStatus, jqXHR);
 				}
 				if (data['redirect'] && data['redirect'].url) {
-					window.location = data['redirect'].url;
+					if (typeof window.History != 'undefined' && window.History.enabled) {
+						EXTBASE_HIJAX.url = data['redirect'].url;
+						History.pushState({hijax: false, custom: false}, null, data['redirect'].url);
+					} else {
+						window.location = data['redirect'].url;
+					}
 				} else {
 					if (this.pendingElement) {
 						$.each(EXTBASE_HIJAX.beforeLoadElement, function(i, f) {

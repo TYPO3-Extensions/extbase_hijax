@@ -310,6 +310,7 @@ class Dispatcher implements \TYPO3\CMS\Core\SingletonInterface {
 		/* @var $dispatcher \EssentialDots\ExtbaseHijax\MVC\Dispatcher */
 		$dispatcher = $this->objectManager->get('EssentialDots\\ExtbaseHijax\\MVC\\Dispatcher');
 		$dispatcher->dispatch($request, $response, $listener);
+		$this->parseHeaders($response);
 
 		$_POST[$namespace] = array();
 
@@ -384,18 +385,39 @@ class Dispatcher implements \TYPO3\CMS\Core\SingletonInterface {
 						$dispatcher = $this->objectManager->get('EssentialDots\\ExtbaseHijax\\MVC\\Dispatcher');
 						try {
 							$dispatcher->dispatch($request, $response, $listener);
+							$this->parseHeaders($response);
 
 							$content = $response->getContent();
 							$this->serviceContent->processIntScripts($content);
 							$this->serviceContent->processAbsRefPrefix($content, $configuration['settings']['absRefPrefix']);
 							$responses['affected'][] = array( 'id' => $listenerId, 'format' => $request->getFormat(), 'response' => $content, 'preventMarkupUpdate' => $this->getPreventMarkupUpdateOnAjaxLoad() );
 						} catch (\EssentialDots\ExtbaseHijax\MVC\Exception\StopProcessingAction $exception) {
+							$this->parseHeaders($response);
 
 						}
 					} else {
 						// TODO: log error message
 					}
 				}
+			}
+		}
+	}
+
+	/**
+	 * @param \TYPO3\CMS\Extbase\Mvc\Web\Response $response
+	 */
+	protected function parseHeaders($response) {
+		// detect redirects
+		if (method_exists($response, 'getHeaders')) {
+			foreach ($response->getHeaders() as $header) {
+				$matches = array();
+				preg_match('/Location: (.*)/ms', $header, $matches);
+				if (count($matches) > 0) {
+					$url = trim($matches[1]);
+					// no need to set any other status than 303?
+					\EssentialDots\ExtbaseHijax\Utility\HTTP::redirect($url, \TYPO3\CMS\Core\Utility\HttpUtility::HTTP_STATUS_303);
+				}
+
 			}
 		}
 	}
