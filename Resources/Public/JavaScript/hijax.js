@@ -465,6 +465,9 @@
 						break;
 					case 'form':
 						el.bind('submit', function(e) {
+							if (e.isPropagationStopped()) {
+								return false;
+							}
 							e.preventDefault(); // <-- important
 							var requests = [];
 							var target = $(this).parents('.hijax-element[data-hijax-listener-id="'+$(this).attr('data-hijax-settings')+'"]');
