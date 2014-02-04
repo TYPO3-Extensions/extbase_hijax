@@ -465,7 +465,7 @@
 						break;
 					case 'form':
 						el.bind('submit', function(e) {
-							if (e.isPropagationStopped()) {
+							if (typeof e.isPropagationStopped === 'function' && e.isPropagationStopped()) {
 								return false;
 							}
 							e.preventDefault(); // <-- important
