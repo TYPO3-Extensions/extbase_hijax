@@ -49,6 +49,8 @@ class ObjectAccessViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\AbstractVi
 			}
 			if ($getter && is_object($this->arguments['object']) && method_exists($this->arguments['object'], $getter)) {
 				$value = call_user_func(array($this->arguments['object'], $getter));
+			} else {
+				$value = \TYPO3\CMS\Extbase\Reflection\ObjectAccess::getPropertyPath($this->arguments['object'], $this->arguments['attribute']);
 			}
 		}
 
