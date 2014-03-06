@@ -1,5 +1,6 @@
 <?php
 namespace EssentialDots\ExtbaseHijax\ViewHelpers\Widget;
+use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
 
 /***************************************************************
 *  Copyright notice
@@ -108,7 +109,7 @@ class LinkViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\Widget\LinkViewHelper 
 	 */
 	protected function getWidgetUri($action = NULL, array $arguments = array(), array $contextArguments = array(), $ajax = TRUE, $cachedAjaxIfPossible = TRUE) {
 		$this->hijaxEventDispatcher->setIsHijaxElement(true);		
-		
+
 		$request = $this->controllerContext->getRequest();
 			/* @var $widgetContext \EssentialDots\ExtbaseHijax\Core\Widget\WidgetContext */
 		$widgetContext = $request->getWidgetContext();
@@ -177,7 +178,9 @@ class LinkViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\Widget\LinkViewHelper 
 		if ($ajax) {
 			$tagAttributes['data-hijax-settings'] = $listener->getId();
 		}
-		
+
+		$cachedAjaxIfPossible = $cachedAjaxIfPossible ? $this->configurationManager->getContentObject()->getUserObjectType() != ContentObjectRenderer::OBJECTTYPE_USER_INT : false;
+
 		if ($cachedAjaxIfPossible) {
 			/* @var $cacheHash \TYPO3\CMS\Frontend\Page\CacheHashCalculator */
 			$cacheHash = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\Page\\CacheHashCalculator');
