@@ -86,11 +86,12 @@ class LinkViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\Widget\LinkViewHelper 
 	 * @param string $format The requested format, e.g. ".html"
 	 * @param boolean $ajax TRUE if the URI should be to an AJAX widget, FALSE otherwise.
 	 * @param boolean $cachedAjaxIfPossible TRUE if the URI should be cached (with respect to non-cacheable actions)
+	 * @param boolean $forceContext TRUE if the controller/action/... should be passed
 	 * @return string The rendered link
 	 * @api
 	 */
-	public function render($action = NULL, $arguments = array(), $contextArguments = array(), $section = '', $format = '', $ajax = TRUE, $cachedAjaxIfPossible = TRUE) {
-		$uri = $this->getWidgetUri($action, $arguments, $contextArguments, $ajax, $cachedAjaxIfPossible);
+	public function render($action = NULL, $arguments = array(), $contextArguments = array(), $section = '', $format = '', $ajax = TRUE, $cachedAjaxIfPossible = TRUE, $forceContext = FALSE) {
+		$uri = $this->getWidgetUri($action, $arguments, $contextArguments, $ajax, $cachedAjaxIfPossible, $forceContext);
 		$this->tag->addAttribute('href', $uri);
 		$this->tag->setContent($this->renderChildren());
 
@@ -105,9 +106,10 @@ class LinkViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\Widget\LinkViewHelper 
 	 * @param array $contextArguments
 	 * @param bool $ajax
 	 * @param bool $cachedAjaxIfPossible
+	 * @param bool $forceContext
 	 * @return string
 	 */
-	protected function getWidgetUri($action = NULL, array $arguments = array(), array $contextArguments = array(), $ajax = TRUE, $cachedAjaxIfPossible = TRUE) {
+	protected function getWidgetUri($action = NULL, array $arguments = array(), array $contextArguments = array(), $ajax = TRUE, $cachedAjaxIfPossible = TRUE, $forceContext = FALSE) {
 		$this->hijaxEventDispatcher->setIsHijaxElement(true);		
 
 		$request = $this->controllerContext->getRequest();
@@ -126,7 +128,7 @@ class LinkViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\Widget\LinkViewHelper 
 		if ($ajax) {
 			$tagAttributes['data-hijax-action'] = $action;
 		}
-	
+
 		$controller = $widgetContext->getParentControllerContext()->getRequest()->getControllerName();
 		if ($ajax) {
 			$tagAttributes['data-hijax-controller'] = $controller;
@@ -207,15 +209,20 @@ class LinkViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\Widget\LinkViewHelper 
 			$requestArguments['format'] = $this->arguments['format'];
 		}
 
-		return $uriBuilder
+		$uriBuilder
 			->reset()
 			//->setUseCacheHash($this->contentObject->getUserObjectType() === \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer::OBJECTTYPE_USER)
 			->setArguments(array($pluginNamespace => $requestArguments))
 			->setSection($this->arguments['section'])
 			->setAddQueryString(TRUE)
 			->setArgumentsToBeExcludedFromQueryString(array($argumentPrefix, 'cHash'))
-			->setFormat($this->arguments['format'])
-			->build();
+			->setFormat($this->arguments['format']);
+
+		if ($forceContext) {
+			return $uriBuilder->uriFor($action, $arguments, $controller, $extensionName, $pluginName);
+		} else {
+			return $uriBuilder->build();
+		}
 	}	
 }
 
