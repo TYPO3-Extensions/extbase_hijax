@@ -184,9 +184,10 @@ class Dispatcher implements \TYPO3\CMS\Core\SingletonInterface {
 					$configuration = $listener->getConfiguration();
 					$request = $listener->getRequest();	
 					$bootstrap->cObj = $listener->getCObj();
-				} elseif (\EssentialDots\ExtbaseHijax\Utility\Extension::isAllowedHijaxAction($r['extension'], $r['controller'], $r['action'])) {
+				} elseif (\EssentialDots\ExtbaseHijax\Utility\Extension::isAllowedHijaxAction($r['extension'], $r['controller'], $r['action'], $r['vendor'])) {
 					$allowCaching = FALSE; // we do not want to cache this request
 					$configuration['extensionName'] = $r['extension'];
+					$configuration['vendorName']    = $r['vendor'];
 					$configuration['pluginName']    = $r['plugin'];
 					$configuration['controller']    = $r['controller'];
 					$configuration['action']        = $r['action'];
@@ -503,6 +504,9 @@ class Dispatcher implements \TYPO3\CMS\Core\SingletonInterface {
 		$request->setFormat($r['format'] ? $r['format'] : 'html');
 		$request->setControllerName($r['controller']);
 		$request->setControllerActionName($r['action']);
+		if ($r['vendor']) {
+			$request->setControllerVendorName($r['vendor']);
+		}
 		if ($r['arguments'] && !is_array($r['arguments'])) {
 			$r['arguments'] = unserialize($r['arguments']);
 			$this->stringify($r['arguments']);

@@ -125,14 +125,18 @@ tt_content.' . $pluginSignature . ' {
 	 * @param string $extensionKey The extension name (in UpperCamelCase) or the extension key (in lower_underscore)
 	 * @param array $controllerActions is an array of allowed combinations of controller and action stored in an array (controller name as key and a comma separated list of action names as value, the first controller and its first action is chosen as default)
 	 * @param array $nonCacheableControllerActions is an optional array of controller name and  action names which should not be cached (array as defined in $controllerActions)
+	 * @param string $vendorName
 	 * @return void
+	 *
 	 * @throws \InvalidArgumentException
 	 */
-	static public function registerHijaxPlugin($extensionKey, array $controllerActions, array $nonCacheableControllerActions = array()) {
+	static public function registerHijaxPlugin($extensionKey, array $controllerActions, array $nonCacheableControllerActions = array(), $vendorName = '') {
 		if (empty($extensionKey)) {
 			throw new \InvalidArgumentException('The extension name was invalid (must not be empty and must match /[A-Za-z][_A-Za-z0-9]/)', 1239891989);
 		}
 		$extensionName = \TYPO3\CMS\Core\Utility\GeneralUtility::underscoredToUpperCamelCase($extensionKey);
+		$extensionName = $vendorName ? "{$vendorName}.{$extensionName}" : $extensionName;
+
 		foreach ($controllerActions as $controllerName => $actionsList) {
 			$GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['extbase_hijax']['extensions'][$extensionName]['controllers'][$controllerName] = array('actions' => \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $actionsList));
 			if (!empty($nonCacheableControllerActions[$controllerName])) {
@@ -147,7 +151,10 @@ tt_content.' . $pluginSignature . ' {
 	 * @param string $actionName
 	 * @return boolean
 	 */
-	static public function isAllowedHijaxAction($extensionName, $controllerName, $actionName) {
+	static public function isAllowedHijaxAction($extensionName, $controllerName, $actionName, $vendorName) {
+		// @todo: allow only requests with the given referrer
+		$extensionName = $vendorName ? "{$vendorName}.{$extensionName}" : $extensionName;
+
 		if (
 				$GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['extbase_hijax'] && 
 				$GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['extbase_hijax']['extensions'][$extensionName] &&
