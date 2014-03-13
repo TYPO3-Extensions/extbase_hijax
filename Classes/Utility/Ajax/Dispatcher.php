@@ -184,6 +184,7 @@ class Dispatcher implements \TYPO3\CMS\Core\SingletonInterface {
 					$configuration = $listener->getConfiguration();
 					$request = $listener->getRequest();	
 					$bootstrap->cObj = $listener->getCObj();
+					$this->checkAllowedControllerActions($configuration, $r);
 				} elseif (\EssentialDots\ExtbaseHijax\Utility\Extension::isAllowedHijaxAction($r['extension'], $r['controller'], $r['action'], $r['vendor'])) {
 					$allowCaching = FALSE; // we do not want to cache this request
 					$configuration['extensionName'] = $r['extension'];
@@ -559,6 +560,41 @@ class Dispatcher implements \TYPO3\CMS\Core\SingletonInterface {
 	public function setPreventMarkupUpdateOnAjaxLoad($preventMarkupUpdateOnAjaxLoad) {
 		$this->preventMarkupUpdateOnAjaxLoad = $preventMarkupUpdateOnAjaxLoad;
 	}
-}
 
-?>
+	/**
+	 * @param $configuration
+	 * @param $r
+	 * @throws \TYPO3\CMS\Extbase\Mvc\Exception\InvalidActionNameException
+	 * @throws \TYPO3\CMS\Extbase\Mvc\Exception
+	 * @throws \TYPO3\CMS\Extbase\Mvc\Exception\InvalidControllerNameException
+	 */
+	protected function checkAllowedControllerActions($configuration, &$r) {
+		$allowedControllerActions = array();
+		foreach ($configuration['controllerConfiguration'] as $controllerName => $controllerActions) {
+			$allowedControllerActions[$controllerName] = $controllerActions['actions'];
+		}
+		
+		$allowedControllerNames = array_keys($allowedControllerActions);
+		if (!in_array($r['controller'], $allowedControllerNames)) {
+			throw new \TYPO3\CMS\Extbase\Mvc\Exception\InvalidControllerNameException('The controller "' . $r['controller'] . '" is not allowed by this plugin. Please check for TYPO3\\CMS\\Extbase\\Utility\\ExtensionUtility::configurePlugin() in your ext_localconf.php.', 1313855173);
+		}
+
+		$defaultActionName = is_array($allowedControllerActions[$r['controller']]) ? current($allowedControllerActions[$r['controller']]) : '';
+		if (!isset($r['action']) || strlen($r['action']) === 0) {
+			if (strlen($defaultActionName) === 0) {
+				throw new \TYPO3\CMS\Extbase\Mvc\Exception('The default action can not be determined for controller "' . $r['controller'] . '". Please check TYPO3\\CMS\\Extbase\\Utility\\ExtensionUtility::configurePlugin() in your ext_localconf.php.', 1295479651);
+			} else {
+				$r['action'] = $defaultActionName;
+			}
+		}
+		$allowedActionNames = $allowedControllerActions[$r['controller']];
+		if (!in_array($r['action'], $allowedActionNames)) {
+			throw new \TYPO3\CMS\Extbase\Mvc\Exception\InvalidActionNameException('The action "' . $r['action'] . '" (controller "' . $r['controller'] . '") is not allowed by this plugin. Please check TYPO3\\CMS\\Extbase\\Utility\\ExtensionUtility::configurePlugin() in your ext_localconf.php.', 1313855175);
+		}
+
+		// filter extension/vendor/plugin, we allow only initial context plugin
+		unset($r['extension']);
+		unset($r['vendor']);
+		unset($r['plugin']);
+	}
+}
