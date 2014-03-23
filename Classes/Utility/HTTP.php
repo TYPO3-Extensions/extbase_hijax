@@ -71,8 +71,8 @@ class HTTP implements \TYPO3\CMS\Core\SingletonInterface {
 	 * Location redirect header. By default the HTTP status code sent is
 	 * a 'HTTP/1.1 303 See Other'.
 	 *
-	 * @param $url          The target URL to redirect to
-	 * @param $httpStatus   An optional HTTP status header. Default is 'HTTP/1.1 303 See Other'
+	 * @param string $url          The target URL to redirect to
+	 * @param string $httpStatus   An optional HTTP status header. Default is 'HTTP/1.1 303 See Other'
 	 */
 	public static function redirect($url, $httpStatus = \TYPO3\CMS\Core\Utility\HttpUtility::HTTP_STATUS_303) {
 			/* @var $httpServiceInstance \EssentialDots\ExtbaseHijax\Utility\HTTP */

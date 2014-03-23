@@ -31,6 +31,11 @@ class Content implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @var string
 	 */
 	protected $absRefPrefix;
+
+	/**
+	 * @var
+	 */
+	protected $absRefPrefixCallbackAttribute;
 	
 	/**
 	 * @var boolean

@@ -35,16 +35,69 @@ class Typo3DbBackend extends \TYPO3\CMS\Extbase\Persistence\Generic\Storage\Typo
 	 * @return int
 	 */
 	public function getObjectCountByQuery(\TYPO3\CMS\Extbase\Persistence\QueryInterface $query) {
+		if (version_compare(TYPO3_version,'6.2','<')) {
+			return $this->getObjectCountByQueryTYPO361($query);
+		} else {
+			return $this->getObjectCountByQueryTYPO362($query);
+		}
+	}
 
+	/**
+	 * @param \TYPO3\CMS\Extbase\Persistence\QueryInterface $query
+	 * @return int
+	 * @throws \TYPO3\CMS\Extbase\Persistence\Generic\Storage\Exception\BadConstraintException
+	 */
+	protected function getObjectCountByQueryTYPO362(\TYPO3\CMS\Extbase\Persistence\QueryInterface $query) {
+		if ($query->getConstraint() instanceof \TYPO3\CMS\Extbase\Persistence\Generic\Qom\Statement) {
+			throw new \TYPO3\CMS\Extbase\Persistence\Generic\Storage\Exception\BadConstraintException('Could not execute count on queries with a constraint of type TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Qom\\StatementInterface', 1256661045);
+		}
+
+		return parent::getObjectCountByQuery($query);
 		$statement = $query->getStatement();
 		if($statement instanceof \TYPO3\CMS\Extbase\Persistence\Generic\Qom\Statement) {
-				/*
-				 * Overriding default extbase logic for manually passed SQL
-				 */
+			/*
+			 * Overriding default extbase logic for manually passed SQL
+			 */
 			$sql = $statement->getStatement();
 			$parameters = $statement->getBoundVariables();
 			$this->replacePlaceholders($sql, $parameters);
-			
+
+			$sqlParser = \EssentialDots\ExtbaseHijax\Persistence\Parser\SQL::ParseString($sql);
+
+			$countQuery = $sqlParser->getCountQuery();
+			$res = $this->databaseHandle->sql_query($countQuery);
+			$this->checkSqlErrors($countQuery);
+			$count = 0;
+			while ($row = $this->databaseHandle->sql_fetch_assoc($res)) {
+				$count = $row['count'];
+				break;
+			}
+			$this->databaseHandle->sql_free_result($res);
+		} else {
+			/*
+			 * Default Extbase logic
+			 */
+			$count = parent::getObjectCountByQuery($query);
+		}
+
+		return (int)$count;
+	}
+
+	/**
+	 * @param \TYPO3\CMS\Extbase\Persistence\QueryInterface $query
+	 * @return int
+	 * @throws \TYPO3\CMS\Extbase\Persistence\Generic\Storage\Exception\BadConstraintException
+	 */
+	protected function getObjectCountByQueryTYPO361(\TYPO3\CMS\Extbase\Persistence\QueryInterface $query) {
+		$statement = $query->getStatement();
+		if($statement instanceof \TYPO3\CMS\Extbase\Persistence\Generic\Qom\Statement) {
+			/*
+			 * Overriding default extbase logic for manually passed SQL
+			 */
+			$sql = $statement->getStatement();
+			$parameters = $statement->getBoundVariables();
+			$this->replacePlaceholders($sql, $parameters);
+
 			$sqlParser = \EssentialDots\ExtbaseHijax\Persistence\Parser\SQL::ParseString($sql);
 
 			$countQuery = $sqlParser->getCountQuery();
@@ -58,9 +111,9 @@ class Typo3DbBackend extends \TYPO3\CMS\Extbase\Persistence\Generic\Storage\Typo
 			$count = current(current($rows));
 			$this->databaseHandle->sql_free_result($result);
 		} else {
-				/*
-				 * Default Extbase logic
-				 */
+			/*
+			 * Default Extbase logic
+			 */
 			$count = parent::getObjectCountByQuery($query);
 		}
 
