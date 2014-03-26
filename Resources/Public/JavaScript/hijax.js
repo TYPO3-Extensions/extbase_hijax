@@ -258,13 +258,13 @@
 			if (data['redirect'] && data['redirect'].url) {
 				if (typeof window.History != 'undefined' && window.History.enabled) {
 					EXTBASE_HIJAX.url = data['redirect'].url;
-					History.pushState({hijax: false, custom: false}, null, data['redirect'].url);
+					History.pushState({hijax: false, custom: false, tstamp: new Date().getTime()}, null, data['redirect'].url);
 				} else {
 					window.location = data['redirect'].url;
 				}
 			} else {
 				if (typeof window.History != 'undefined' && window.History.enabled && typeof stateUrl != 'undefined' && stateUrl) {
-					History.pushState({hijax: true, custom: true}, null, stateUrl);
+					History.pushState({hijax: true, custom: true, tstamp: new Date().getTime()}, null, stateUrl);
 				}
 
 				$.each(EXTBASE_HIJAX.beforeLoadElement, function(i, f) {
@@ -1156,7 +1156,7 @@
 				if (data['redirect'] && data['redirect'].url) {
 					if (typeof window.History != 'undefined' && window.History.enabled) {
 						EXTBASE_HIJAX.url = data['redirect'].url;
-						History.pushState({hijax: false, custom: false}, null, data['redirect'].url);
+						History.pushState({hijax: false, custom: false, tstamp: new Date().getTime()}, null, data['redirect'].url);
 					} else {
 						window.location = data['redirect'].url;
 					}
