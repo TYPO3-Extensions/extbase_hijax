@@ -52,7 +52,6 @@ class Typo3DbBackend extends \TYPO3\CMS\Extbase\Persistence\Generic\Storage\Typo
 			throw new \TYPO3\CMS\Extbase\Persistence\Generic\Storage\Exception\BadConstraintException('Could not execute count on queries with a constraint of type TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Qom\\StatementInterface', 1256661045);
 		}
 
-		return parent::getObjectCountByQuery($query);
 		$statement = $query->getStatement();
 		if($statement instanceof \TYPO3\CMS\Extbase\Persistence\Generic\Qom\Statement) {
 			/*
