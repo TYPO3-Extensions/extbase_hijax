@@ -475,6 +475,7 @@ class Dispatcher implements \TYPO3\CMS\Core\SingletonInterface {
 		$tsfe->settingLocale();
 		$tsfe->calculateLinkVars();
 		$tsfe->newCObj();
+        \TYPO3\CMS\Frontend\Page\PageGenerator::pagegenInit();
 	}
 	
 	/**
