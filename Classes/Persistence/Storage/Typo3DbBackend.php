@@ -1,5 +1,6 @@
 <?php
 namespace EssentialDots\ExtbaseHijax\Persistence\Storage;
+use TYPO3\CMS\Extbase\Persistence\QueryInterface;
 
 /***************************************************************
 *  Copyright notice
