@@ -118,6 +118,21 @@ class Typo3DbBackend extends \TYPO3\CMS\Extbase\Persistence\Generic\Storage\Typo
 
 		return (int)$count;
 	}
+
+	/**
+	 * Parses the query and returns the SQL statement parts.
+	 *
+	 * @param QueryInterface $query The query
+	 * @return array The SQL statement parts
+	 */
+	public function parseQuery(QueryInterface $query) {
+		// backward compatibility for some extensions like news v2.3.0 for TYPO3 6.2.0
+		if ($this->queryParser != NULL) {
+			return $this->queryParser->parseQuery($query);
+		} else {
+			return parent::parseQuery($query);
+		}
+	}
 }
 
 ?>

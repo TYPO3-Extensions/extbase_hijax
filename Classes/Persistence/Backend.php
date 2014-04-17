@@ -89,7 +89,7 @@ class Backend extends \TYPO3\CMS\Extbase\Persistence\Generic\Backend {
 			$properties = $object->_getProperties();
 			$row = array();
 			foreach ($properties as $propertyName => $propertyValue) {
-				if (!$dataMap->isPersistableProperty($propertyName) || $this->propertyValueIsLazyLoaded($propertyValue)) continue;
+				if (!$propertyValue || !is_object($propertyValue) || !$dataMap->isPersistableProperty($propertyName) || $this->propertyValueIsLazyLoaded($propertyValue)) continue;
 				$columnMap = $dataMap->getColumnMap($propertyName);
 				if ($propertyValue instanceof \TYPO3\CMS\Extbase\Persistence\ObjectStorage) {
 					if ($object->_isNew() || $propertyValue->_isDirty()) {
