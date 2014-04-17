@@ -134,6 +134,35 @@ class Typo3DbBackend extends \TYPO3\CMS\Extbase\Persistence\Generic\Storage\Typo
 			return parent::parseQuery($query);
 		}
 	}
+
+	/**
+	 * Returns the statement, ready to be executed.
+	 *
+	 * @param array $sql The SQL statement parts
+	 * @return string The SQL statement
+	 */
+	public function buildQuery(array $sql) {
+		if ($this->queryParser != NULL) {
+			$statement = 'SELECT ' . implode(' ', $sql['keywords']) . ' ' . implode(',', $sql['fields']) . ' FROM ' . implode(' ', $sql['tables']) . ' ' . implode(' ', $sql['unions']);
+			if (!empty($sql['where'])) {
+				$statement .= ' WHERE ' . implode('', $sql['where']);
+				if (!empty($sql['additionalWhereClause'])) {
+					$statement .= ' AND ' . implode(' AND ', $sql['additionalWhereClause']);
+				}
+			} elseif (!empty($sql['additionalWhereClause'])) {
+				$statement .= ' WHERE ' . implode(' AND ', $sql['additionalWhereClause']);
+			}
+			if (!empty($sql['orderings'])) {
+				$statement .= ' ORDER BY ' . implode(', ', $sql['orderings']);
+			}
+			if (!empty($sql['limit'])) {
+				$statement .= ' LIMIT ' . $sql['limit'];
+			}
+			return $statement;
+		} else {
+			return parent::buildQuery($sql);
+		}
+	}
 }
 
 ?>
