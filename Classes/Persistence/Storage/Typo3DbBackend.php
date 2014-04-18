@@ -126,12 +126,14 @@ class Typo3DbBackend extends \TYPO3\CMS\Extbase\Persistence\Generic\Storage\Typo
 	 * @param QueryInterface $query The query
 	 * @return array The SQL statement parts
 	 */
-	public function parseQuery(QueryInterface $query) {
+	public function parseQuery(QueryInterface $query, array &$parameters) {
 		// backward compatibility for some extensions like news v2.3.0 for TYPO3 6.2.0
 		if ($this->queryParser != NULL) {
+			// note: this does not use the new query cache in TYPO3 6.2!
+			list($queryHash, $parameters) = $this->queryParser->preparseQuery($query);
 			return $this->queryParser->parseQuery($query);
 		} else {
-			return parent::parseQuery($query);
+			return parent::parseQuery($query, $parameters);
 		}
 	}
 
