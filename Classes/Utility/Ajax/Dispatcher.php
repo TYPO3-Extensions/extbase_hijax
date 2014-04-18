@@ -182,7 +182,7 @@ class Dispatcher implements \TYPO3\CMS\Core\SingletonInterface {
 					// load settings saved under settingsHash
 				if ($listener) {
 					$configuration = $listener->getConfiguration();
-					$request = $listener->getRequest();	
+					$request = $listener->getRequest();
 					$bootstrap->cObj = $listener->getCObj();
 					$this->checkAllowedControllerActions($configuration, $r);
 				} elseif (\EssentialDots\ExtbaseHijax\Utility\Extension::isAllowedHijaxAction($r['extension'], $r['controller'], $r['action'], $r['vendor'])) {
@@ -212,7 +212,9 @@ class Dispatcher implements \TYPO3\CMS\Core\SingletonInterface {
 						if ($configuration['settings']['extbaseHijaxDefaultCacheExpiryPeriod']) {
 							$cacheConf['expire_on_datetime'] = $GLOBALS['EXEC_TIME'] + $configuration['settings']['extbaseHijaxDefaultCacheExpiryPeriod'];
 						}
-						$responses['original'][] = $this->cacheRepository->getByKey('hijax_'.$r['chash'], $cacheConf, $bootstrap->cObj);
+						$cachedResponse = $this->cacheRepository->getByKey('hijax_'.$r['chash'], $cacheConf, $bootstrap->cObj);
+						$cachedResponse['id'] = $r['id'];
+						$responses['original'][] = $cachedResponse;
 					} else {
 						$responses['original'][] = $this->handleFrontendRequest($bootstrap, $configuration, $r, $request, $listener, FALSE);
 					}
