@@ -48,7 +48,7 @@ class TrackCollectionViewHelper extends \TYPO3\CMS\Fluid\Core\ViewHelper\Abstrac
 	 */
 	public function render($collection = NULL, $clearCacheOnAllHashesForCurrentPage = false) {
 		foreach ($collection as $object) {
-			if ($object && (get_class($object)=='TYPO3\\CMS\\Extbase\\DomainObject\\AbstractDomainObject' || is_subclass_of($object, 'TYPO3\\CMS\\Extbase\\DomainObject\\AbstractDomainObject'))) {
+			if ($object instanceof \TYPO3\CMS\Extbase\DomainObject\AbstractDomainObject) {
 				if ($clearCacheOnAllHashesForCurrentPage) {
 					$this->trackingManager->trackObjectOnPage($object, 'id');
 				} else {
