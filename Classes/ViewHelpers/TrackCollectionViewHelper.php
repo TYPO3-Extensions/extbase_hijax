@@ -46,7 +46,7 @@ class Tx_ExtbaseHijax_ViewHelpers_TrackCollectionViewHelper extends Tx_Fluid_Cor
 	 */
 	public function render($collection = NULL, $clearCacheOnAllHashesForCurrentPage = false) {
 		foreach ($collection as $object) {
-			if ($object && (get_class($object)=='Tx_Extbase_DomainObject_AbstractDomainObject' || is_subclass_of($object, 'Tx_Extbase_DomainObject_AbstractDomainObject'))) {
+			if ($object instanceof Tx_Extbase_DomainObject_AbstractDomainObject) {
 				if ($clearCacheOnAllHashesForCurrentPage) {
 					$this->trackingManager->trackObjectOnPage($object, 'id');
 				} else {
