@@ -247,6 +247,10 @@ class Content implements \TYPO3\CMS\Core\SingletonInterface {
 		$tslib_cObj = GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\ContentObject\\ContentObjectRenderer');
 		$pathSegments = GeneralUtility::trimExplode('.', $typoscriptObjectPath);
 		$lastSegment = array_pop($pathSegments);
+		if (is_null($GLOBALS['TSFE'])) {
+			$hijaxDispatcher = GeneralUtility::makeInstance('EssentialDots\\ExtbaseHijax\\Utility\\Ajax\\Dispatcher'); /** @var $hijaxDispatcher \EssentialDots\ExtbaseHijax\Utility\Ajax\Dispatcher */
+			$hijaxDispatcher->initialize();
+		}
 		$setup = $GLOBALS['TSFE']->tmpl->setup;
 		foreach ($pathSegments as $segment) {
 			if (!array_key_exists($segment . '.', $setup)) {
