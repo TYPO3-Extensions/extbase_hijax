@@ -1,5 +1,6 @@
 <?php
 namespace EssentialDots\ExtbaseHijax\Tracking;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /***************************************************************
  *  Copyright notice
@@ -25,13 +26,11 @@ namespace EssentialDots\ExtbaseHijax\Tracking;
  ***************************************************************/
 
 class Manager implements \TYPO3\CMS\Core\SingletonInterface {
+
 	/**
-	 * the page cache object, use this to save pages to the cache and to
-	 * retrieve them again
-	 *
-	 * @var \TYPO3\CMS\Core\Cache\Backend\AbstractBackend
+	 * @var \EssentialDots\ExtbaseHijax\Cache\PageCacheFacade
 	 */
-	protected $pageCache;
+	protected $pageCacheFacade;
 	
 	/**
 	 * @var \TYPO3\CMS\Core\Cache\Frontend\VariableFrontend
@@ -76,12 +75,12 @@ class Manager implements \TYPO3\CMS\Core\SingletonInterface {
 	public function __construct() {
 		$this->fe = $GLOBALS['TSFE'];
 		$this->trackingCache = $GLOBALS['typo3CacheManager']->getCache('extbase_hijax_tracking');
-		$this->objectManager = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Object\\ObjectManager');
+		$this->objectManager = GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Object\\ObjectManager');
 		$this->dataMapper = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Mapper\\DataMapper');
-		$this->pageCache = $GLOBALS['typo3CacheManager']->getCache('cache_pages');
 		$this->configurationManager = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Configuration\\ConfigurationManagerInterface');
 		$this->ajaxDispatcher = $this->objectManager->get('EssentialDots\\ExtbaseHijax\\Utility\\Ajax\\Dispatcher');
 		$this->extensionConfiguration = $this->objectManager->get('EssentialDots\\ExtbaseHijax\\Configuration\\ExtensionInterface');
+		$this->pageCacheFacade = GeneralUtility::makeInstance('EssentialDots\\ExtbaseHijax\\Cache\\PageCacheFacade');
 	}
 	
 	/**
@@ -145,25 +144,12 @@ class Manager implements \TYPO3\CMS\Core\SingletonInterface {
 		
 						if ($exclusiveLockAcquired) {
 							$pageHashs = $this->trackingCache->get($objectIdentifier);
-							if ($pageHashs && count($pageHashs)) {
-								foreach ($pageHashs as $pageHash) {
-									if (substr($pageHash, 0, 3) == 'id-') {
-										$this->pageCache->flushByTag('pageId_' . substr($pageHash, 3));
-									} elseif (substr($pageHash, 0, 5) == 'hash-') {
-										$this->pageCache->remove(substr($pageHash, 5));
-									}
-								}
-								$this->trackingCache->set($objectIdentifier, array());
-							}
-								
+							$this->pageCacheFacade->flushCacheByHashIdentifiers($pageHashs);
+							$this->trackingCache->set($objectIdentifier, array());
 							$this->releaseLock($exclusiveLock);
 						} else {
 							$pageHashs = $this->trackingCache->get($objectIdentifier);
-							if ($pageHashs && count($pageHashs)) {
-								foreach ($pageHashs as $pageHash) {
-									$this->pageCache->remove($pageHash);
-								}
-							}
+							$this->pageCacheFacade->flushCacheByHashIdentifiers($pageHashs);
 						}
 					}
 						
@@ -221,7 +207,7 @@ class Manager implements \TYPO3\CMS\Core\SingletonInterface {
 				$frameworkConfiguration = $this->configurationManager->getConfiguration(\TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK);
 				
 				if ($tableName && $frameworkConfiguration['persistence']['storagePid']) {
-					$storagePids = \TYPO3\CMS\Core\Utility\GeneralUtility::intExplode(',', $frameworkConfiguration['persistence']['storagePid'], true);
+					$storagePids = GeneralUtility::intExplode(',', $frameworkConfiguration['persistence']['storagePid'], true);
 					
 					foreach ($storagePids as $storagePid) {
 						$objectIdentifier = $this->getObjectIdentifierForRepository($tableName, $storagePid);
@@ -391,7 +377,7 @@ class Manager implements \TYPO3\CMS\Core\SingletonInterface {
 		try {
 			if (!is_object($lockObj)) {
 					/* @var $lockObj \EssentialDots\ExtbaseHijax\Lock\Lock */
-				$lockObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('EssentialDots\\ExtbaseHijax\\Lock\\Lock', $key);
+				$lockObj = GeneralUtility::makeInstance('EssentialDots\\ExtbaseHijax\\Lock\\Lock', $key);
 			}
 	
 			$success = FALSE;
@@ -402,7 +388,7 @@ class Manager implements \TYPO3\CMS\Core\SingletonInterface {
 				}
 			}
 		} catch (\Exception $e) {
-			\TYPO3\CMS\Core\Utility\GeneralUtility::sysLog('Locking: Failed to acquire lock: '.$e->getMessage(), 'cms', \TYPO3\CMS\Core\Utility\GeneralUtility::SYSLOG_SEVERITY_ERROR);
+			GeneralUtility::sysLog('Locking: Failed to acquire lock: '.$e->getMessage(), 'cms', GeneralUtility::SYSLOG_SEVERITY_ERROR);
 			$success = FALSE;	// If locking fails, return with FALSE and continue without locking
 		}
 	
