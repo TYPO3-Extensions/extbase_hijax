@@ -117,6 +117,10 @@ class Hooks implements \TYPO3\CMS\Core\SingletonInterface {
 				if (!in_array($objectIdentifier, $this->pendingIdentifiers)) {
 					$this->pendingIdentifiers[] = $objectIdentifier;
 				}
+				$objectIdentifier = $this->trackingManager->getObjectIdentifierForRepository($table, -1);
+				if (!in_array($objectIdentifier, $this->pendingIdentifiers)) {
+					$this->pendingIdentifiers[] = $objectIdentifier;
+				}
 			}
 		}
 	}
@@ -166,6 +170,8 @@ class Hooks implements \TYPO3\CMS\Core\SingletonInterface {
 			
 			if ($pid > 0) {
 				$objectIdentifier = $this->trackingManager->getObjectIdentifierForRepository($table, $pid);
+				$this->trackingManager->clearPageCacheForObjectIdentifier($objectIdentifier);
+				$objectIdentifier = $this->trackingManager->getObjectIdentifierForRepository($table, -1);
 				$this->trackingManager->clearPageCacheForObjectIdentifier($objectIdentifier);
 			}
 		}

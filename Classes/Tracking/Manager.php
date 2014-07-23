@@ -213,12 +213,16 @@ class Manager implements \TYPO3\CMS\Core\SingletonInterface {
 				} else {
 					$tableName = (string) $object;
 				}
-				
-				$frameworkConfiguration = $this->configurationManager->getConfiguration(\TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK);
-				
-				if ($tableName && $frameworkConfiguration['persistence']['storagePid']) {
-					$storagePids = GeneralUtility::intExplode(',', $frameworkConfiguration['persistence']['storagePid'], true);
-					
+
+				if ($tableName) {
+					$frameworkConfiguration = $this->configurationManager->getConfiguration(\TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK);
+
+					if ($frameworkConfiguration['persistence']['storagePid']) {
+						$storagePids = GeneralUtility::intExplode(',', $frameworkConfiguration['persistence']['storagePid'], true);
+					} else {
+						$storagePids = array(-1);
+					}
+
 					foreach ($storagePids as $storagePid) {
 						$objectIdentifier = $this->getObjectIdentifierForRepository($tableName, $storagePid);
 						
