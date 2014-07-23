@@ -27,6 +27,9 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class Manager implements \TYPO3\CMS\Core\SingletonInterface {
 
+	const SIGNAL_PreTrackRepositoryOnPage = 'preTrackRepositoryOnPage';
+	const SIGNAL_PreTrackObjectOnPage = 'preTrackObjectOnPage';
+
 	/**
 	 * @var \EssentialDots\ExtbaseHijax\Cache\PageCacheFacade
 	 */
@@ -68,6 +71,11 @@ class Manager implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @var \EssentialDots\ExtbaseHijax\Configuration\ExtensionInterface
 	 */
 	protected $extensionConfiguration;
+
+	/**
+	 * @var \TYPO3\CMS\Extbase\SignalSlot\Dispatcher
+	 */
+	protected $signalSlotDispatcher;
 	
 	/**
 	 * Constructor
@@ -81,6 +89,7 @@ class Manager implements \TYPO3\CMS\Core\SingletonInterface {
 		$this->ajaxDispatcher = $this->objectManager->get('EssentialDots\\ExtbaseHijax\\Utility\\Ajax\\Dispatcher');
 		$this->extensionConfiguration = $this->objectManager->get('EssentialDots\\ExtbaseHijax\\Configuration\\ExtensionInterface');
 		$this->pageCacheFacade = GeneralUtility::makeInstance('EssentialDots\\ExtbaseHijax\\Cache\\PageCacheFacade');
+		$this->signalSlotDispatcher = $this->objectManager->get('TYPO3\\CMS\\Extbase\\SignalSlot\\Dispatcher');
 	}
 	
 	/**
@@ -175,8 +184,9 @@ class Manager implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @return void
 	 */
 	public function trackRepositoryOnPage($object = NULL, $type = 'hash', $hash = false) {
-
 		if ($object && !$this->ajaxDispatcher->getIsActive()) {
+			$this->signalSlotDispatcher->dispatch(__CLASS__, self::SIGNAL_PreTrackRepositoryOnPage, array('object' => $object, 'type' => $type, 'hash' => $hash));
+
 			if ($type) {
 				switch ($type) {
 					case 'id':
@@ -254,7 +264,10 @@ class Manager implements \TYPO3\CMS\Core\SingletonInterface {
 	 * @return void
 	 */
 	public function trackObjectOnPage(\TYPO3\CMS\Extbase\DomainObject\AbstractDomainObject $object = NULL, $type = 'hash', $hash = false) {
+
 		if ($object && !$this->ajaxDispatcher->getIsActive()) {
+			$this->signalSlotDispatcher->dispatch(__CLASS__, self::SIGNAL_PreTrackObjectOnPage, array('object' => $object, 'type' => $type, 'hash' => $hash));
+
 			if ($type) {
 				switch ($type) {
 					case 'id':
@@ -271,7 +284,7 @@ class Manager implements \TYPO3\CMS\Core\SingletonInterface {
 						$pageHash = 'hash-'.$hash;
 						break;
 				}
-				
+
 				$objectIdentifier = $this->getObjectIdentifierForObject($object);
 				
 				$sharedLock = null;
