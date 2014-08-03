@@ -1,5 +1,6 @@
 <?php
 namespace EssentialDots\ExtbaseHijax\Persistence\Storage;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Persistence\QueryInterface;
 
 /***************************************************************
@@ -62,9 +63,19 @@ class Typo3DbBackend extends \TYPO3\CMS\Extbase\Persistence\Generic\Storage\Typo
 			$parameters = $statement->getBoundVariables();
 			$this->replacePlaceholders($sql, $parameters);
 
+			$matches = array();
+			$tableNames = array();
+			if (preg_match('/^\s*#\s*@tables_used\s*=\s*(.*)\s*;/msU', $sql, $matches)) {
+				$tableNames = GeneralUtility::trimExplode(',', $matches[1]);
+				$sql = preg_replace('/^\s*#\s*@tables_used\s*=\s*(.*)\s*;/msU', '', $sql);
+			}
 			$sqlParser = \EssentialDots\ExtbaseHijax\Persistence\Parser\SQL::ParseString($sql);
 
 			$countQuery = $sqlParser->getCountQuery();
+			if (count($tableNames)) {
+				$countQuery = "# @tables_used=".implode(',', $tableNames)."; \n".$countQuery;
+			}
+
 			$res = $this->databaseHandle->sql_query($countQuery);
 			$this->checkSqlErrors($countQuery);
 			$count = 0;
