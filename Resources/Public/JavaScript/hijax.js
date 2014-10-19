@@ -24,7 +24,7 @@
 ; (function($) {
 	var elements = [], eventsToListen = {}, listeners = [], startedTimer = false, timerInterval = 10000, currentTimerTime = 0, uniqueIDCounter = 0, ajaxCallback = false, baseAnimationSpeed = 600;
 
-	_evalStr = function(str){
+	var _evalStr = function(str){
 		try {
 			return eval(str);
 		} catch (e) {
@@ -33,9 +33,37 @@
 	};
 
 	/*
-	 * Private methods 
+	 * Private methods
 	 */
-	_addElements = function(newElements) {
+	var _redirectToURL = function(url) {
+		if (typeof window.History != 'undefined' && window.History.enabled) {
+			var rootUrl = History.getRootUrl(),
+				urlScheme = url.match(/^(.*?):\/\//),
+				rootUrlScheme = rootUrl.match(/^(.*?):\/\//),
+				isInternalLink = (typeof url !== 'undefined' && url !== null) && (url.substring(0,rootUrl.length) === rootUrl || url.indexOf(':') === -1);
+
+			urlScheme = urlScheme ? urlScheme[1] : null;
+			rootUrlScheme = rootUrlScheme ? rootUrlScheme[1] : null;
+
+			// 1. check if the URL is internal or not (by comparing domains)
+			// 2. check scheme, as well do plain redirect for HTTP -> HTTPS or vice versa redirects
+			if (!isInternalLink || (urlScheme && rootUrlScheme && urlScheme != rootUrlScheme)) {
+				window.location = url;
+			} else {
+				try {
+					EXTBASE_HIJAX.url = url;
+					History.pushState({hijax: false, custom: false, tstamp: new Date().getTime()}, null, url);
+				} catch (e) {
+					window.location = url;
+				}
+			}
+		} else {
+			window.location = url;
+		}
+
+	};
+
+	var _addElements = function(newElements) {
 			// add unique element ID if it already doesn't have it
 		$.each(newElements, function(i, element) {
 			var id = $(element).attr('id');
@@ -67,7 +95,7 @@
 		return addedElements;
 	};
 	
-	_clearElements = function () {
+	var _clearElements = function () {
 		var removedElements = [];
 
 		elements = $.grep(elements, function(element) {
@@ -107,7 +135,7 @@
 		return removedElements;
 	};
 	
-	_addEvents = function(listenerId, newEvents) {
+	var _addEvents = function(listenerId, newEvents) {
 		var addedEvents = [];
 		
 		if (typeof eventsToListen[listenerId] == 'undefined') {
@@ -132,7 +160,7 @@
 		return addedEvents;
 	};	
 	
-	_timer = function () {
+	var _timer = function () {
 		currentTimerTime += timerInterval/1000;
 		processElements = [];
 		$.each(elements, function(i, element) {
@@ -144,7 +172,7 @@
 		_process(processElements);
 	};
 	
-	_parseCSV = function( strData, strDelimiter ){
+	var _parseCSV = function( strData, strDelimiter ){
 			// Check to see if the delimiter is defined. If not,
 			// then default to comma.
 		strDelimiter = (strDelimiter || ",");
@@ -219,7 +247,7 @@
 		return( arrData );
 	};
 	
-	_ajaxRequest = function (requests, stateUrl) {
+	var _ajaxRequest = function (requests, stateUrl) {
 		var pendingElements = [];
 		var processedRequests = [];
 		var fields = [];
@@ -256,12 +284,7 @@
 
 		var successCallback = function(data, textStatus, jqXHR) {
 			if (data['redirect'] && data['redirect'].url) {
-				if (typeof window.History != 'undefined' && window.History.enabled) {
-					EXTBASE_HIJAX.url = data['redirect'].url;
-					History.pushState({hijax: false, custom: false, tstamp: new Date().getTime()}, null, data['redirect'].url);
-				} else {
-					window.location = data['redirect'].url;
-				}
+				_redirectToURL(data['redirect'].url);
 			} else {
 				if (typeof window.History != 'undefined' && window.History.enabled && typeof stateUrl != 'undefined' && stateUrl) {
 					History.pushState({hijax: true, custom: true, tstamp: new Date().getTime()}, null, stateUrl);
@@ -343,7 +366,7 @@
 		});			
 	};
 
-	_processAnimation = function (animation) {
+	var _processAnimation = function (animation) {
 		var $animation = $(animation);
 
 		$animation.find('> .hijax-content > .hijax-element').each(function(i, scene) {
@@ -398,7 +421,7 @@
 		}
 	};
 
-	_process = function (elements) {
+	var _process = function (elements) {
 		if (elements && elements.length > 0) {
 			var requests = [];
 			$.each(elements, function(i, element) {
@@ -1154,12 +1177,7 @@
 					this.parentSuccessCallback(data, textStatus, jqXHR);
 				}
 				if (data['redirect'] && data['redirect'].url) {
-					if (typeof window.History != 'undefined' && window.History.enabled) {
-						EXTBASE_HIJAX.url = data['redirect'].url;
-						History.pushState({hijax: false, custom: false, tstamp: new Date().getTime()}, null, data['redirect'].url);
-					} else {
-						window.location = data['redirect'].url;
-					}
+					_redirectToURL(data['redirect'].url);
 				} else {
 					if (this.pendingElement) {
 						$.each(EXTBASE_HIJAX.beforeLoadElement, function(i, f) {
